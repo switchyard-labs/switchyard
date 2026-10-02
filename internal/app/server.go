@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"switchyard/internal/agent"
 	"switchyard/internal/artifacts"
 	"switchyard/internal/refs"
 	"switchyard/internal/trestle"
@@ -27,6 +28,9 @@ type App struct {
 	StaticDir string
 	DataDir   string
 	Hub       *Hub
+	Secrets   *agent.CredentialStore
+	Runner    agent.Runner
+	Roles     []agent.Role
 }
 
 func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App {
@@ -49,6 +53,8 @@ func (a *App) Provision() error {
 		{"prs", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "attempt_id", Type: "text"}, {Name: "work_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "base", Type: "text"}, {Name: "title", Type: "text"}, {Name: "status", Type: "text"}, {Name: "check_status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "integrated_at", Type: "text"}}},
 		{"pr_checks", []trestle.CollectionField{{Name: "pr_id", Type: "text"}, {Name: "status", Type: "text"}, {Name: "detail", Type: "text"}, {Name: "created_at", Type: "text"}}},
 		{"ref_obs", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "sha", Type: "text"}, {Name: "seen_at", Type: "text"}}},
+		{"credentials", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "name", Type: "text"}, {Name: "provider", Type: "text"}, {Name: "scope", Type: "text"}, {Name: "ciphertext", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "last_used", Type: "text"}}},
+		{"executions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "role", Type: "text"}, {Name: "attempt_id", Type: "text"}, {Name: "adapter", Type: "text"}, {Name: "status", Type: "text"}, {Name: "output", Type: "text"}, {Name: "started_at", Type: "text"}, {Name: "finished_at", Type: "text"}}},
 	} {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
@@ -99,6 +105,13 @@ func (a *App) Handler() http.Handler {
 	// realtime + provenance (CP5)
 	mux.HandleFunc("GET /api/events/stream", a.handleEventStream)
 	mux.HandleFunc("GET /api/work/{id}/provenance", a.handleWorkProvenance)
+
+	// agents + credentials (CP6)
+	mux.HandleFunc("POST /api/credentials", a.handleCreateCredential)
+	mux.HandleFunc("GET /api/credentials", a.handleListCredentials)
+	mux.HandleFunc("POST /api/credentials/{id}/rotate", a.handleRotateCredential)
+	mux.HandleFunc("DELETE /api/credentials/{id}", a.handleDeleteCredential)
+	mux.HandleFunc("GET /api/roles", a.handleListRoles)
 
 	return a.withSession(mux)
 }

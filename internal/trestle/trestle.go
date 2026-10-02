@@ -266,6 +266,28 @@ func (c *Client) PatchRecord(collection, id, version string, values map[string]a
 	return nil
 }
 
+// DeleteRecord removes a record with optimistic concurrency (If-Match version).
+func (c *Client) DeleteRecord(collection, id, version string) error {
+	if err := c.ensureLogin(); err != nil {
+		return err
+	}
+	req, err := http.NewRequest(http.MethodDelete, c.BaseURL+"/api/v1/collections/"+collection+"/records/"+id, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("X-Trestle-CSRF", c.csrf)
+	req.Header.Set("If-Match", version)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("delete %s/%s: %d", collection, id, resp.StatusCode)
+	}
+	return nil
+}
+
 func urlQueryEscape(s string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(s, " ", "%20"), "&", "%26")
 }

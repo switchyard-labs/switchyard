@@ -4,11 +4,15 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"flag"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
+
+	"switchyard/internal/agent"
 
 	"switchyard/internal/app"
 	"switchyard/internal/artifacts"
@@ -47,6 +51,29 @@ func main() {
 	art := artifacts.New(*acc, *ns, *tokCmd)
 	a := app.New(tre, art, *static, *data)
 	a.StrutBin = *strutBin
+	// agent substrate: credential store keyed from env or a persisted data key
+	key := loadOrCreateKey(filepath.Join(*data, "secret.key"))
+	a.Secrets = agent.NewCredentialStore(
+		func(v map[string]any, idem string) error { _, _, e := tre.CreateRecord("credentials", v, idem); return e },
+		func() ([]map[string]any, error) { return tre.ListRecords("credentials", "") },
+		func(id string) error {
+			rid, ver, vals, e := tre.FindRecord("credentials", `id = "`+id+`"`)
+			if e != nil {
+				return e
+			}
+			if rid == "" || len(vals) == 0 {
+				return os.ErrNotExist
+			}
+			return tre.DeleteRecord("credentials", rid, ver)
+		},
+		key)
+	a.Roles = agent.BuiltinRoles
+	a.Runner = &agent.DeterministicRunner{
+		StrutBin: *strutBin, WorkDir: filepath.Join(*data, "scratch"),
+		Apply: func(exec *agent.Execution, path, content string) (string, error) {
+			return "", nil // handled by the run handler via refs
+		},
+	}
 	if err := a.Provision(); err != nil {
 		log.Fatalf("provision: %v", err)
 	}
@@ -55,4 +82,17 @@ func main() {
 	}
 	log.Printf("switchyard control plane listening on %s (trestle=%s, namespace=%s)", *listen, *treBase, *ns)
 	log.Fatal(http.ListenAndServe(*listen, a.Handler()))
+}
+// loadOrCreateKey returns a 32-byte AES key from env or a persisted file.
+func loadOrCreateKey(path string) []byte {
+	if k := os.Getenv("SWITCHYARD_SECRET_KEY"); len(k) >= 32 {
+		return []byte(k)[:32]
+	}
+	if b, err := os.ReadFile(path); err == nil && len(b) == 32 {
+		return b
+	}
+	k := make([]byte, 32)
+	_, _ = rand.Read(k)
+	_ = os.WriteFile(path, k, 0600)
+	return k
 }

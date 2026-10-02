@@ -1,0 +1,24 @@
+### 1. roles
+[{"name":"implementer","capabilities":["read","edit-draft","create-branch","commit"]},{"name":"reviewer","capabilities":["read","review","findings"]},{"name":"conflict-resolver","capabilities":["read","compare","create-attempt"]}]
+### 2. create credential (secret must never echo)
+{"id":"cred_c4ef8a5d7efec06d68fa2563","name":"deepseek-personal","notice":"credential stored securely; the secret cannot be viewed again","provider":"deepseek","scope":"personal"}
+secret leaked in create response: 0
+### 3. list credentials (metadata only, no ciphertext/secret)
+{"items":[{"id":"cred_c4ef8a5d7efec06d68fa2563","name":"deepseek-personal","provider":"deepseek","scope":"personal","created_at":"2026-10-02T17:46:29Z","last_used":"0001-01-01T00:00:00Z"},{"id":"cred_d4cd055612e264ca73d5ed96","name":"deepseek-personal","provider":"deepseek","scope":"personal","created_at":"2026-10-02T17:43:12Z","last_used":"0001-01-01T00:00:00Z"}]}
+secret leaked in list: 0
+ciphertext leaked in list: 0
+### 4. rotate
+{"ok":true}
+old secret still visible anywhere: 0
+### 5. delete + revoked handling
+{"ok":true}
+list after delete: ["deepseek-personal"]
+### 6. substrate run: Work -> Attempt -> implementer execution -> edit -> commit
+{"adapter":"deterministic","attempt_id":"wk_f9b4ea79da54a977","execution":"exe_127c4693","new_sha":"907a6b356ed682b65db92f04cc4f7b6711feca43","output":"deterministic edit of ATTEMPT.md (+71 bytes) -> ","status":"ok"}
+--- executions recorded ---
+[{"id":"exe_127c4693","role":"implementer","adapter":"deterministic","status":"succeeded","output":"deterministic edit of ATTEMPT.md (+71 bytes) -> "},{"id":"exe_90ba1dc1","role":"implementer","adapter":"deterministic","status":"succeeded","output":"deterministic edit of ATTEMPT.md (+71 bytes) -> "}]
+--- attempt branch content ---
+# Attempt wk_f9b4ea79da54a977
+
+// run by alice at 2026-10-02T17:46:34Z
+### CP6 gate done
