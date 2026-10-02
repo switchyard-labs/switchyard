@@ -65,7 +65,7 @@ func (a *App) Provision() error {
 		{"executions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "role", Type: "text"}, {Name: "attempt_id", Type: "text"}, {Name: "adapter", Type: "text"}, {Name: "status", Type: "text"}, {Name: "output", Type: "text"}, {Name: "started_at", Type: "text"}, {Name: "finished_at", Type: "text"}}},
 		{"findings", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "target", Type: "text"}, {Name: "severity", Type: "text"}, {Name: "message", Type: "text"}, {Name: "file", Type: "text"}, {Name: "status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "resolved_at", Type: "text"}}},
 		{"iq", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "pr_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "base", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "status", Type: "text"}, {Name: "risk", Type: "text"}, {Name: "policy", Type: "text"}, {Name: "attempts", Type: "text"}, {Name: "error", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
-		{"drafts", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "path", Type: "text"}, {Name: "content", Type: "text"}, {Name: "user", Type: "text"}, {Name: "revision", Type: "text"}, {Name: "base_sha", Type: "text"}, {Name: "updated_at", Type: "text"}, {Name: "committed_at", Type: "text"}}},
+		{"drafts", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "path", Type: "text"}, {Name: "content", Type: "text"}, {Name: "user", Type: "text"}, {Name: "revision", Type: "text"}, {Name: "base_sha", Type: "text"}, {Name: "last_agent_execution", Type: "text"}, {Name: "last_agent_prompt", Type: "text"}, {Name: "updated_at", Type: "text"}, {Name: "committed_at", Type: "text"}}},
 		{"escalations", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "packet", Type: "json"}, {Name: "status", Type: "text"}, {Name: "created_by", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "decision", Type: "text"}, {Name: "decided_by", Type: "text"}, {Name: "decided_at", Type: "text"}}},
 	} {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
@@ -175,6 +175,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/drafts", a.handleSaveDraft)
 	mux.HandleFunc("GET /api/drafts/{repo}/{branch}/{path...}", a.handleGetDraft)
 	mux.HandleFunc("POST /api/drafts/{id}/commit", a.handleCommitDraft)
+	mux.HandleFunc("POST /api/drafts/{id}/agent-propose", a.handleAgentProposeDraft)
 	mux.HandleFunc("POST /api/diff", a.handleDiff)
 
 	// integration queue (CP9)
