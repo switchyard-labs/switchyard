@@ -130,8 +130,10 @@ live state; a forced outage converges via reconciliation within a bounded window
 
 ## CP6 — Agent execution + credentials
 
-- **Status: CONDITIONAL PASS** (handover: `handovers/CP06.md`; bounded: real-LLM
-  CLI adapter requires a provider credential + CLI on the Linode).
+- **Status: CONDITIONAL PASS** (handover: `handovers/CP06.md`; bounded: the
+  real-LLM CLI adapter requires a provider credential + coding-agent CLI on the
+  control-plane host — see addendum: safely investigated; none available;
+  deterministic adapter is the proven substrate; not blocking).
 
 **Objective:** pluggable runner adapter (v1: one coding-agent CLI adapter),
 Agent Role/Profile/Principal/Execution, provider credentials, SecretStore
