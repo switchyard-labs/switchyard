@@ -85,3 +85,16 @@ func (a *App) handleListRoles(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, 200, map[string]any{"items": a.Roles})
 }
+
+func (a *App) handleListExecutions(w http.ResponseWriter, r *http.Request) {
+	if a.currentUser(r) == "" {
+		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
+		return
+	}
+	items, err := a.Trestle.ListRecords("executions", "")
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"items": items})
+}

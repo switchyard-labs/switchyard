@@ -182,6 +182,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/credentials/{id}/rotate", a.handleRotateCredential)
 	mux.HandleFunc("DELETE /api/credentials/{id}", a.handleDeleteCredential)
 	mux.HandleFunc("GET /api/roles", a.handleListRoles)
+	mux.HandleFunc("GET /api/executions", a.handleListExecutions)
 
 	// durable workflows (CP7)
 	mux.HandleFunc("POST /api/workflows", a.handleCreateWorkflow)
@@ -260,6 +261,10 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/work/") {
 		http.ServeFile(w, r, filepath.Join(a.StaticDir, "work-detail.html"))
+		return
+	}
+	if r.URL.Path == "/operations" || r.URL.Path == "/operations.html" {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "operations.html"))
 		return
 	}
 	if r.URL.Path == "/settings" || strings.HasPrefix(r.URL.Path, "/settings/") {
