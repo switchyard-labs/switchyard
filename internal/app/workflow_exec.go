@@ -386,10 +386,10 @@ func (e *wfExec) opIntegrate(args map[string]any) (map[string]any, error) {
 		}
 		// deterministic PR id so a crash between PR creation and step
 		// completion re-creates the SAME PR (idempotent).
-		prID := "pr_" + sha256Hex([]byte(e.runID+"|"+e.currentKey))[:10]
+		prID := "pr_" + sha256Hex([]byte(e.runID + "|" + e.currentKey))[:10]
 		_, replayed, err := e.a.Trestle.CreateRecord("prs", map[string]any{
 			"id": prID, "attempt_id": "wf:" + e.runID, "work_id": "wf:" + e.runID,
-			"repo": repo, "branch": branch, "base": base, "title": "workflow integrate "+e.runID,
+			"repo": repo, "branch": branch, "base": base, "title": "workflow integrate " + e.runID,
 			"status": "open", "check_status": "pending", "created_at": nowStr(), "integrated_at": "",
 		}, "pr-"+prID)
 		if err != nil {
@@ -476,7 +476,7 @@ func (e *wfExec) opSpawn(args map[string]any) (map[string]any, error) {
 		}
 		// deterministic child id from (parent, step) so a crash between child
 		// creation and step-completion re-creates the SAME child (idempotent).
-		childID := "wfr_" + sha256Hex([]byte(e.runID+"|"+e.currentKey))[:10]
+		childID := "wfr_" + sha256Hex([]byte(e.runID + "|" + e.currentKey))[:10]
 		script, _ := def["script"].(string)
 		_, replayed, err := e.a.Trestle.CreateRecord("workflow_runs", map[string]any{
 			"id": childID, "workflow_id": def["id"], "params": childParams, "script": script,

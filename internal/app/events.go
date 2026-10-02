@@ -12,8 +12,8 @@ import (
 // ingest boundary.
 func (a *App) handleIngestEvent(w http.ResponseWriter, r *http.Request) {
 	var ev struct {
-		Type    string `json:"type"`
-		Source  struct {
+		Type   string `json:"type"`
+		Source struct {
 			RepoName string `json:"repoName"`
 		} `json:"source"`
 		RepoName string `json:"repo_name"`

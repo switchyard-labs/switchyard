@@ -41,11 +41,11 @@ func (a *App) handleRefUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		Repo     string         `json:"repo"`
-		Branch   string         `json:"branch"`
-		Expected string         `json:"expected_sha"`
-		Changes  []refs.Change  `json:"changes"`
-		Message  string         `json:"message"`
+		Repo     string        `json:"repo"`
+		Branch   string        `json:"branch"`
+		Expected string        `json:"expected_sha"`
+		Changes  []refs.Change `json:"changes"`
+		Message  string        `json:"message"`
 	}
 	if err := readJSON(r, &in); err != nil {
 		writeJSON(w, 400, map[string]any{"error": "bad_request"})

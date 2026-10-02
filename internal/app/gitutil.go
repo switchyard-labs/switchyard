@@ -10,14 +10,14 @@ import (
 
 // ExecutionRecord is the durable record of an Agent/check execution.
 type ExecutionRecord struct {
-	ID         string
-	Role       string
-	AttemptID  string
-	Adapter    string
-	Status     string
-	Output     string
-	Started    time.Time
-	Finished   time.Time
+	ID        string
+	Role      string
+	AttemptID string
+	Adapter   string
+	Status    string
+	Output    string
+	Started   time.Time
+	Finished  time.Time
 }
 
 func (a *App) recordExecution(ex *ExecutionRecord) {

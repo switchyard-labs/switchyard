@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
 )
 
 func (a *App) handleOpenPR(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +68,7 @@ func (a *App) handlePRCheck(w http.ResponseWriter, r *http.Request) {
 	detail := "marker file valid"
 	if lines < 2 {
 		status = "fail"
-		detail = "expected at least 2 lines (init + run), got " + string(rune('0'+min(lines,9)))
+		detail = "expected at least 2 lines (init + run), got " + string(rune('0'+min(lines, 9)))
 	}
 	a.setCheck(prID, status, detail)
 	writeJSON(w, 200, map[string]any{"check": status, "lines": lines, "detail": detail})
