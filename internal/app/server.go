@@ -72,6 +72,9 @@ func (a *App) Provision() error {
 			return err
 		}
 	}
+	for _, c := range profileCollections() {
+		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil { return err }
+	}
 	for _, c := range policyCollections() {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
@@ -96,6 +99,11 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/auth/login", a.handleLogin)
 	mux.HandleFunc("POST /api/auth/logout", a.handleLogout)
 	mux.HandleFunc("GET /api/auth/me", a.handleMe)
+	mux.HandleFunc("GET /api/users/{username}", a.handleGetUserProfile)
+	mux.HandleFunc("PATCH /api/settings/profile", a.handleUpdateUserProfile)
+	mux.HandleFunc("POST /api/settings/avatar", a.handleUploadUserAvatar)
+	mux.HandleFunc("DELETE /api/settings/avatar", a.handleDeleteUserAvatar)
+	mux.HandleFunc("GET /api/avatars/{kind}/{id}", a.handleAvatar)
 
 	// repositories: legacy flat API plus canonical owner/repository metadata (PX2)
 	mux.HandleFunc("GET /api/repositories", a.handleListRepositoryMeta)
