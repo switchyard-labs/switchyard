@@ -64,3 +64,16 @@ a { color: var(--accent-text); }
 .line-no:hover { color: var(--accent-text); }
 .line-code { white-space: pre; padding-right: 22px; }
 .language-badge { font: 11px/1 var(--mono); color: var(--text-dim); border: 1px solid var(--border); border-radius: 999px; padding: 5px 8px; }
+
+/* PX24 accessibility/responsive hardening */
+.skip-link{position:fixed;left:12px;top:10px;z-index:200;transform:translateY(-160%);background:var(--signal-amber,#d89a43);color:#16110a;padding:9px 13px;border-radius:8px;font-weight:800}.skip-link:focus{transform:translateY(0)}
+:focus-visible{outline:2px solid var(--signal-amber,#d89a43);outline-offset:3px}
+button,a,input,select,textarea,summary{scroll-margin-top:88px}
+button,.btn,.hamburger,summary{min-height:38px}
+img{max-width:100%;height:auto}
+pre,.code-surface,.diff-view,.repo-tabs,table{max-width:100%}
+pre,.code-surface,.diff-view,.repo-tabs{overflow:auto}
+table{display:block;overflow-x:auto;border-collapse:collapse}
+.repo-name,.brand-name,h1,h2,h3,.list-item strong,.pr-row strong,.work-row strong{overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+@media(max-width:430px){.site-main{padding-left:12px;padding-right:12px}.panel{padding-left:12px;padding-right:12px}.inline-form{display:grid;grid-template-columns:1fr}.inline-form>*{min-width:0;width:100%}.repo-actions,.pr-actions{flex-wrap:wrap}.repo-tabs a,.repo-tabs button{white-space:nowrap}.account-chip span{max-width:105px;overflow:hidden;text-overflow:ellipsis}.settings-nav{grid-template-columns:1fr}}
