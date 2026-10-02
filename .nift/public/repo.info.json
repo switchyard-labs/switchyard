@@ -1,0 +1,22 @@
+{
+  "name": "repo",
+  "title": "Repository",
+  "template": "templates/template.html",
+  "content": "content/repo.html",
+  "output": "public/repo.html",
+  "minify": false,
+  "minify-version": 0,
+  "pagination": false,
+  "pagination-items-per-page": 0,
+  "pagination-template": "",
+  "pagination-separator": "",
+  "pagination-pages": 0,
+  "project-fingerprint": "",
+  "hierarchy-fingerprint": "",
+  "dependencies": [
+    "content/repo.html",
+    "templates/head.html",
+    "templates/template.html"
+  ],
+  "reqs": []
+}

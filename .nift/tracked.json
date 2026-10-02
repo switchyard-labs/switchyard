@@ -1,0 +1,24 @@
+{
+  "tracked": [
+    {
+      "name": "/",
+      "title": "index",
+      "template": "templates/template.html"
+    },
+    {
+      "name": "signin",
+      "title": "Sign in",
+      "template": "templates/template.html"
+    },
+    {
+      "name": "work",
+      "title": "Work",
+      "template": "templates/template.html"
+    },
+    {
+      "name": "repo",
+      "title": "Repository",
+      "template": "templates/template.html"
+    }
+  ]
+}

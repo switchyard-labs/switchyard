@@ -52,6 +52,8 @@ contradicts a foundational assumption → stop and re-plan that layer.
 
 ## CP2 — Control-plane foundation
 
+- **Status: PASS** (handover: `handovers/CP02.md`; gate: `experiments/cp2/cp2_gate.sh`).
+
 **Objective:** authentication (users/orgs), Artifacts repository integration,
 repo browser + read surfaces, and event ingestion/reconciliation on single-node
 Trestle.

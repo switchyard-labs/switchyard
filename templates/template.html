@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		@input("templates/head.html")
+	</head>
+	<body>
+		<header class="site-header">
+			<div class="header-inner">
+				<a class="brand" href="/"><span class="brand-mark">S</span><span class="brand-name">Switchyard</span></a>
+				<nav class="site-nav" id="site-nav">
+					<a href="/">Dashboard</a>
+					<a href="/repos.html">Repositories</a>
+					<a href="/work.html">Work</a>
+				</nav>
+				<div class="header-right">
+					<span class="auth-state" id="auth-state"></span>
+					<button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>
+				</div>
+			</div>
+		</header>
+		<nav class="mobile-menu" id="mobile-menu" hidden>
+			<div class="mobile-menu-head"><span class="brand-name">Switchyard</span><button class="hamburger" id="mobile-close" aria-label="Close menu">×</button></div>
+			<a href="/">Dashboard</a>
+			<a href="/repos.html">Repositories</a>
+			<a href="/work.html">Work</a>
+			<div class="mobile-auth" id="mobile-auth"></div>
+		</nav>
+		<main class="site-main">
+			@content
+		</main>
+		<script src="/assets/js/app.js"></script>
+	</body>
+</html>

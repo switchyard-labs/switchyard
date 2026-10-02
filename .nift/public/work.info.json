@@ -1,0 +1,22 @@
+{
+  "name": "work",
+  "title": "Work",
+  "template": "templates/template.html",
+  "content": "content/work.html",
+  "output": "public/work.html",
+  "minify": false,
+  "minify-version": 0,
+  "pagination": false,
+  "pagination-items-per-page": 0,
+  "pagination-template": "",
+  "pagination-separator": "",
+  "pagination-pages": 0,
+  "project-fingerprint": "",
+  "hierarchy-fingerprint": "",
+  "dependencies": [
+    "content/work.html",
+    "templates/head.html",
+    "templates/template.html"
+  ],
+  "reqs": []
+}
