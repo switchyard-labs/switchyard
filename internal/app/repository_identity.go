@@ -202,6 +202,10 @@ func (a *App) resolveCanonicalRepository(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, 404, map[string]any{"error": "repository_not_found"})
 		return nil, "", false
 	}
+	if !a.canAccessRepository(meta, a.currentUser(r), false) {
+		writeJSON(w, 403, map[string]any{"error": "repository_access_denied"})
+		return nil, "", false
+	}
 	artifact, _ := meta["artifact_name"].(string)
 	if artifact == "" {
 		writeJSON(w, 500, map[string]any{"error": "repository_backend_missing"})

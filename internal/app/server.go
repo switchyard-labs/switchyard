@@ -72,6 +72,9 @@ func (a *App) Provision() error {
 			return err
 		}
 	}
+	for _, c := range collaborationCollections() {
+		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil { return err }
+	}
 	for _, c := range profileCollections() {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil { return err }
 	}
@@ -177,6 +180,15 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/orgs", a.handleCreateOrg)
 	mux.HandleFunc("GET /api/orgs/{id}", a.handleGetOrgProfile)
 	mux.HandleFunc("GET /api/orgs/{id}/repositories", a.handleOrgRepositories)
+	mux.HandleFunc("GET /api/orgs/{id}/members", a.handleOrgMembers)
+	mux.HandleFunc("POST /api/orgs/{id}/invitations", a.handleInviteOrgMember)
+	mux.HandleFunc("GET /api/orgs/{id}/invitations", a.handleListOrgInvitations)
+	mux.HandleFunc("POST /api/org-invitations/{id}/decide", a.handleDecideOrgInvitation)
+	mux.HandleFunc("DELETE /api/orgs/{id}/members/{username}", a.handleRemoveOrgMember)
+	mux.HandleFunc("POST /api/orgs/{id}/teams", a.handleCreateTeam)
+	mux.HandleFunc("GET /api/orgs/{id}/teams", a.handleListTeams)
+	mux.HandleFunc("POST /api/orgs/{id}/teams/{team}/members", a.handleAddTeamMember)
+	mux.HandleFunc("POST /api/orgs/{id}/repositories/{repo}/access", a.handleSetRepoAccess)
 	mux.HandleFunc("PATCH /api/orgs/{id}/profile", a.handleUpdateOrgProfile)
 	mux.HandleFunc("POST /api/orgs/{id}/avatar", a.handleUploadOrgAvatar)
 	mux.HandleFunc("POST /api/orgs/{id}/policies", a.handleCreatePolicy)
