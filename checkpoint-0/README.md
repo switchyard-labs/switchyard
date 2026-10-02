@@ -58,26 +58,30 @@ Per the Checkpoint 0 brief:
 
 ## Gate decision
 
-**CHECKPOINT 0 CONDITIONAL PASS.** The fundamental assumptions held: Trestle
-clustering has a real, now-reproduced defect (good — Switchyard should force
-its fix), and Strut main is capable of the experimental step-executor role
-(good — no architectural incompatibility). Two bounded items remain:
+**CHECKPOINT 0 PASS — ready to design Checkpoint 1** (earned from live evidence,
+not assumption). The remaining blocker from the earlier conditional pass is
+closed:
 
-1. **Cloudflare live exercise (E and G): blocked by account eligibility, now
-   precisely characterized.** Authentication is resolved (OAuth device flow via
-   the official `cf` CLI; token carries `artifacts.read/write`), but the
-   account has **zero subscriptions and zero entitlements** — it is not on the
-   Workers Paid plan that Artifacts requires. This is an account-owner billing
-   action, not a code or credentials issue. The round-trip code is staged under
-   `cloudflare-artifacts/roundtrip/` and is expected to run unchanged once the
-   account is eligible.
-2. **Reproduction note:** the `backend_baseline_certification.py` script failed
-   once under concurrent load on the 1-vCPU Linode, then passed consistently in
-   isolation. Treat as suspected timing sensitivity on constrained hardware,
-   not a confirmed Strut defect; re-run before relying on it.
+- The **Cloudflare Git-plane round trip was executed live** after the account
+  was upgraded to Workers Paid: repo create → push → REST reads → fork →
+  scoped tokens → git clone/commit/push → `pushed` event via a Queues event
+  subscription → normalized → ingested into single-node Trestle with verified
+  idempotent re-delivery. See `cloudflare-artifacts/` for observed-vs-
+  documented findings and `evidence-live/` for captured outputs.
 
-Do not begin Checkpoint 1 until the Cloudflare eligibility gap is resolved and
-the live round trip has been exercised.
+Still recorded (not blockers):
+
+- **Trestle clustered side-effect gap** is confirmed and is a separately
+  planned Trestle development campaign (do not rely on clustered side effects
+  until it is fixed); phase 1 uses single-node Trestle by design.
+- **Strut** remains the planned step-executor; it depends on a future release
+  that includes the current-main surface (release gate per the agreed process).
+- `backend_baseline_certification.py` flaked once under load on the 1-vCPU
+  Linode; passes in isolation — reproduce before trusting it on constrained
+  hardware.
+
+**Checkpoint 1 remains blocked until this handover is reviewed.** Do not begin
+Checkpoint 1 on instruction, even though the gate reads PASS.
 
 ## Secrets
 

@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "id": "f5315421e498c0bea52e622e47ba4833",
+      "timestamp_ms": 1790946780512,
+      "body": "{\"type\":\"cf.artifacts.repo.pushed\",\"source\":{\"namespace\":\"switchyard-cp0\",\"repoName\":\"cp0-event-repo-1790945911\",\"type\":\"artifacts.repo\"},\"metadata\":{\"accountId\":\"b7f20353ee8a9e5d2003f52c74ba795e\",\"eventSubscriptionId\":\"fca60c84795848268cb3f131bbd8751a\",\"eventSchemaVersion\":1,\"eventTimestamp\":\"2026-10-02T13:13:00.512Z\"},\"payload\":{\"ref\":\"refs/heads/main\",\"before\":\"09e7a155230eff7d72613d02a086cc4650b09315\",\"after\":\"45b7c32027d52a068d53e6b366dcb55aeb548e9b\",\"commits\":[{\"id\":\"45b7c32027d52a068d53e6b366dcb55aeb548e9b\",\"message\":\"event-triggering change 1790946780\",\"messageTruncated\":false,\"timestamp\":\"2026-10-02T13:13:00.000Z\",\"author\":{\"name\":\"agent\",\"email\":\"agent@cp0\"},\"committer\":{\"name\":\"agent\",\"email\":\"agent@cp0\"},\"parents\":[\"09e7a155230eff7d72613d02a086cc4650b09315\"]}],\"totalCommitsCount\":1,\"commitsTruncated\":false}}",
+      "attempts": 0,
+      "metadata": {
+        "CF-sourceMessageSource": "artifacts.repo",
+        "CF-Content-Type": "json"
+      },
+      "ref": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIn0..5fehutiA8IN3bkB5UaJlMg.nVkBQ_iCWV4gkc4qQA8IVj3vgMps8altRafxyZ0hp4rEIFG9MWcdmWyA_7X2hSKxy7Tra1CB4Xc2SAaq6yuaCWsLEI2OZQhGTgvRWUKryak.XaSkV3tzuKsDTe7zxiVVu2r57FzMc9_HR8sXJEbtfAA"
+    }
+  ]
+}

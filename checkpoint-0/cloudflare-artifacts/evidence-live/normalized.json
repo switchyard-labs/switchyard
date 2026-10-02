@@ -1,0 +1,10 @@
+{
+  "event_type": "cf.artifacts.repo.pushed",
+  "namespace": "switchyard-cp0",
+  "repo_name": "cp0-event-repo-1790945911",
+  "ref": "refs/heads/main",
+  "before": "09e7a155230eff7d72613d02a086cc4650b09315",
+  "after": "45b7c32027d52a068d53e6b366dcb55aeb548e9b",
+  "commit_count": 1,
+  "occurred_at": "2026-10-02T13:13:00.512Z"
+}

@@ -1,0 +1,37 @@
+starting ingest Trestle on 7340
+{"status":"ok"}
+
+csrf=wx60Dy-40-TjK-1iyb6hfQ3yyZheiZoy
+### create collection artifact_events
+{"id":"col_z34Pv3aJBkOb--3l7oXi","name":"artifact_events","kind":"base","fields":[{"id":"fld_c2ZmRJWVcXW78ufzAhRo","name":"event_type","type":"text","required":false,"unique":false},{"id":"fld_uyDo6a-upFUM4H4HHN5q","name":"namespace","type":"text","required":false,"unique":false},{"id":"fld_u2LbQHdO
+### normalize event from peek.json
+{
+  "event_type": "cf.artifacts.repo.pushed",
+  "namespace": "switchyard-cp0",
+  "repo_name": "cp0-event-repo-1790945911",
+  "ref": "refs/heads/main",
+  "before": "09e7a155230eff7d72613d02a086cc4650b09315",
+  "after": "45b7c32027d52a068d53e6b366dcb55aeb548e9b",
+  "commit_count": 1,
+  "occurred_at": "2026-10-02T13:13:00.512Z"
+}
+IDEMPOTENCY_KEY=artifacts-fca60c84795848268cb3f131bbd8751a-45b7c32027d52a068d53e6b366dcb55aeb548e9b
+
+### ingest event (with Idempotency-Key)
+{"id":"rec_jetSjh2swXnJMVM0LaNt","version":1,"createdAt":"2026-10-02T13:14:03.721888058Z","updatedAt":"2026-10-02T13:14:03.721888058Z","values":{"after":"45b7c32027d52a068d53e6b366dcb55aeb548e9b","before":"09e7a155230eff7d72613d02a086cc4650b09315","commit_count":1,"event_type":"cf.artifacts.repo.pushed","namespace":"switchyard-cp0","occurred_at":"2026-10-02T13:13:00.512Z","ref":"refs/heads/main","repo_name":"cp0-event-repo-1790945911"}}
+### re-deliver same event (idempotency test)
+{"id":"rec_jetSjh2swXnJMVM0LaNt","version":1,"headers":"replayed:"}
+### verify Trestle state (list records)
+{"items":[{"id":"rec_jetSjh2swXnJMVM0LaNt","version":1,"createdAt":"2026-10-02T13:14:03.721888058Z","updatedAt":"2026-10-02T13:14:03.721888058Z","values":{"after":"45b7c32027d52a068d53e6b366dcb55aeb548e9b","before":"09e7a155230eff7d72613d02a086cc4650b09315","commit_count":1,"event_type":"cf.artifacts.repo.pushed","namespace":"switchyard-cp0","occurred_at":"2026-10-02T13:13:00.512Z","ref":"refs/heads/main","repo_name":"cp0-event-repo-1790945911"}}],"nextCursor":""}
+### event+audit rows in Trestle (should be >0 for the single-node write)
+Error: in prepare, no such function: sha256
+  SELECT substr(lower(hex(sha256(id))),1,8) FROM _trestle_collections WHERE name
+                          ^--- error here
+### ack the queue message (at-least-once semantics)
+cf queues messages ack <queue-id>
+
+Acknowledges successfully processed Queue messages and retries messages that
+were not processed successfully.
+
+### remaining messages (should be 0 after ack)
+1

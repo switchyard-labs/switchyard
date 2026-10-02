@@ -1,0 +1,20 @@
+### P1 invalid git credential (bad token clone)
+clone rc=128
+fatal: unable to access 'https://b7f20353ee8a9e5d2003f52c74ba795e.artifacts.cloudflare.net/git/switchyard-cp0/cp0-event-repo-1790945911.git/': The requested URL returned error: 403
+### P2 nonexistent repo (REST get)
+{"success":false,"errors":["Repository not found"]}
+### P3 nonexistent ref (raw read)
+{"success":false,"errors":["File not found"]}
+### P4 nonexistent path (file read)
+{"success":false,"errors":["File not found"]}
+### P5 delete repo (cleanup) then re-get
+deleted: {"success":true,"errors":[]}
+get after delete: {"success":false,"errors":["Repository not found"]}
+### P6 repo name validation
+{"success":false,"errors":["Invalid repo name: must match /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/"]}
+### P7 token scopes (read token push should fail)
+/opt/cp0/repro/failure_probes.sh: line 45: cd: /tmp/tmp.Jhmkm4Twbv/w2: No such file or directory
+/opt/cp0/repro/failure_probes.sh: line 46: src/app.txt: No such file or directory
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+read-token push rc=128

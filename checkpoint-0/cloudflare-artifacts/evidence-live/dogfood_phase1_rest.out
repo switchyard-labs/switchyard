@@ -1,0 +1,41 @@
+### create baseline: cp0-baseline-1790945676
+remote=https://b7f20353ee8a9e5d2003f52c74ba795e.artifacts.cloudflare.net/git/switchyard-cp0/cp0-baseline-1790945676.git token_len=68
+### push baseline content (init + remote + push)
+baseline HEAD=afc388b0f5c3fa4e701041a7dcffbfed70414a52
+### inspect baseline via REST
+-- log:
+[{"hash":"afc388b0f5c3fa4e701041a7dcffbfed70414a52","treeHash":"9470f1ae93ed7fdccd57da49b6c94394d96841bd","message":"baseline content","author":{"name":"cp0","email":"cp0@local"},"committer":{"name":"cp0","email":"cp0@local"},"parents":[],"authoredAt":1790945677,"committedAt":1790945677}]
+
+-- file:
+baseline source
+
+-- raw:
+baseline source
+
+### fork baseline -> task
+{"success":true,"errors":[],"result":{"name":"cp0-task-1790945676","remote":"https://b7f20353ee8a9e5d2003f52c74ba795e.artifacts.cloudflare.net/git/switchyard-cp0/cp0-task-1790945676.git","objects":5}}
+fork latency: 1924 ms
+### mint read token; list tokens
+read token len=68
+[{"id":"cuzf2jfkm3fodbco","scope":"read","state":"active","created_at":"2026-10-02T12:54:41.658Z","expires_at":"2026-10-02T13:54:41.658Z"},{"id":"8ys0pir19shjv2bp","scope":"write","state":"active","created_at":"2026-10-02T12:54:40.457Z","expires_at":"2026-10-03T12:54:40.457Z"}]
+### clone task (read), agent change on branch, push (write)
+task HEAD=acc9b005d0ac903d69d25f25f257a8ca70cbfcc7
+### inspect task via REST
+-- task log:
+[{"hash":"acc9b005d0ac903d69d25f25f257a8ca70cbfcc7","treeHash":"c6cda8d2852bec2cea5a4067f7c61e3fc26a4394","message":"agent change on task branch","author":{"name":"agent","email":"agent@cp0"},"committer":{"name":"agent","email":"agent@cp0"},"parents":["afc388b0f5c3fa4e701041a7dcffbfed70414a52"],"authoredAt":1790945682,"committedAt":1790945682},{"hash":"afc388b0f5c3fa4e701041a7dcffbfed70414a52","treeHash":"9470f1ae93ed7fdccd57da49b6c94394d96841bd","message":"baseline content","author":{"name":"cp0","email":"cp0@local"},"committer":{"name":"cp0","email":"cp0@local"},"parents":[],"authoredAt":1790945677,"committedAt":1790945677}]
+
+-- task raw src/hello.txt:
+agent-modified
+
+-- task file AGENT.md:
+agent notes
+
+-- baseline src/hello.txt (unchanged):
+baseline source
+
+-- task tree root:
+[{"name":"AGENT.md","mode":"100644","hash":"96cf200234d432cba5304b0955b89ae1467116f4","type":"blob"},{"name":"README.md","mode":"100644","hash":"c1af25f03166e455466d7a62cde8c39dca6d16b5","type":"blob"},{"name":"src","mode":"40000","hash":"8e21635f377652d7440871a140c06bd343b32486","type":"tree"}]
+
+### namespace repo list
+["cp0-task-1790945676","cp0-baseline-1790945676","gitprobe-1790945640","cp0-task-1790945600","cp0-baseline-1790945600","cp0-import-1790945450"]
+### done. BASE=cp0-baseline-1790945676 TASK=cp0-task-1790945676 WORKDIR=/tmp/tmp.1vgyHoNb6V

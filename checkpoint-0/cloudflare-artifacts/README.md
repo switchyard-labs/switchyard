@@ -1,12 +1,93 @@
 # Cloudflare Artifacts — Git plane research and round-trip scaffolding
 
-**Status:** live round trip **still NOT executed**. Authentication is now fully
-resolved (OAuth device flow via the official `cf` CLI; the OAuth token carries
-`artifacts.read`/`artifacts.write`), but the account is **not eligible** for
-Artifacts: it has zero subscriptions and zero entitlements (Workers Free / not
-enrolled). The blocker is now precisely characterized in "Live observations"
-below. The full contract was extracted from the docs, and the round-trip
-Worker + scripts are staged and ready to run the moment the account is eligible.
+**Status:** live round trip **EXECUTED**. The full Git-plane loop was exercised
+against a real account on the Workers Paid plan: repo create → push → REST
+reads → fork → scoped tokens → git clone/commit/push → **`pushed` event
+delivered via a Queues event subscription** → normalized → ingested into a
+single-node Trestle instance with **idempotent re-delivery**. See the
+"Live validation" section and `evidence-live/`. The account-eligibility blocker
+was resolved by the operator upgrading to Workers Paid.
+
+## Live validation (executed 2026-10-02, after plan upgrade)
+
+Driven from the Linode with the official `cf` CLI (`npm install -g cf`) and the
+REST API (OAuth token). Evidence outputs are in `evidence-live/`.
+
+### What actually worked (observed behavior, not docs)
+
+| Step | Result |
+| --- | --- |
+| Namespace create | `switchyard-cp0`, `unrestricted` jurisdiction, created instantly |
+| Repo create | `POST /repos {name, default_branch}` → `{id, remote, token}`, token `art_v2_x_...?expires=...` |
+| Import (public GitHub repo) | `octocat/Hello-World` imported → `default_branch: main`, `source` recorded; ready within seconds |
+| Push content | `git init + remote + push` and `git clone + push` both work; ordinary git client, protocol v2 upload-pack / v1 receive-pack |
+| REST reads | `log`, `commit/:hash`, `tree/:hash`, `file?ref&path`, `raw/:ref/:path` all return the expected objects/bytes |
+| Fork | `POST /repos/:name/fork {default_branch_only}` → returns `objects` count; measured latency **~1.9–2.2 s** |
+| Scoped tokens | `POST /tokens {scope, ttl}` → read and write tokens; `GET /repos/:name/tokens` lists them with state/expiry |
+| Git UX | clone/fetch/push with `http.extraHeader="Authorization: Bearer $TOKEN"` work out of the box; read token clones, write token pushes |
+| **Event delivery** | `pushed` event delivered to a Queues event subscription and observed via queue `peek`; payload exactly matches the documented schema (before/after hashes matched the real push) |
+| **Trestle ingest** | normalized event inserted into single-node Trestle (port 7340) as a record; `_trestle_events` and `_trestle_audit` both = 1 (the standalone contrast to the clustered finding) |
+| **Idempotent re-delivery** | re-POSTing the same event with the same `Idempotency-Key` returned the same record (version 1, no duplicate) |
+| Failure modes | bad token → git clone `403`; nonexistent repo → `Repository not found`; nonexistent ref/path → `File not found`; bad repo name → regex validation error; delete then get → `Repository not found` |
+
+### Findings and rough edges (observed, beyond the docs)
+
+1. **Account eligibility was the real gate.** Before the operator's plan
+   upgrade: zero subscriptions, zero entitlements, `10004 Access denied` on
+   every Artifacts call — with a token that already had `artifacts.read/write`
+   scopes. Token scopes are necessary but not sufficient.
+2. **The `cf` CLI's event-subscription source enum does not include
+   `artifacts`/`artifacts.repo`** (`cf queues subscriptions create --source-type`
+   lists only images/kv/r2/vectorize/workersAi/workersBuilds/workers.script/
+   workflows). The subscription had to be created via the REST API
+   (`POST /accounts/{id}/event_subscriptions/subscriptions`), which accepts
+   `source.type = "artifacts.repo"`.
+3. **The subscription `events` list uses short names** (`"pushed"`), not the
+   delivered `type` string (`cf.artifacts.repo.pushed`). The docs' examples
+   show only the delivered event's `type`; sending `cf.artifacts.repo.pushed`
+   as the subscription event fails with "Unrecognized event types".
+4. **Repo-level `pushed` events require a specific `repo_name`** in the
+   subscription source (`source.repo_name` is a required field). There is no
+   namespace-wide `pushed` subscription; subscribe per repo (or use the
+   account-level `artifacts` source for created/deleted/forked/imported).
+5. **HTTP pull consumers require an explicit enable step.** Creating an
+   `http_pull` consumer (`cf queues consumers create --type http_pull`) does
+   NOT enable pull mode; the docs require `wrangler queues consumer http add`
+   or the dashboard. `cf` has no such subcommand yet. Push-based Worker
+   consumers are the default/recommended path and need no extra enablement.
+   Queue pull/ack lease semantics work as documented once enabled.
+6. **Occasional transient git clone failures under bursty scripted activity.**
+   Several scripted runs saw `git clone` fail silently on the first attempt
+   (and a naive retry reusing the target dir compounded it — git leaves a
+   partial dir). Isolated clones (15+ in a row, including `-q`) all succeeded
+   in ~300–500 ms. Root cause not isolated; treat as a transient to retry with
+   a fresh target dir. Worth watching under real agent traffic.
+7. **Edge Workers cannot reach a self-hosted Trestle on loopback.** The staged
+   Worker's `/ingest` points at `127.0.0.1:7333` on the Linode; from the
+   Cloudflare edge that is unreachable. The bridge therefore ran as
+   **control-plane pull** (queue → Linode → Trestle), which is also the more
+   robust shape: the edge writes durable state (queue/R2), and the control
+   plane pulls and ingests with idempotency. If a direct edge→Trestle push is
+   ever desired, Trestle must be reachable (reverse proxy / tunnel), not on
+   loopback.
+8. **`git clone` of a freshly created (empty) repo** prints the standard
+   "empty repository" warning; `git init + remote add + push` is the reliable
+   bootstrap path (the initial token from `POST /repos` is a write token).
+
+### Opinion after dogfooding: does "Artifacts = Git truth" still hold?
+
+**Yes.** Artifacts behaved as a faithful Git server for the whole round trip:
+objects/refs/commits were exactly what a normal `git` client wrote, REST reads
+returned the same bytes, forks copied object sets, and the push event carried
+the exact before/after SHAs. Nothing observed suggests we should hold Git state
+anywhere else. The at-least-once assumption for the Artifacts → Worker →
+Trestle bridge is also supported: messages persist in the queue until acked
+(redelivery possible), and the Trestle ingest boundary dedupes via
+`Idempotency-Key` (verified). Two planning consequences, not architecture
+changes: (a) per-repo `pushed` subscriptions mean the bridge must either create
+a subscription per task repo or use the account-level source plus its own
+filtering; (b) the bridge should be pull-based (queue → control plane) given a
+self-hosted control plane, or a Worker consumer writing to durable storage.
 
 ## What is required to run the round trip
 
@@ -31,9 +112,11 @@ Worker + scripts are staged and ready to run the moment the account is eligible.
   `/root/.config/cloudflare/config/default.json` (0600). No credentials are in
   this repository.
 
-## Live observations (account-level, 2026-10-02)
+## Live observations (account-level, 2026-10-02) — historical, pre-upgrade
 
-Facts learned by actually talking to the account, distinct from the docs:
+Recorded **before** the operator upgraded the account to Workers Paid. Kept as
+evidence of the eligibility diagnosis. After the upgrade, every item below
+flipped to working (see Live validation).
 
 | Observation | Detail |
 | --- | --- |
@@ -148,10 +231,12 @@ The intended end-to-end slice (see `roundtrip/` for staged code):
 mints tokens and (later) forwards events; `roundtrip/scripts/` contains the
 git round-trip steps.
 
-## Credentials blocker
+## Credentials and account state (resolved)
 
-No `CLOUDFLARE_API_TOKEN` / wrangler auth exists on the Linode or the operator
-machine. The single required input to finish E and G is Cloudflare access on a
-Workers Paid account with an Artifacts namespace. `wrangler login` device flow
-or an exported API token both work. This is the only hard blocker to Checkpoint
-0 passing unconditionally.
+- Authentication: `cf` OAuth device flow; token stored on the Linode at
+  `/root/.config/cloudflare/config/default.json` (0600). No credentials are in
+  this repository.
+- Account: `b7f20353ee8a9e5d2003f52c74ba795e`, **Workers Paid** as of
+  2026-10-02 (operator action). Artifacts namespace `switchyard-cp0`.
+- The API token in `~/.bashrc` still lacks Artifacts permissions; use `cf`'s
+  OAuth profile on the Linode (`env -u CLOUDFLARE_API_TOKEN cf ...`).
