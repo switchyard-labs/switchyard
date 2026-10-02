@@ -30,6 +30,7 @@ func main() {
 	tokCmd := flag.String("artifacts-token-cmd", envOr("SWITCHYARD_ARTIFACTS_TOKEN_CMD", "/opt/cp0/switchyard/token.sh"), "token helper")
 	static := flag.String("static", envOr("SWITCHYARD_STATIC_DIR", "./public"), "Nift build output directory")
 	data := flag.String("data", envOr("SWITCHYARD_DATA_DIR", "./data"), "control-plane data dir")
+	strutBin := flag.String("strut-bin", envOr("SWITCHYARD_STRUT_BIN", "/opt/cp0/switchyard/deterministic-worker"), "Strut worker binary")
 	flag.Parse()
 
 	if *trePass == "" {
@@ -42,6 +43,7 @@ func main() {
 	tre := trestle.New(*treBase, *treUser, *trePass)
 	art := artifacts.New(*acc, *ns, *tokCmd)
 	a := app.New(tre, art, *static, *data)
+	a.StrutBin = *strutBin
 	if err := a.Provision(); err != nil {
 		log.Fatalf("provision: %v", err)
 	}

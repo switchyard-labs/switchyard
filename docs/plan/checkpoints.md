@@ -85,6 +85,8 @@ agent principals hold no canonical-write credential.
 
 ## CP4 — Deterministic end-to-end vertical slice
 
+- **Status: PASS** (handover: `handovers/CP04.md`; gate: `experiments/cp4/cp4_gate.sh`).
+
 **Objective:** the first full loop, **deterministic (no AI model)**:
 
 ```

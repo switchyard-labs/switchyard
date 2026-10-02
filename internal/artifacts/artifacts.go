@@ -177,6 +177,11 @@ func (c *Client) RawFile(name, ref, path string) ([]byte, error) {
 	return b, nil
 }
 
+// LsRemoteWithToken is the client method wrapper for the package LsRemote.
+func (c *Client) LsRemoteWithToken(remote, token string) (map[string]string, error) {
+	return LsRemote(remote, token)
+}
+
 // AccountToken returns the cached fresh account token (used for git
 // subprocess calls that need the bearer header).
 func (c *Client) AccountToken() (string, error) {

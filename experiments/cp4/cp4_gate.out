@@ -1,0 +1,28 @@
+baseline cp4-1790959801 base=6af2859260abd0508593657ae0407a50a91dee92
+### 1. create Work
+work=wk_394e23f8ce1ad08c
+### 2. create Attempt (isolated branch)
+{"branch":"attempt-30182b544a6a347e","id":"wk_30182b544a6a347e","repo":"cp4-1790959801","status":"created","work_id":"wk_394e23f8ce1ad08c"}
+### 3. run Attempt via Strut executor
+{"attempt_id":"wk_30182b544a6a347e","new_len":71,"new_sha":"90c7c680633541e43cadb0e063a0f65456ff97ba","status":"ok"}
+### 4. open Pull Request
+{"base":"main","branch":"attempt-30182b544a6a347e","id":"wk_32088d7e1bd8baa2","proposed_by":"alice","repo":"cp4-1790959801","status":"open","title":"deterministic change"}
+### 5. deterministic check
+{"check":"pass","detail":"marker file valid","lines":3}
+### 6. integrate (Integration Queue) -> merge into canonical
+{"new_base_sha":"11a921c24284703f34a3a932c8e10bcdba3a2e47","pr":"wk_32088d7e1bd8baa2","status":"integrated"}
+### 7. verify canonical main now contains the deterministic change
+["ATTEMPT.md","base.txt","main.go"]
+--- ATTEMPT.md on main ---
+# Attempt wk_30182b544a6a347e
+
+// run by alice at 2026-10-02T16:50:10Z
+
+### 8. provenance: ref_updates + prs
+-- ref_updates:
+[{"branch":"main","old_sha":"524e2c4","new_sha":"c10e667","provenance":"user:alice"},{"branch":"attempt-9eaad74f53330a63","old_sha":"c40719b","new_sha":"e07f30f","provenance":"user:alice"},{"branch":"main","old_sha":"1665b67","new_sha":"524e2c4","provenance":"user:alice"},{"branch":"attempt-28e9f3acaa5812d7","old_sha":"b1e6e4e","new_sha":"15d45aa","provenance":"user:alice"},{"branch":"attempt-30182b544a6a347e","old_sha":"6af2859","new_sha":"b937839","provenance":"user:alice"},{"branch":"main","old_sha":"6af2859","new_sha":"11a921c","provenance":"merge:user:alice pr:wk_32088d7e1bd8baa2"},{"branch":"attempt-9eaad74f53330a63","old_sha":"c3af4bd","new_sha":"c40719b","provenance":"user:alice"},{"branch":"attempt-30182b544a6a347e","old_sha":"b937839","new_sha":"90c7c68","provenance":"user:alice"}]
+-- prs:
+[{"id":"wk_32088d7e1bd8baa2","status":"integrated","check_status":"pass","branch":"attempt-30182b544a6a347e"},{"id":"wk_da8817c1836e4965","status":"open","check_status":"pending","branch":"attempt-9eaad74f53330a63"}]
+-- runs:
+[{"attempt_id":"wk_30182b544a6a347e","new_sha":"90c7c68"},{"attempt_id":"wk_9eaad74f53330a63","new_sha":"e07f30f"}]
+### CP4 gate done

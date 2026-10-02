@@ -145,6 +145,17 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 	if expected != "" && current != expected {
 		return &Result{Status: "stale", OldSHA: expected, NewSHA: current, Ref: "refs/heads/" + branch}, nil
 	}
+	// if the target branch does not exist yet, base it on the repo default branch
+	if current == "" {
+		r, err := s.Artifacts.GetRepo(repo)
+		if err != nil {
+			return nil, err
+		}
+		current, err = s.currentSHA(repo, remote, r.DefaultBranch)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// build the commit in a disposable scratch clone
 	dir, err := s.buildCommit(repo, remote, branch, changes, message)
@@ -185,8 +196,18 @@ func (s *Service) buildCommit(repo, remote, branch string, changes []Change, mes
 	if err != nil {
 		return "", err
 	}
+	cloneBranch := branch
+	if _, ok, err := s.branchExists(remote, branch); err != nil {
+		return "", err
+	} else if !ok {
+		r, err := s.Artifacts.GetRepo(repo)
+		if err != nil {
+			return "", err
+		}
+		cloneBranch = r.DefaultBranch
+	}
 	cloneArgs := append([]string{"clone", "--quiet"}, args...)
-	cloneArgs = append(cloneArgs, "--branch", branch, remote, dir)
+	cloneArgs = append(cloneArgs, "--branch", cloneBranch, remote, dir)
 	if err := git(dir, "", cloneArgs...); err != nil {
 		return "", fmt.Errorf("scratch clone: %w", err)
 	}
@@ -217,6 +238,83 @@ func (s *Service) buildCommit(repo, remote, branch string, changes []Change, mes
 		return "", fmt.Errorf("commit: %w", err)
 	}
 	return dir, nil
+}
+
+func (s *Service) branchExists(remote, branch string) (string, bool, error) {
+	tok, err := s.repoTokenRemote(remote)
+	if err != nil {
+		return "", false, err
+	}
+	refs, err := artifacts.LsRemote(remote, tok)
+	if err != nil {
+		return "", false, err
+	}
+	sha, ok := refs["refs/heads/"+branch]
+	return sha, ok && sha != "", nil
+}
+
+// MergeBranch merges the source branch into the target branch and CAS-updates
+// the target (canonical integration primitive). Returns the new target SHA.
+func (s *Service) MergeBranch(repo, target, source, message, provenance string) (*Result, error) {
+	l := s.lock(repo, target)
+	l.Lock()
+	defer l.Unlock()
+	remote, err := s.remote(repo)
+	if err != nil {
+		return nil, err
+	}
+	current, err := s.currentSHA(repo, remote, target)
+	if err != nil {
+		return nil, err
+	}
+	dir := filepath.Join(s.ScratchDir, "merge-"+strings.ReplaceAll(repo+target+source, "/", "_"))
+	os.RemoveAll(dir)
+	os.MkdirAll(dir, 0755)
+	args, err := s.authArgs(repo)
+	if err != nil {
+		return nil, err
+	}
+	c := append([]string{"clone", "--quiet"}, args...)
+	c = append(c, "--branch", target, remote, dir)
+	if err := git(dir, "", c...); err != nil {
+		return nil, fmt.Errorf("merge clone: %w", err)
+	}
+	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
+	// fetch the source branch
+	f := append([]string{}, args...)
+	f = append(f, "fetch", "--quiet", remote, source+":"+"src")
+	if err := git(dir, "", f...); err != nil {
+		return nil, fmt.Errorf("merge fetch: %w", err)
+	}
+	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "merge", "--no-ff", "--quiet", "-m", message, "src"); err != nil {
+		return nil, fmt.Errorf("merge: %w", err)
+	}
+	newSHA, pushErr := s.push(repo, remote, target, dir)
+	if pushErr != nil {
+		now, e := s.currentSHA(repo, remote, target)
+		if e == nil && now != "" && now != current {
+			return &Result{Status: "stale", OldSHA: current, NewSHA: now, Ref: "refs/heads/" + target}, nil
+		}
+		return nil, fmt.Errorf("merge push: %w", pushErr)
+	}
+	if s.Trestle != nil {
+		_, _, _ = s.Trestle.CreateRecord("ref_updates", map[string]any{
+			"repo": repo, "branch": target, "old_sha": current, "new_sha": newSHA,
+			"provenance": "merge:" + provenance, "occurred_at": time.Now().UTC().Format(time.RFC3339),
+		}, "refupd-"+repo+"-"+target+"-"+newSHA[:12])
+	}
+	return &Result{Status: "ok", OldSHA: current, NewSHA: newSHA, Ref: "refs/heads/" + target}, nil
+}
+
+// repoTokenRemote resolves a repo token from a remote URL by fetching repo name
+// is not needed: we already have repo tokens cached by repo name; for ls-remote
+// by remote URL we look up the token via the artifacts account token. This is a
+// fallback used by branchExists when only a remote is available.
+func (s *Service) repoTokenRemote(remote string) (string, error) {
+	// parse the remote path: /git/<ns>/<name>.git and mint a repo token
+	parts := strings.Split(strings.TrimSuffix(remote, ".git"), "/")
+	name := parts[len(parts)-1]
+	return s.repoToken(name)
 }
 
 func (s *Service) push(repo, remote, branch, dir string) (string, error) {

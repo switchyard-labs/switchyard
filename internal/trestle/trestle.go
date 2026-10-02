@@ -210,6 +210,62 @@ func (c *Client) ListRecords(collection, filter string) ([]map[string]any, error
 	return items, nil
 }
 
+// FindRecord returns the first record matching the filter, including its id
+// and version (needed for conditional PATCH).
+func (c *Client) FindRecord(collection, filter string) (id, version string, values map[string]any, err error) {
+	path := "/api/v1/collections/" + collection + "/records"
+	if filter != "" {
+		path += "?filter=" + urlQueryEscape(filter)
+	}
+	resp, b, e := c.do(http.MethodGet, path, nil)
+	if e != nil {
+		return "", "", nil, e
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", "", nil, fmt.Errorf("find %s: %d", collection, resp.StatusCode)
+	}
+	var out struct {
+		Items []struct {
+			ID      string         `json:"id"`
+			Version int            `json:"version"`
+			Values  map[string]any `json:"values"`
+		} `json:"items"`
+	}
+	if e := json.Unmarshal(b, &out); e != nil {
+		return "", "", nil, e
+	}
+	if len(out.Items) == 0 {
+		return "", "", nil, nil
+	}
+	it := out.Items[0]
+	return it.ID, fmt.Sprint(it.Version), it.Values, nil
+}
+
+// PatchRecord updates a record with optimistic concurrency (If-Match version).
+func (c *Client) PatchRecord(collection, id, version string, values map[string]any) error {
+	if err := c.ensureLogin(); err != nil {
+		return err
+	}
+	b, _ := json.Marshal(map[string]any{"values": values})
+	req, err := http.NewRequest(http.MethodPatch, c.BaseURL+"/api/v1/collections/"+collection+"/records/"+id, bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Trestle-CSRF", c.csrf)
+	req.Header.Set("If-Match", version)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	rb, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("patch %s/%s: %d %s", collection, id, resp.StatusCode, strings.TrimSpace(string(rb)))
+	}
+	return nil
+}
+
 func urlQueryEscape(s string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(s, " ", "%20"), "&", "%26")
 }

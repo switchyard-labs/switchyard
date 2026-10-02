@@ -23,6 +23,7 @@ type App struct {
 	Trestle   *trestle.Client
 	Artifacts *artifacts.Client
 	Refs      *refs.Service
+	StrutBin  string
 	StaticDir string
 	DataDir   string
 }
@@ -42,6 +43,10 @@ func (a *App) Provision() error {
 		{"work", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "title", Type: "text"}, {Name: "kind", Type: "text"}, {Name: "status", Type: "text"}, {Name: "owner", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"events", []trestle.CollectionField{{Name: "type", Type: "text"}, {Name: "repo_name", Type: "text"}, {Name: "payload", Type: "json"}, {Name: "occurred_at", Type: "text"}}},
 		{"ref_updates", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "old_sha", Type: "text"}, {Name: "new_sha", Type: "text"}, {Name: "provenance", Type: "text"}, {Name: "occurred_at", Type: "text"}}},
+		{"attempts", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "work_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "status", Type: "text"}, {Name: "owner", Type: "text"}, {Name: "message", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
+		{"runs", []trestle.CollectionField{{Name: "attempt_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "new_sha", Type: "text"}, {Name: "message", Type: "text"}, {Name: "created_at", Type: "text"}}},
+		{"prs", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "attempt_id", Type: "text"}, {Name: "work_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "base", Type: "text"}, {Name: "title", Type: "text"}, {Name: "status", Type: "text"}, {Name: "check_status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "integrated_at", Type: "text"}}},
+		{"pr_checks", []trestle.CollectionField{{Name: "pr_id", Type: "text"}, {Name: "status", Type: "text"}, {Name: "detail", Type: "text"}, {Name: "created_at", Type: "text"}}},
 	} {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
@@ -80,6 +85,14 @@ func (a *App) Handler() http.Handler {
 	// refs (safe mutation substrate)
 	mux.HandleFunc("POST /api/refs/update", a.handleRefUpdate)
 	mux.HandleFunc("GET /api/repos/{name}/refs", a.handleRepoRefs)
+
+	// attempts + PRs (deterministic vertical slice)
+	mux.HandleFunc("POST /api/work/{id}/attempts", a.handleCreateAttempt)
+	mux.HandleFunc("POST /api/attempts/{id}/run", a.handleRunAttempt)
+	mux.HandleFunc("POST /api/attempts/{id}/pr", a.handleOpenPR)
+	mux.HandleFunc("POST /api/prs/{id}/check", a.handlePRCheck)
+	mux.HandleFunc("POST /api/prs/{id}/integrate", a.handlePRIntegrate)
+	mux.HandleFunc("GET /api/prs", a.handleListPRs)
 
 	return a.withSession(mux)
 }
