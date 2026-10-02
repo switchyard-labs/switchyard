@@ -36,7 +36,7 @@
 .workbench-sidebar { border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:0; background:var(--bg-panel); resize:horizontal; overflow:auto; }
 .workbench-modes { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid var(--border); }
 .workbench-modes button,.mobile-workbench-switcher button { border:0; background:none; color:var(--text-dim); padding:9px 5px; font-size:12px; cursor:pointer; }
-.workbench-modes button.active,.mobile-workbench-switcher button.active { color:var(--text); background:var(--bg-elevated); box-shadow:inset 0 -2px var(--accent); }
+.workbench-modes button.active,.mobile-workbench-switcher button.active { color:var(--text); background:var(--bg-elevated); box-shadow:none;border-bottom:2px solid var(--accent); }
 .sidebar-tools { display:flex; gap:6px; padding:8px; border-bottom:1px solid var(--border); }
 .sidebar-tools input,.workspace-search input,.agent-controls textarea { min-width:0; width:100%; background:var(--bg-input); border:1px solid var(--border); color:var(--text); border-radius:var(--radius-sm); padding:7px 9px; }
 .workspace-tree,.workspace-search,.workspace-source { overflow:auto; padding:7px; }
