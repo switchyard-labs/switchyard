@@ -102,6 +102,8 @@ in provenance; integration lands only via the queue.
 
 ## CP5 — Events, provenance, realtime
 
+- **Status: PASS** (handover: `handovers/CP05.md`; gate: `experiments/cp5/cp5_gate.sh`).
+
 **Objective:** full event bridge; provenance graph; browser realtime.
 
 **Tasks:** Artifacts event bridge at-least-once + idempotent (extend CP2);

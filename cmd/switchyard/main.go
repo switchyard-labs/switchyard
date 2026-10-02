@@ -3,10 +3,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"switchyard/internal/app"
 	"switchyard/internal/artifacts"
@@ -31,6 +33,7 @@ func main() {
 	static := flag.String("static", envOr("SWITCHYARD_STATIC_DIR", "./public"), "Nift build output directory")
 	data := flag.String("data", envOr("SWITCHYARD_DATA_DIR", "./data"), "control-plane data dir")
 	strutBin := flag.String("strut-bin", envOr("SWITCHYARD_STRUT_BIN", "/opt/cp0/switchyard/deterministic-worker"), "Strut worker binary")
+	reconcile := flag.String("reconcile-interval", envOr("SWITCHYARD_RECONCILE_INTERVAL", "15s"), "reconciliation interval")
 	flag.Parse()
 
 	if *trePass == "" {
@@ -46,6 +49,9 @@ func main() {
 	a.StrutBin = *strutBin
 	if err := a.Provision(); err != nil {
 		log.Fatalf("provision: %v", err)
+	}
+	if d, err := time.ParseDuration(*reconcile); err == nil {
+		a.StartReconciler(context.Background(), d)
 	}
 	log.Printf("switchyard control plane listening on %s (trestle=%s, namespace=%s)", *listen, *treBase, *ns)
 	log.Fatal(http.ListenAndServe(*listen, a.Handler()))

@@ -26,12 +26,13 @@ type App struct {
 	StrutBin  string
 	StaticDir string
 	DataDir   string
+	Hub       *Hub
 }
 
 func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App {
 	scratch := filepath.Join(dataDir, "scratch")
 	os.MkdirAll(scratch, 0700)
-	return &App{Trestle: t, Artifacts: a, Refs: refs.NewService(a, t, scratch), StaticDir: staticDir, DataDir: dataDir}
+	return &App{Trestle: t, Artifacts: a, Refs: refs.NewService(a, t, scratch), StaticDir: staticDir, DataDir: dataDir, Hub: NewHub()}
 }
 
 // Provision creates the Switchyard coordination collections if missing.
@@ -47,6 +48,7 @@ func (a *App) Provision() error {
 		{"runs", []trestle.CollectionField{{Name: "attempt_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "new_sha", Type: "text"}, {Name: "message", Type: "text"}, {Name: "created_at", Type: "text"}}},
 		{"prs", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "attempt_id", Type: "text"}, {Name: "work_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "base", Type: "text"}, {Name: "title", Type: "text"}, {Name: "status", Type: "text"}, {Name: "check_status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "integrated_at", Type: "text"}}},
 		{"pr_checks", []trestle.CollectionField{{Name: "pr_id", Type: "text"}, {Name: "status", Type: "text"}, {Name: "detail", Type: "text"}, {Name: "created_at", Type: "text"}}},
+		{"ref_obs", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "sha", Type: "text"}, {Name: "seen_at", Type: "text"}}},
 	} {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
@@ -93,6 +95,10 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/prs/{id}/check", a.handlePRCheck)
 	mux.HandleFunc("POST /api/prs/{id}/integrate", a.handlePRIntegrate)
 	mux.HandleFunc("GET /api/prs", a.handleListPRs)
+
+	// realtime + provenance (CP5)
+	mux.HandleFunc("GET /api/events/stream", a.handleEventStream)
+	mux.HandleFunc("GET /api/work/{id}/provenance", a.handleWorkProvenance)
 
 	return a.withSession(mux)
 }

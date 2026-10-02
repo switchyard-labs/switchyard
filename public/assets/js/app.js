@@ -190,7 +190,27 @@
     } catch (e) { treeEl.innerHTML = "<p class='error'>" + esc(e.message) + "</p>"; }
   }
 
+  async function startLive() {
+    const liveEl = document.getElementById("live");
+    if (!liveEl) return;
+    const user = await refreshAuth();
+    if (!user) { liveEl.innerHTML = '<p class="muted">Sign in to stream live events.</p>'; return; }
+    liveEl.innerHTML = '<p class="muted">Connected — watching live events…</p>';
+    const es = new EventSource("/api/events/stream");
+    es.addEventListener("ready", () => { liveEl.innerHTML = '<p class="muted">Connected — watching live events…</p>'; });
+    es.addEventListener("event", (e) => {
+      try {
+        const ev = JSON.parse(e.data);
+        const row = el("<div class='list-item'><strong>" + esc(ev.type) + "</strong><span class='muted'>" + esc(ev.repo || "") + " · " + new Date().toLocaleTimeString() + "</span></div>");
+        liveEl.prepend(row);
+        while (liveEl.children.length > 20) liveEl.removeChild(liveEl.lastChild);
+      } catch (err) { /* ignore */ }
+    });
+    es.onerror = () => { /* EventSource auto-reconnects */ };
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
+    startLive();
     if (document.getElementById("repos") || document.getElementById("work")) await renderDashboard();
     if (document.getElementById("signin-form")) renderSignin();
     if (document.getElementById("work-form")) renderWork();
