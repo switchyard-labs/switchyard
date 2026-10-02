@@ -74,6 +74,11 @@ func (a *App) Provision() error {
 			return err
 		}
 	}
+	for _, c := range repositorySettingsCollections() {
+		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
+			return err
+		}
+	}
 	for _, c := range collaborationCollections() {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
@@ -131,6 +136,10 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/commits", a.handleRepositoryCommits)
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/commits/{sha}", a.handleRepositoryCommit)
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/compare", a.handleRepositoryCompare)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/settings", a.handleRepositorySettings)
+	mux.HandleFunc("PATCH /api/repositories/{owner}/{repo}/settings", a.handleUpdateRepositorySettings)
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/collaborators", a.handleAddRepositoryCollaborator)
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/protected-refs", a.handleAddProtectedRef)
 
 	// repos (legacy compatibility)
 	mux.HandleFunc("GET /api/repos", a.handleListRepos)
@@ -258,6 +267,10 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	parts0 := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts0) == 3 && parts0[2] == "settings" {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "repo-settings.html"))
+		return
+	}
 	if len(parts0) == 3 && parts0[2] == "pulls" {
 		http.ServeFile(w, r, filepath.Join(a.StaticDir, "pulls.html"))
 		return
