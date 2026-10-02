@@ -187,6 +187,9 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("DELETE /api/orgs/{id}/members/{username}", a.handleRemoveOrgMember)
 	mux.HandleFunc("POST /api/orgs/{id}/teams", a.handleCreateTeam)
 	mux.HandleFunc("GET /api/orgs/{id}/teams", a.handleListTeams)
+	mux.HandleFunc("GET /api/orgs/{id}/policies", a.handleListOrgPolicies)
+	mux.HandleFunc("GET /api/orgs/{id}/audit", a.handleOrgAudit)
+	mux.HandleFunc("GET /api/settings/org-invitations", a.handleMyOrgInvitations)
 	mux.HandleFunc("POST /api/orgs/{id}/teams/{team}/members", a.handleAddTeamMember)
 	mux.HandleFunc("POST /api/orgs/{id}/repositories/{repo}/access", a.handleSetRepoAccess)
 	mux.HandleFunc("PATCH /api/orgs/{id}/profile", a.handleUpdateOrgProfile)
@@ -221,6 +224,10 @@ func (a *App) Handler() http.Handler {
 func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/") {
 		writeJSON(w, 404, map[string]any{"error": "not_found"})
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/organizations/") && strings.Contains(r.URL.Path, "/settings") {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "org-settings.html"))
 		return
 	}
 	if r.URL.Path == "/settings" || strings.HasPrefix(r.URL.Path, "/settings/") {

@@ -190,11 +190,10 @@ func (a *App) handleCreateOrg(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) handleCreatePolicy(w http.ResponseWriter, r *http.Request) {
 	user := a.currentUser(r)
-	if user == "" {
-		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
-		return
-	}
-	org := r.PathValue("id")
+	if user == "" { writeJSON(w, 401, map[string]any{"error": "unauthorized"}); return }
+	o, ok := a.requireOrgRole(w, r, r.PathValue("id"), "owner")
+	if !ok { return }
+	org := strOr(o["id"])
 	var in struct {
 		Name  string         `json:"name"`
 		Rules map[string]any `json:"rules"`
@@ -216,11 +215,10 @@ func (a *App) handleCreatePolicy(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) handleFleet(w http.ResponseWriter, r *http.Request) {
 	user := a.currentUser(r)
-	if user == "" {
-		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
-		return
-	}
-	org := r.PathValue("id")
+	if user == "" { writeJSON(w, 401, map[string]any{"error": "unauthorized"}); return }
+	o, ok := a.requireOrgRole(w, r, r.PathValue("id"), "member")
+	if !ok { return }
+	org := strOr(o["id"])
 	orgs, _ := a.Trestle.ListRecords("orgs", `id = "`+org+`"`)
 	orgView := map[string]any{}
 	if len(orgs) > 0 {
