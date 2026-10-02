@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "switchyard-cp0-roundtrip",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "artifacts": [
+    {
+      "binding": "ARTIFACTS",
+      "namespace": "switchyard-cp0"
+    }
+  ],
+  "vars": {
+    "TRESTLE_BASE_URL": "http://127.0.0.1:7333",
+    "TRESTLE_SERVICE_TOKEN": ""
+  }
+}
