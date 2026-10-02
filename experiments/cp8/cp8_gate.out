@@ -1,0 +1,25 @@
+[18:52:21] repo=cp8-1790967138 seeded (shared.txt 4 lines + base.txt)
+
+[18:52:21] ### 1. review produces structured findings
+{"attempt_id":"wk_7025b3af6419f3ea","execution":"exe_6e8bbed8","findings":[{"file":"","message":"attempt touches 1 file(s)","severity":"info"}],"reviewed_by":"alice"}
+[18:52:26] findings produced: 1 (expect >=1)
+[18:52:26] findings listing: [{"severity":"info","status":"open"}]
+
+[18:52:26] ### 2. two competing attempts produce comparable PRs
+[18:52:37] PRs: A=wk_474a67ff4423714c B=wk_dc081fa1251e730d
+
+[18:52:37] ### 3. A integrates first; B preview detects conflict
+[18:52:39] A integrate: {"new_base_sha":"a7e098388e24257a9fd0a6167166be686967344e","pr":"wk_474a67ff4423714c","status":"integrated"}
+{"attempt_id":"wk_daeefff042855f04","conflict":true,"conflicts":["ATTEMPT.md","shared.txt"],"resolved_by":"alice","status":"conflict"}
+[18:52:40] conflict findings for B: [{"file":"shared.txt","status":"open"},{"file":"ATTEMPT.md","status":"open"}]
+
+[18:52:40] ### 4. conflict-resolver bounded repair loop resolves B
+{"attempt_id":"wk_daeefff042855f04","new_sha":"5a1f3b9b230280c42b32f1483e62281ddc31884c","resolved_by":"alice","resolved_files":["ATTEMPT.md","shared.txt"],"status":"resolved"}
+[18:52:43] re-preview after resolution: {"attempt_id":"wk_daeefff042855f04","conflict":false,"conflicts":[],"status":"ok"}
+
+[18:52:43] ### 5. B integrates cleanly after resolution
+{"new_base_sha":"838aff456495654424ab2637250635bad0fe3002","pr":"wk_dc081fa1251e730d","status":"integrated"}
+[18:52:46] canonical shared.txt line3: BBBB
+
+[18:52:46] #### CP8 GATE: 6/6 checks passed
+PASS=6/6

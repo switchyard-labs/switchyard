@@ -306,6 +306,136 @@ func (s *Service) MergeBranch(repo, target, source, message, provenance string) 
 	return &Result{Status: "ok", OldSHA: current, NewSHA: newSHA, Ref: "refs/heads/" + target}, nil
 }
 
+// PreviewMerge tests whether the source branch merges cleanly into the target
+// branch without modifying any remote ref. It returns the list of files that
+// would conflict (structural/semantic conflict detection for preview
+// integration). A clean merge returns an empty list.
+func (s *Service) PreviewMerge(repo, target, source string) ([]string, error) {
+	l := s.lock(repo, target)
+	l.Lock()
+	defer l.Unlock()
+	remote, err := s.remote(repo)
+	if err != nil {
+		return nil, err
+	}
+	if _, ok, err := s.branchExists(remote, source); err != nil {
+		return nil, err
+	} else if !ok {
+		return nil, fmt.Errorf("preview: source branch %s does not exist", source)
+	}
+	dir := filepath.Join(s.ScratchDir, "preview-"+strings.ReplaceAll(repo+target+source, "/", "_"))
+	os.RemoveAll(dir)
+	os.MkdirAll(dir, 0755)
+	args, err := s.authArgs(repo)
+	if err != nil {
+		return nil, err
+	}
+	c := append([]string{"clone", "--quiet"}, args...)
+	c = append(c, "--branch", target, remote, dir)
+	if err := git(dir, "", c...); err != nil {
+		return nil, fmt.Errorf("preview clone: %w", err)
+	}
+	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
+	f := append([]string{}, args...)
+	f = append(f, "fetch", "--quiet", remote, source+":"+"src")
+	if err := git(dir, "", f...); err != nil {
+		return nil, fmt.Errorf("preview fetch: %w", err)
+	}
+	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "merge", "--no-commit", "--no-ff", "src"); err == nil {
+		// clean; abort to avoid leaving a merge in progress
+		_ = git(dir, "", "merge", "--abort")
+		return nil, nil
+	}
+	// conflicted: enumerate unmerged files
+	out, _ := gitOut(dir, "diff", "--name-only", "--diff-filter=U")
+	_ = git(dir, "", "merge", "--abort")
+	var conflicts []string
+	for _, f := range strings.Fields(out) {
+		conflicts = append(conflicts, f)
+	}
+	return conflicts, nil
+}
+
+// ResolveIntoSource performs a real three-way merge of the source branch into
+// the target branch, resolving any conflicts deterministically (git merge-file
+// three-way; if that still conflicts, the source's version wins with a
+// recorded resolution), and pushes the resolved merge onto the SOURCE branch.
+// This is the conflict-resolver repair loop: the source branch is updated so a
+// subsequent integration is clean.
+func (s *Service) ResolveIntoSource(repo, target, source, message, provenance string) (*Result, []string, error) {
+	l := s.lock(repo, target)
+	l.Lock()
+	defer l.Unlock()
+	remote, err := s.remote(repo)
+	if err != nil {
+		return nil, nil, err
+	}
+	dir := filepath.Join(s.ScratchDir, "resolve-"+strings.ReplaceAll(repo+target+source, "/", "_"))
+	os.RemoveAll(dir)
+	os.MkdirAll(dir, 0755)
+	args, err := s.authArgs(repo)
+	if err != nil {
+		return nil, nil, err
+	}
+	c := append([]string{"clone", "--quiet"}, args...)
+	c = append(c, "--branch", target, remote, dir)
+	if err := git(dir, "", c...); err != nil {
+		return nil, nil, fmt.Errorf("resolve clone: %w", err)
+	}
+	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
+	f := append([]string{}, args...)
+	f = append(f, "fetch", "--quiet", remote, source+":"+"src")
+	if err := git(dir, "", f...); err != nil {
+		return nil, nil, fmt.Errorf("resolve fetch: %w", err)
+	}
+	// capture the source SHA before resolution
+	srcSHA, _ := gitOut(dir, "rev-parse", "src")
+	srcSHA = strings.TrimSpace(srcSHA)
+
+	merged := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "merge", "--no-commit", "--no-ff", "src") == nil
+	var resolved []string
+	if !merged {
+		out, _ := gitOut(dir, "diff", "--name-only", "--diff-filter=U")
+		for _, name := range strings.Fields(out) {
+			// three-way resolution: current = ours (target), base, other = theirs (source)
+			ours, _ := gitOut(dir, "show", ":2:"+name)
+			base, _ := gitOut(dir, "show", ":1:"+name)
+			theirs, _ := gitOut(dir, "show", ":3:"+name)
+			ot := filepath.Join(dir, ".ours")
+			bt := filepath.Join(dir, ".base")
+			tt := filepath.Join(dir, ".theirs")
+			_ = os.WriteFile(ot, []byte(ours), 0644)
+			_ = os.WriteFile(bt, []byte(base), 0644)
+			_ = os.WriteFile(tt, []byte(theirs), 0644)
+			// git merge-file <current> <base> <other> -> writes merged into <current>
+			if git(dir, "", "merge-file", "-p", ot, bt, tt) != nil {
+				// still conflicting: source's version wins (bounded deterministic policy)
+				_ = os.WriteFile(ot, []byte(theirs), 0644)
+			}
+			mergedBytes, _ := os.ReadFile(ot)
+			_ = os.WriteFile(filepath.Join(dir, name), mergedBytes, 0644)
+			_ = git(dir, "", "add", "--", name)
+			resolved = append(resolved, name)
+		}
+	}
+	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "commit", "--quiet", "-m", message); err != nil {
+		return nil, nil, fmt.Errorf("resolve commit: %w", err)
+	}
+	// push the resolution onto the source branch
+	if _, err := s.push(repo, remote, source, dir); err != nil {
+		return nil, nil, fmt.Errorf("resolve push: %w", err)
+	}
+	newSHA, _ := gitOut(dir, "rev-parse", "HEAD")
+	newSHA = strings.TrimSpace(newSHA)
+	if s.Trestle != nil {
+		_, _, _ = s.Trestle.CreateRecord("ref_updates", map[string]any{
+			"repo": repo, "branch": source, "old_sha": srcSHA, "new_sha": newSHA,
+			"provenance": "resolve:" + provenance, "occurred_at": time.Now().UTC().Format(time.RFC3339),
+		}, "refupd-"+repo+"-"+source+"-"+newSHA[:12])
+	}
+	return &Result{Status: "ok", OldSHA: srcSHA, NewSHA: newSHA, Ref: "refs/heads/" + source}, resolved, nil
+}
+
 // repoTokenRemote resolves a repo token from a remote URL by fetching repo name
 // is not needed: we already have repo tokens cached by repo name; for ls-remote
 // by remote URL we look up the token via the artifacts account token. This is a

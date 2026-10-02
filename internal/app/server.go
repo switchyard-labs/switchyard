@@ -60,6 +60,7 @@ func (a *App) Provision() error {
 		{"ref_obs", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "sha", Type: "text"}, {Name: "seen_at", Type: "text"}}},
 		{"credentials", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "name", Type: "text"}, {Name: "provider", Type: "text"}, {Name: "scope", Type: "text"}, {Name: "ciphertext", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "last_used", Type: "text"}}},
 		{"executions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "role", Type: "text"}, {Name: "attempt_id", Type: "text"}, {Name: "adapter", Type: "text"}, {Name: "status", Type: "text"}, {Name: "output", Type: "text"}, {Name: "started_at", Type: "text"}, {Name: "finished_at", Type: "text"}}},
+		{"findings", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "target", Type: "text"}, {Name: "severity", Type: "text"}, {Name: "message", Type: "text"}, {Name: "file", Type: "text"}, {Name: "status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "resolved_at", Type: "text"}}},
 	} {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
@@ -132,6 +133,12 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/workflow_runs/{id}/cancel", a.handleCancelRun)
 	mux.HandleFunc("POST /api/workflow_runs/{id}/approve", a.handleApproveRun)
 	mux.HandleFunc("POST /api/workflow_runs/{id}/retry", a.handleRetryRun)
+
+	// reviews / findings / conflict (CP8)
+	mux.HandleFunc("POST /api/attempts/{id}/review", a.handleReviewAttempt)
+	mux.HandleFunc("POST /api/attempts/{id}/preview", a.handlePreview)
+	mux.HandleFunc("POST /api/attempts/{id}/resolve", a.handleResolveConflict)
+	mux.HandleFunc("GET /api/findings", a.handleListFindings)
 
 	return a.withSession(mux)
 }

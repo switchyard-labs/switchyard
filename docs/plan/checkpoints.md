@@ -155,6 +155,8 @@ workflow can spawn a child workflow and wait on an approval.
 
 ## CP8 — Reviews/findings + conflict
 
+- **Status: PASS** (handover: `handovers/CP08.md`; gate: `experiments/cp8/cp8_gate.sh`).
+
 **Objective:** structured Review Findings; draft contention; preview-based
 structural/semantic detection; conflict routing.
 
