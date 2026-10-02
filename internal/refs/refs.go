@@ -1,0 +1,260 @@
+// Package refs implements the safe per-ref mutation substrate for Switchyard.
+//
+// UpdateRef is the CAS primitive: a ref update succeeds only if the current
+// ref value still equals the expected value; otherwise the write is STALE and
+// the caller reconciles. Git's non-force push provides the expected-old
+// enforcement (verified experimentally in E1); per-ref in-process serialization
+// is an ordering convenience for control-plane writers.
+package refs
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+
+	"switchyard/internal/artifacts"
+	"switchyard/internal/trestle"
+)
+
+type Change struct {
+	Path    string `json:"path"`
+	Content string `json:"content,omitempty"`
+	Delete  bool   `json:"delete,omitempty"`
+}
+
+type Result struct {
+	Status string `json:"status"` // "ok" | "stale"
+	OldSHA string `json:"old_sha"`
+	NewSHA string `json:"new_sha"`
+	Ref    string `json:"ref"`
+}
+
+type Service struct {
+	Artifacts  *artifacts.Client
+	Trestle    *trestle.Client
+	ScratchDir string
+
+	mu         sync.Mutex
+	refLocks   map[string]*sync.Mutex
+	repoTokens map[string]repoToken
+}
+
+type repoToken struct {
+	token   string
+	expires time.Time
+}
+
+func NewService(a *artifacts.Client, t *trestle.Client, scratchDir string) *Service {
+	return &Service{Artifacts: a, Trestle: t, ScratchDir: scratchDir, refLocks: map[string]*sync.Mutex{}}
+}
+
+func (s *Service) lockKey(repo, ref string) string { return repo + "\x00" + ref }
+
+func (s *Service) lock(repo, ref string) *sync.Mutex {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	k := s.lockKey(repo, ref)
+	if m, ok := s.refLocks[k]; ok {
+		return m
+	}
+	m := &sync.Mutex{}
+	s.refLocks[k] = m
+	return m
+}
+
+// repoToken returns a cached repo-scoped git token, minting a fresh one near
+// expiry. Git protocol operations use repo tokens, not the account REST token.
+func (s *Service) repoToken(repo string) (string, error) {
+	s.mu.Lock()
+	if s.repoTokens == nil {
+		s.repoTokens = map[string]repoToken{}
+	}
+	if t, ok := s.repoTokens[repo]; ok && time.Until(t.expires) > 2*time.Minute {
+		s.mu.Unlock()
+		return t.token, nil
+	}
+	s.mu.Unlock()
+	tok, err := s.Artifacts.MintToken(repo, "write", 900)
+	if err != nil {
+		return "", err
+	}
+	s.mu.Lock()
+	s.repoTokens[repo] = repoToken{token: tok, expires: time.Now().Add(900 * time.Second)}
+	s.mu.Unlock()
+	return tok, nil
+}
+
+// GitToken exposes a cached repo-scoped git token for read/git operations.
+func (s *Service) GitToken(repo string) (string, error) {
+	return s.repoToken(repo)
+}
+
+func (s *Service) remote(repo string) (string, error) {
+	r, err := s.Artifacts.GetRepo(repo)
+	if err != nil {
+		return "", err
+	}
+	return r.Remote, nil
+}
+
+func (s *Service) authArgs(repo string) ([]string, error) {
+	tok, err := s.repoToken(repo)
+	if err != nil {
+		return nil, err
+	}
+	return []string{"-c", "http.extraHeader=Authorization: Bearer " + tok}, nil
+}
+
+// currentSHA reads the authoritative current SHA of a branch ref.
+func (s *Service) currentSHA(repo, remote, branch string) (string, error) {
+	tok, err := s.repoToken(repo)
+	if err != nil {
+		return "", err
+	}
+	refs, err := artifacts.LsRemote(remote, tok)
+	if err != nil {
+		return "", err
+	}
+	sha, ok := refs["refs/heads/"+branch]
+	if !ok || sha == "" {
+		return "", nil // branch does not exist yet (empty)
+	}
+	return sha, nil
+}
+
+// Update applies file changes to the current branch head and CAS-updates the
+// ref via a non-force push. Returns status "ok" or "stale".
+func (s *Service) Update(repo, branch, expected string, changes []Change, message, provenance string) (*Result, error) {
+	l := s.lock(repo, branch)
+	l.Lock()
+	defer l.Unlock()
+
+	remote, err := s.remote(repo)
+	if err != nil {
+		return nil, err
+	}
+	current, err := s.currentSHA(repo, remote, branch)
+	if err != nil {
+		return nil, err
+	}
+	if expected != "" && current != expected {
+		return &Result{Status: "stale", OldSHA: expected, NewSHA: current, Ref: "refs/heads/" + branch}, nil
+	}
+
+	// build the commit in a disposable scratch clone
+	dir, err := s.buildCommit(repo, remote, branch, changes, message)
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(dir)
+
+	newSHA, pushErr := s.push(repo, remote, branch, dir)
+	if pushErr != nil {
+		// a rejected non-force push means the ref moved; if it did, STALE,
+		// otherwise it is a genuine error.
+		now, e := s.currentSHA(repo, remote, branch)
+		if e == nil && now != "" && now != expected {
+			return &Result{Status: "stale", OldSHA: expected, NewSHA: now, Ref: "refs/heads/" + branch}, nil
+		}
+		return nil, fmt.Errorf("push failed: %w", pushErr)
+	}
+	// record provenance
+	if s.Trestle != nil {
+		_, _, _ = s.Trestle.CreateRecord("ref_updates", map[string]any{
+			"repo": repo, "branch": branch, "old_sha": current, "new_sha": newSHA,
+			"provenance": provenance, "occurred_at": time.Now().UTC().Format(time.RFC3339),
+		}, "refupd-"+repo+"-"+branch+"-"+newSHA[:12])
+	}
+	return &Result{Status: "ok", OldSHA: current, NewSHA: newSHA, Ref: "refs/heads/" + branch}, nil
+}
+
+func (s *Service) buildCommit(repo, remote, branch string, changes []Change, message string) (string, error) {
+	dir := filepath.Join(s.ScratchDir, "scratch-"+strings.ReplaceAll(repo+branch, "/", "_"))
+	if err := os.RemoveAll(dir); err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", err
+	}
+	args, err := s.authArgs(repo)
+	if err != nil {
+		return "", err
+	}
+	cloneArgs := append([]string{"clone", "--quiet"}, args...)
+	cloneArgs = append(cloneArgs, "--branch", branch, remote, dir)
+	if err := git(dir, "", cloneArgs...); err != nil {
+		return "", fmt.Errorf("scratch clone: %w", err)
+	}
+	// `git clone -c http.extraHeader=...` persists the header into the new
+	// repo's config, which would produce duplicate Authorization headers (and
+	// an Artifacts 400) on later ops. Remove it so only the explicitly passed
+	// -c header is sent.
+	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
+	for _, c := range changes {
+		p := filepath.Join(dir, c.Path)
+		if c.Delete {
+			if err := os.Remove(p); err != nil && !os.IsNotExist(err) {
+				return "", err
+			}
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
+			return "", err
+		}
+		if err := os.WriteFile(p, []byte(c.Content), 0644); err != nil {
+			return "", err
+		}
+	}
+	if err := git(dir, "", "add", "-A"); err != nil {
+		return "", err
+	}
+	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "commit", "--quiet", "-m", message); err != nil {
+		return "", fmt.Errorf("commit: %w", err)
+	}
+	return dir, nil
+}
+
+func (s *Service) push(repo, remote, branch, dir string) (string, error) {
+	head, err := gitOut(dir, "rev-parse", "HEAD")
+	if err != nil {
+		return "", err
+	}
+	args, err := s.authArgs(repo)
+	if err != nil {
+		return "", err
+	}
+	pushArgs := append([]string{}, args...)
+	pushArgs = append(pushArgs, "push", "--quiet", remote, "HEAD:refs/heads/"+branch)
+	if err := git(dir, "", pushArgs...); err != nil {
+		return "", fmt.Errorf("push rejected (stale?): %w", err)
+	}
+	return strings.TrimSpace(head), nil
+}
+
+func git(dir, stdin string, args ...string) error {
+	cmd := exec.Command("git", args...)
+	cmd.Dir = dir
+	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
+	if stdin != "" {
+		cmd.Stdin = strings.NewReader(stdin)
+	}
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return errors.New(strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
+func gitOut(dir string, args ...string) (string, error) {
+	cmd := exec.Command("git", args...)
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}

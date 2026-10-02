@@ -15,18 +15,22 @@ import (
 	"time"
 
 	"switchyard/internal/artifacts"
+	"switchyard/internal/refs"
 	"switchyard/internal/trestle"
 )
 
 type App struct {
 	Trestle   *trestle.Client
 	Artifacts *artifacts.Client
+	Refs      *refs.Service
 	StaticDir string
 	DataDir   string
 }
 
 func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App {
-	return &App{Trestle: t, Artifacts: a, StaticDir: staticDir, DataDir: dataDir}
+	scratch := filepath.Join(dataDir, "scratch")
+	os.MkdirAll(scratch, 0700)
+	return &App{Trestle: t, Artifacts: a, Refs: refs.NewService(a, t, scratch), StaticDir: staticDir, DataDir: dataDir}
 }
 
 // Provision creates the Switchyard coordination collections if missing.
@@ -37,6 +41,7 @@ func (a *App) Provision() error {
 		{"repos", []trestle.CollectionField{{Name: "name", Type: "text", Unique: true}, {Name: "default_branch", Type: "text"}, {Name: "remote", Type: "text"}, {Name: "registered_at", Type: "text"}}},
 		{"work", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "title", Type: "text"}, {Name: "kind", Type: "text"}, {Name: "status", Type: "text"}, {Name: "owner", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"events", []trestle.CollectionField{{Name: "type", Type: "text"}, {Name: "repo_name", Type: "text"}, {Name: "payload", Type: "json"}, {Name: "occurred_at", Type: "text"}}},
+		{"ref_updates", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "old_sha", Type: "text"}, {Name: "new_sha", Type: "text"}, {Name: "provenance", Type: "text"}, {Name: "occurred_at", Type: "text"}}},
 	} {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
@@ -71,6 +76,10 @@ func (a *App) Handler() http.Handler {
 	// events (normalized Artifacts events, idempotent ingest)
 	mux.HandleFunc("POST /api/events/ingest", a.handleIngestEvent)
 	mux.HandleFunc("GET /api/events", a.handleListEvents)
+
+	// refs (safe mutation substrate)
+	mux.HandleFunc("POST /api/refs/update", a.handleRefUpdate)
+	mux.HandleFunc("GET /api/repos/{name}/refs", a.handleRepoRefs)
 
 	return a.withSession(mux)
 }

@@ -1,0 +1,16 @@
+seeded cp3-race-1790959183 base=1665b672f85a2dc097cc7813bbafba38bf1efaaf
+### refs read (ls-remote via API)
+{"HEAD":"1665b672f85a2dc097cc7813bbafba38bf1efaaf","refs/heads/main":"1665b672f85a2dc097cc7813bbafba38bf1efaaf"}
+### writer A: CAS update from base -> should be ok
+{"status":"ok","old_sha":"1665b672f85a2dc097cc7813bbafba38bf1efaaf","new_sha":"524e2c4a9f03a0ff2473a94b404ca690d258390d","ref":"refs/heads/main"}
+### writer B: stale expected (old base) -> should be STALE
+{"status":"stale","old_sha":"1665b672f85a2dc097cc7813bbafba38bf1efaaf","new_sha":"524e2c4a9f03a0ff2473a94b404ca690d258390d","ref":"refs/heads/main"}
+### writer C: correct expected (new head) -> should be ok
+{"status":"ok","old_sha":"524e2c4a9f03a0ff2473a94b404ca690d258390d","new_sha":"c10e66763586ed77924cf9117190324614c2b391","ref":"refs/heads/main"}
+### verify tree reflects A+C (not B)
+["a.txt","base.txt","c.txt"]
+### provenance records in Trestle (ref_updates)
+[{"repo":"cp3-race-1790959183","branch":"main","old_sha":"524e2c4","new_sha":"c10e667","provenance":"user:alice"},{"repo":"cp3-race-1790959183","branch":"main","old_sha":"1665b67","new_sha":"524e2c4","provenance":"user:alice"}]
+### cleanup
+{"success":true}
+### CP3 gate done

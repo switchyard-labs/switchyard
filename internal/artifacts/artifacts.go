@@ -183,6 +183,40 @@ func (c *Client) AccountToken() (string, error) {
 	return c.token()
 }
 
+// MintToken creates a repo-scoped git token (used for git protocol operations;
+// git auth uses repo tokens, unlike the REST API which uses the account token).
+func (c *Client) MintToken(repo, scope string, ttlSeconds int) (string, error) {
+	tok, err := c.token()
+	if err != nil {
+		return "", err
+	}
+	body := strings.NewReader(fmt.Sprintf(`{"repo":%q,"scope":%q,"ttl":%d}`, repo, scope, ttlSeconds))
+	req, _ := http.NewRequest(http.MethodPost, c.baseURL()+"/tokens", body)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	b, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return "", fmt.Errorf("mint token %s: %d %s", repo, resp.StatusCode, strings.TrimSpace(string(b)))
+	}
+	var env struct {
+		Result struct {
+			Plaintext string `json:"plaintext"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(b, &env); err != nil {
+		return "", err
+	}
+	if env.Result.Plaintext == "" {
+		return "", fmt.Errorf("mint token %s: empty", repo)
+	}
+	return env.Result.Plaintext, nil
+}
+
 // LsRemote returns the ref->sha map for a git remote (read path for CAS).
 func LsRemote(remote, token string) (map[string]string, error) {
 	cmd := exec.Command("git", "ls-remote", remote)

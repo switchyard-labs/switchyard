@@ -69,6 +69,8 @@ leaked in logs/provenance.
 
 ## CP3 — Git/ref mutation substrate
 
+- **Status: PASS** (handover: `handovers/CP03.md`; gate: `experiments/cp3/cp3_gate.sh`).
+
 **Objective:** the safe per-ref mutation primitive and direct human Git
 compatibility.
 
