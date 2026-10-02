@@ -76,6 +76,10 @@ func (a *App) executeRun(runID string) error {
 	if sc, ok := run["step_count"].(string); ok && sc != "" {
 		fmt.Sscanf(sc, "%d", &baseN)
 	}
+	if d, _ := a.policyGateWorkflow(strOr(params["repo"]), budget); d == "deny" {
+		a.patchRun(runID, map[string]any{"status": "failed", "error": "policy denied workflow", "updated_at": nowStr()})
+		return nil
+	}
 	e := &wfExec{
 		a: a, runID: runID, script: script, params: params,
 		budget: budget, depth: depth, baseN: baseN, status: status,
@@ -278,6 +282,11 @@ func stepStr(v any) string {
 
 // ---- host ops ----
 
+func strOr(v any) string {
+	s, _ := v.(string)
+	return s
+}
+
 func (e *wfExec) defaultRepoBranch(args map[string]any) (repo, branch string) {
 	repo, _ = args["repo"].(string)
 	branch, _ = args["branch"].(string)
@@ -297,6 +306,9 @@ func (e *wfExec) opAgent(args map[string]any) (map[string]any, error) {
 		appendLine, _ := args["append"].(string)
 		if repo == "" || branch == "" || file == "" {
 			return nil, fmt.Errorf("agent: repo, branch, file required")
+		}
+		if err := e.a.policyGateAgent("implementer", repo, file); err != nil {
+			return nil, err
 		}
 		current := ""
 		if raw, err := e.a.Artifacts.RawFile(repo, branch, file); err == nil {

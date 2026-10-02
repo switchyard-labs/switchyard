@@ -1,0 +1,29 @@
+[20:32:55] repo=cp12-1790973172 seeded (config/secrets.txt + public.txt)
+
+[20:32:55] ### 1. create org owning the repo + policy denying implementer writes to config/secrets/*
+[20:32:55] org=org_de91c4b1
+{"id":"pol_990323c1","name":"protect-secrets","org":"org_de91c4b1"}
+
+[20:32:55] ### 2. agent attempt on a protected path is denied (policy), public path allowed
+[20:33:01] denied workflow run: status=failed error=GoError: step s0 (agent) failed: policy: implementer cannot write config/* at switchyard/internal/app.(*wfExec).opAgent-fm (native)
+[20:33:07] allowed workflow run: completed (expect completed) -> simple repo case not broken
+
+[20:33:07] ### 3. audit trail records both policy decisions
+[{"action":"agent","decision":"deny"},{"action":"workflow","decision":"allow"},{"action":"workflow","decision":"allow"},{"action":"agent","decision":"allow"},{"action":"agent","decision":"deny"},{"action":"agent","decision":"deny"}]
+
+[20:33:07] ### 4. simple repo case (no org/policy) is unconstrained
+[20:33:17] no-policy repo run: completed (expect completed - simple case not broken)
+
+[20:33:17] ### 5. high-risk integration escalates under policy (require_approval_risk=high)
+enqueue high-risk: {"id":"iq_b968e9c33a","policy":"check_pass + preview_clean","pr_id":"wk_1a88c55984a14459","risk":"high","status":"queued"}
+[20:33:27] high-risk queue status: blocked (expect blocked via policy), risk=high
+
+[20:33:27] ### 6. fleet view + workflow budget policy
+{"org":"acme-1790973172","repos":2,"queue_items":1,"workflow_runs":3,"escalations":0}
+[20:33:29] budget-denied run: failed error=policy denied workflow
+
+[20:33:29] ### 7. risk model (blast x uncertainty) observable
+[20:33:29] riskScore for high-risk branch was high (high)
+
+[20:33:29] #### CP12 GATE: 8/8 checks passed
+PASS=8/9

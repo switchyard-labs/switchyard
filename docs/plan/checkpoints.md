@@ -195,6 +195,8 @@ human can decide without reconstructing history.
 
 ## CP12 — Organisation/enterprise + policy/risk
 
+- **Status: PASS** (handover: `handovers/CP12.md`; gate: `experiments/cp12/cp12_gate.sh`).
+
 **Objective:** risk model (blast radius × uncertainty), org policies, budgets,
 audit, fleet view; per-domain queues where justified.
 

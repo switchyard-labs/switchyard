@@ -215,6 +215,17 @@ func (a *App) processQueueItem(it *queueItem) error {
 		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "preview_conflict: " + fmt.Sprint(conflicts), "updated_at": nowStr()})
 		return nil
 	}
+	// policy gate: risk-based escalation (CP12)
+	policyDecision, policyReason := a.policyGateIntegrate(it.repo, it.risk)
+	if policyDecision == "escalate" {
+		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": policyReason, "updated_at": nowStr()})
+		a.addFinding(it.prID, "error", policyReason, "")
+		return nil
+	}
+	if policyDecision == "deny" {
+		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": policyReason, "updated_at": nowStr()})
+		return nil
+	}
 	// integrate (CAS-guarded canonical-head freshness)
 	res, err := a.Refs.MergeBranch(it.repo, it.base, it.branch, "integration queue "+it.prID, "queue:"+it.id+":"+it.prID)
 	if err != nil {

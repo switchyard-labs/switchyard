@@ -66,6 +66,10 @@ func (a *App) handleRunAttempt(w http.ResponseWriter, r *http.Request) {
 	repo := attempt["repo"].(string)
 	branch := attempt["branch"].(string)
 	file := "ATTEMPT.md"
+	if err := a.policyGateAgent("implementer", repo, file); err != nil {
+		writeJSON(w, 403, map[string]any{"error": err.Error()})
+		return
+	}
 
 	refsMap, err := a.repoRefs(repo)
 	if err != nil {

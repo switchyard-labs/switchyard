@@ -70,6 +70,11 @@ func (a *App) Provision() error {
 			return err
 		}
 	}
+	for _, c := range policyCollections() {
+		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
+			return err
+		}
+	}
 	for _, c := range workflowCollections() {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
@@ -143,6 +148,12 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/attempts/{id}/preview", a.handlePreview)
 	mux.HandleFunc("POST /api/attempts/{id}/resolve", a.handleResolveConflict)
 	mux.HandleFunc("GET /api/findings", a.handleListFindings)
+
+	// org/policy/risk/audit/fleet (CP12)
+	mux.HandleFunc("POST /api/orgs", a.handleCreateOrg)
+	mux.HandleFunc("POST /api/orgs/{id}/policies", a.handleCreatePolicy)
+	mux.HandleFunc("GET /api/orgs/{id}/fleet", a.handleFleet)
+	mux.HandleFunc("GET /api/audit", a.handleAudit)
 
 	// needs attention + escalation (CP11)
 	mux.HandleFunc("GET /api/attention", a.handleNeedsAttention)
