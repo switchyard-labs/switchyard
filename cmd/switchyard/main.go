@@ -40,6 +40,7 @@ func main() {
 	reconcile := flag.String("reconcile-interval", envOr("SWITCHYARD_RECONCILE_INTERVAL", "15s"), "reconciliation interval")
 	queueID := flag.String("queue-id", envOr("SWITCHYARD_QUEUE_ID", ""), "Cloudflare queue id for Artifacts events (fast path)")
 	queueInt := flag.String("queue-pull-interval", envOr("SWITCHYARD_QUEUE_PULL_INTERVAL", "5s"), "queue pull interval")
+	wfInt := flag.String("workflow-interval", envOr("SWITCHYARD_WORKFLOW_INTERVAL", "2s"), "workflow runner interval")
 	flag.Parse()
 
 	if *trePass == "" {
@@ -89,6 +90,10 @@ func main() {
 	}
 	if qi, err := time.ParseDuration(*queueInt); err == nil {
 		a.StartEventConsumer(context.Background(), qi)
+	}
+	// durable workflow runner (CP7)
+	if wi, err := time.ParseDuration(*wfInt); err == nil {
+		a.StartWorkflowRunner(context.Background(), wi)
 	}
 	log.Printf("switchyard control plane listening on %s (trestle=%s, namespace=%s)", *listen, *treBase, *ns)
 	log.Fatal(http.ListenAndServe(*listen, a.Handler()))

@@ -1,0 +1,31 @@
+[18:41:32] repo=cp7-1790966489 seeded main@b9bd3cfa20ece0de106c79009722d3716a9bb670
+
+[18:41:32] ### 1. basic durable run: agent -> check -> integrate
+[18:41:38] basic run=wfr_165ab17298 status=completed error=
+[18:41:38] executions for basic run: 1 (expect 1)
+
+[18:41:38] ### 2. crash/restart: executor death mid-run resumes idempotently
+[18:41:42] sleep step running; killing control plane (executor death)
+ 74176[18:42:11] crashed run=wfr_b896f0aaa8 completed; executions=2 (expect exactly 2: step1+step2, NOT re-executed)
+[18:42:11] crash run steps: ["1"] (expect [1,1])
+
+[18:42:11] ### 3. spawn child + wait on approval + integrate
+[18:42:21] parent waiting_approval (child spawned) -> PASS
+[18:42:21] child run=wfr_dfc1968bfe status=completed
+{"approved_by":"alice","id":"wfr_c79a18d529","status":"running"}
+[18:42:23] parent completed after approval -> PASS
+
+[18:42:23] ### 4. cancellation parks further steps
+[18:42:24] cancelling run while sleep active
+{"id":"wfr_4b6b934059","status":"cancelling"}
+[18:42:26] run cancelled -> PASS
+[18:42:26] agent step executed after cancel: 0 (expect 0)
+
+[18:42:26] ### 5. parallel branches + bounded recursion
+[18:42:32] parallel run completed -> PASS
+[18:42:32] parallel steps ops: ["agent","review"] (expect agent+review)
+[18:42:51] recursive spawn depth-limited (failed) -> PASS
+[18:42:51] recursive run error: child wfr_e966ab5379 failed
+
+[18:42:51] #### CP7 GATE: 9/9 checks passed
+PASS=9/9

@@ -145,6 +145,8 @@ reduced credentials; no secret in Git/logs/provenance.
 
 ## CP7 — Durable workflows
 
+- **Status: PASS** (handover: `handovers/CP07.md`; gate: `experiments/cp7/cp7_gate.sh`).
+
 **Objective:** JS→step durable interpreter over Trestle + Strut; execution queue;
 budgets/cancellation.
 

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -78,8 +79,8 @@ func (a *App) handleRunAttempt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ex, err := a.runViaSubstrate("implementer", attemptID, repo, branch, file, string(cur),
-		"\n// run by "+user+" at "+time.Now().UTC().Format(time.RFC3339)+"\n")
+	ex, res, err := a.runAgentStep("implementer", attemptID, repo, branch, file, string(cur),
+		"\n// run by "+user+" at "+time.Now().UTC().Format(time.RFC3339)+"\n", head, "user:"+user)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -90,12 +91,6 @@ func (a *App) handleRunAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 	if newContent == "" {
 		writeJSON(w, 502, map[string]any{"error": "agent produced no change"})
-		return
-	}
-	res, err := a.Refs.Update(repo, branch, head, []refs.Change{{Path: file, Content: newContent}},
-		"attempt "+attemptID+" run", "user:"+user)
-	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -147,6 +142,60 @@ func (a *App) runViaSubstrate(role, attemptID, repo, branch, file, currentConten
 		return nil, err
 	}
 	return ex, nil
+}
+
+// runAgentStep runs an Agent execution through the substrate and commits the
+// produced change to the branch via the ref substrate. It is the shared
+// executor for the attempts API and the durable workflow engine. When
+// expectedHead is non-empty the commit is CAS-guarded; an already-applied
+// identical commit (same message) is treated as idempotent success.
+func (a *App) runAgentStep(role, attemptID, repo, branch, file, currentContent, appendLine, expectedHead, provenance string) (*agent.Execution, *refs.Result, error) {
+	ex, err := a.runViaSubstrate(role, attemptID, repo, branch, file, currentContent, appendLine)
+	if err != nil {
+		return nil, nil, err
+	}
+	newContent := ""
+	if ex.Result != nil {
+		newContent = ex.Result[file]
+	}
+	if newContent == "" {
+		return nil, nil, fmt.Errorf("agent produced no change")
+	}
+	msg := "attempt " + attemptID + " run (" + ex.Adapter + ")"
+	res, err := a.Refs.Update(repo, branch, expectedHead, []refs.Change{{Path: file, Content: newContent}}, msg, provenance)
+	if err != nil {
+		// Idempotent recovery: if the branch head already carries our commit
+		// (crash between commit and step-record), treat as already applied.
+		if head, e2 := a.repoHead(repo, branch); e2 == nil && a.commitHasMessage(repo, branch, head, msg) {
+			return ex, &refs.Result{Status: "ok", NewSHA: head}, nil
+		}
+		return nil, nil, err
+	}
+	return ex, res, nil
+}
+
+func (a *App) repoHead(repo, branch string) (string, error) {
+	refsMap, err := a.repoRefs(repo)
+	if err != nil {
+		return "", err
+	}
+	return refsMap["refs/heads/"+branch], nil
+}
+
+func (a *App) commitHasMessage(repo, branch, head, want string) bool {
+	if head == "" {
+		return false
+	}
+	logs, err := a.Artifacts.Log(repo, branch, 5)
+	if err != nil {
+		return false
+	}
+	for _, c := range logs {
+		if c.Hash == head {
+			return strings.Contains(c.Message, want)
+		}
+	}
+	return false
 }
 
 func randHex(n int) string {

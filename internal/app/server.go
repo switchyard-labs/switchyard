@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"switchyard/internal/agent"
@@ -32,12 +33,15 @@ type App struct {
 	Runner    agent.Runner
 	Roles     []agent.Role
 	Queue     *QueueConsumer
+
+	wfMu      sync.Mutex
+	wfInFlight map[string]bool
 }
 
 func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App {
 	scratch := filepath.Join(dataDir, "scratch")
 	os.MkdirAll(scratch, 0700)
-	return &App{Trestle: t, Artifacts: a, Refs: refs.NewService(a, t, scratch), StaticDir: staticDir, DataDir: dataDir, Hub: NewHub()}
+	return &App{Trestle: t, Artifacts: a, Refs: refs.NewService(a, t, scratch), StaticDir: staticDir, DataDir: dataDir, Hub: NewHub(), wfInFlight: map[string]bool{}}
 }
 
 // Provision creates the Switchyard coordination collections if missing.
@@ -57,6 +61,11 @@ func (a *App) Provision() error {
 		{"credentials", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "name", Type: "text"}, {Name: "provider", Type: "text"}, {Name: "scope", Type: "text"}, {Name: "ciphertext", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "last_used", Type: "text"}}},
 		{"executions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "role", Type: "text"}, {Name: "attempt_id", Type: "text"}, {Name: "adapter", Type: "text"}, {Name: "status", Type: "text"}, {Name: "output", Type: "text"}, {Name: "started_at", Type: "text"}, {Name: "finished_at", Type: "text"}}},
 	} {
+		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
+			return err
+		}
+	}
+	for _, c := range workflowCollections() {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
 		}
@@ -113,6 +122,16 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/credentials/{id}/rotate", a.handleRotateCredential)
 	mux.HandleFunc("DELETE /api/credentials/{id}", a.handleDeleteCredential)
 	mux.HandleFunc("GET /api/roles", a.handleListRoles)
+
+	// durable workflows (CP7)
+	mux.HandleFunc("POST /api/workflows", a.handleCreateWorkflow)
+	mux.HandleFunc("GET /api/workflows", a.handleListWorkflows)
+	mux.HandleFunc("POST /api/workflows/{id}/run", a.handleStartRun)
+	mux.HandleFunc("GET /api/workflow_runs", a.handleListRuns)
+	mux.HandleFunc("GET /api/workflow_runs/{id}", a.handleGetRun)
+	mux.HandleFunc("POST /api/workflow_runs/{id}/cancel", a.handleCancelRun)
+	mux.HandleFunc("POST /api/workflow_runs/{id}/approve", a.handleApproveRun)
+	mux.HandleFunc("POST /api/workflow_runs/{id}/retry", a.handleRetryRun)
 
 	return a.withSession(mux)
 }
