@@ -54,6 +54,8 @@ func (a *App) Provision() error {
 		{"owner_namespaces", []trestle.CollectionField{{Name: "slug", Type: "text", Unique: true}, {Name: "owner_type", Type: "text"}, {Name: "owner_id", Type: "text"}, {Name: "created_at", Type: "text"}}},
 		{"repository_meta", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "full_name", Type: "text", Unique: true}, {Name: "owner_type", Type: "text"}, {Name: "owner_id", Type: "text"}, {Name: "owner_slug", Type: "text"}, {Name: "slug", Type: "text"}, {Name: "display_name", Type: "text"}, {Name: "description", Type: "text"}, {Name: "visibility", Type: "text"}, {Name: "default_branch", Type: "text"}, {Name: "artifact_name", Type: "text", Unique: true}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"work", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "title", Type: "text"}, {Name: "kind", Type: "text"}, {Name: "status", Type: "text"}, {Name: "owner", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
+		{"work_details", []trestle.CollectionField{{Name: "work_id", Type: "text", Unique: true}, {Name: "body", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "assignee", Type: "text"}, {Name: "updated_at", Type: "text"}}},
+		{"work_comments", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "work_id", Type: "text"}, {Name: "author", Type: "text"}, {Name: "body", Type: "text"}, {Name: "created_at", Type: "text"}}},
 		{"events", []trestle.CollectionField{{Name: "type", Type: "text"}, {Name: "repo_name", Type: "text"}, {Name: "payload", Type: "json"}, {Name: "occurred_at", Type: "text"}}},
 		{"ref_updates", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "old_sha", Type: "text"}, {Name: "new_sha", Type: "text"}, {Name: "provenance", Type: "text"}, {Name: "occurred_at", Type: "text"}}},
 		{"attempts", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "work_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "status", Type: "text"}, {Name: "owner", Type: "text"}, {Name: "message", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
@@ -140,6 +142,9 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/work", a.handleListWork)
 	mux.HandleFunc("POST /api/work", a.handleCreateWork)
 	mux.HandleFunc("GET /api/work/{id}", a.handleGetWork)
+	mux.HandleFunc("PATCH /api/work/{id}", a.handleUpdateWork)
+	mux.HandleFunc("GET /api/work/{id}/comments", a.handleListWorkComments)
+	mux.HandleFunc("POST /api/work/{id}/comments", a.handleCreateWorkComment)
 
 	// events (normalized Artifacts events, idempotent ingest)
 	mux.HandleFunc("POST /api/events/ingest", a.handleIngestEvent)
@@ -242,6 +247,10 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/organizations/") && strings.Contains(r.URL.Path, "/settings") {
 		http.ServeFile(w, r, filepath.Join(a.StaticDir, "org-settings.html"))
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/work/") {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "work-detail.html"))
 		return
 	}
 	if r.URL.Path == "/settings" || strings.HasPrefix(r.URL.Path, "/settings/") {

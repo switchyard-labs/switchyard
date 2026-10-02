@@ -38,8 +38,11 @@ func (a *App) handleCreateWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		Title string `json:"title"`
-		Kind  string `json:"kind"`
+		Title    string `json:"title"`
+		Kind     string `json:"kind"`
+		Body     string `json:"body"`
+		Repo     string `json:"repo"`
+		Assignee string `json:"assignee"`
 	}
 	if err := readJSON(r, &in); err != nil {
 		writeJSON(w, 400, map[string]any{"error": "bad_request"})
@@ -63,7 +66,8 @@ func (a *App) handleCreateWork(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 500, map[string]any{"error": err.Error()})
 		return
 	}
-	writeJSON(w, 201, map[string]any{"id": id, "title": in.Title, "kind": in.Kind, "status": "open", "owner": user})
+	_, _, _ = a.Trestle.CreateRecord("work_details", map[string]any{"work_id": id, "body": strings.TrimSpace(in.Body), "repo": strings.TrimSpace(in.Repo), "assignee": strings.TrimSpace(in.Assignee), "updated_at": now}, "work-details-"+id)
+	writeJSON(w, 201, map[string]any{"id": id, "title": in.Title, "kind": in.Kind, "status": "open", "owner": user, "body": in.Body, "repo": in.Repo, "assignee": in.Assignee})
 }
 
 func (a *App) handleGetWork(w http.ResponseWriter, r *http.Request) {
@@ -77,5 +81,99 @@ func (a *App) handleGetWork(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 404, map[string]any{"error": "work_not_found"})
 		return
 	}
-	writeJSON(w, 200, items[0])
+	out := map[string]any{}
+	for k, v := range items[0] {
+		out[k] = v
+	}
+	if ds, _ := a.Trestle.ListRecords("work_details", `work_id = "`+id+`"`); len(ds) > 0 {
+		for _, k := range []string{"body", "repo", "assignee"} {
+			out[k] = ds[0][k]
+		}
+	}
+	if ats, _ := a.Trestle.ListRecords("attempts", `work_id = "`+id+`"`); len(ats) > 0 {
+		out["attempts"] = ats
+	} else {
+		out["attempts"] = []map[string]any{}
+	}
+	if prs, _ := a.Trestle.ListRecords("prs", `work_id = "`+id+`"`); len(prs) > 0 {
+		out["pull_requests"] = prs
+	} else {
+		out["pull_requests"] = []map[string]any{}
+	}
+	writeJSON(w, 200, out)
+}
+
+func (a *App) handleUpdateWork(w http.ResponseWriter, r *http.Request) {
+	u := a.currentUser(r)
+	if u == "" {
+		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
+		return
+	}
+	id := r.PathValue("id")
+	rid, ver, v, e := a.Trestle.FindRecord("work", `id = "`+id+`"`)
+	if e != nil || rid == "" {
+		writeJSON(w, 404, map[string]any{"error": "work_not_found"})
+		return
+	}
+	if strOr(v["owner"]) != u {
+		writeJSON(w, 403, map[string]any{"error": "work_owner_required"})
+		return
+	}
+	var in struct {
+		Status   string `json:"status"`
+		Title    string `json:"title"`
+		Body     string `json:"body"`
+		Assignee string `json:"assignee"`
+	}
+	if readJSON(r, &in) != nil {
+		writeJSON(w, 400, map[string]any{"error": "bad_request"})
+		return
+	}
+	patch := map[string]any{"updated_at": time.Now().UTC().Format(time.RFC3339)}
+	if strings.TrimSpace(in.Title) != "" {
+		patch["title"] = strings.TrimSpace(in.Title)
+	}
+	if in.Status == "open" || in.Status == "closed" {
+		patch["status"] = in.Status
+	}
+	_ = a.Trestle.PatchRecord("work", rid, ver, patch)
+	if drid, dver, _, de := a.Trestle.FindRecord("work_details", `work_id = "`+id+`"`); de == nil && drid != "" {
+		_ = a.Trestle.PatchRecord("work_details", drid, dver, map[string]any{"body": in.Body, "assignee": in.Assignee, "updated_at": time.Now().UTC().Format(time.RFC3339)})
+	}
+	writeJSON(w, 200, map[string]any{"ok": true})
+}
+
+func (a *App) handleListWorkComments(w http.ResponseWriter, r *http.Request) {
+	if a.currentUser(r) == "" {
+		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
+		return
+	}
+	xs, e := a.Trestle.ListRecords("work_comments", `work_id = "`+r.PathValue("id")+`"`)
+	if e != nil {
+		writeJSON(w, 502, map[string]any{"error": e.Error()})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"items": xs})
+}
+func (a *App) handleCreateWorkComment(w http.ResponseWriter, r *http.Request) {
+	u := a.currentUser(r)
+	if u == "" {
+		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
+		return
+	}
+	var in struct {
+		Body string `json:"body"`
+	}
+	if readJSON(r, &in) != nil || strings.TrimSpace(in.Body) == "" {
+		writeJSON(w, 400, map[string]any{"error": "body_required"})
+		return
+	}
+	id := "cmt_" + newWorkID()[3:]
+	vals := map[string]any{"id": id, "work_id": r.PathValue("id"), "author": u, "body": strings.TrimSpace(in.Body), "created_at": time.Now().UTC().Format(time.RFC3339)}
+	_, _, e := a.Trestle.CreateRecord("work_comments", vals, "work-comment-"+id)
+	if e != nil {
+		writeJSON(w, 502, map[string]any{"error": e.Error()})
+		return
+	}
+	writeJSON(w, 201, vals)
 }

@@ -142,7 +142,7 @@
     if (form) form.addEventListener("submit", async (e) => {
       e.preventDefault();
       try {
-        await api("/api/work", { method: "POST", body: JSON.stringify({ title: form.title.value, kind: form.kind.value }) });
+        await api("/api/work", { method: "POST", body: JSON.stringify({ title: form.title.value, kind: form.kind.value, body: form.body ? form.body.value : "", repo: form.repo ? form.repo.value : "", assignee: form.assignee ? form.assignee.value : "" }) });
         form.title.value = "";
         await loadWork(list);
       } catch (ex) { list.innerHTML = "<p class='error'>" + esc(ex.message) + "</p>"; }
@@ -152,11 +152,7 @@
   async function loadWork(list) {
     try {
       const work = await api("/api/work");
-      list.innerHTML = work.items.length
-        ? work.items.map((w) =>
-            "<div class='list-item'><strong>" + esc(w.title) + "</strong>" +
-            "<span class='muted'>" + esc(w.id) + " · " + esc(w.kind) + " · " + esc(w.status) + "</span></div>").join("")
-        : "<p class='muted'>No work yet.</p>";
+      const draw = (filter="open") => { const xs=work.items.filter(w=>filter==="all"||w.status===filter); list.innerHTML = xs.length ? xs.map((w) => "<a class='work-row' href='/work/"+encodeURIComponent(w.id)+"'><span class='status-badge "+esc(w.status)+"'>"+esc(w.status)+"</span><div><strong>" + esc(w.title) + "</strong><span>" + esc(w.kind) + " · opened by " + esc(w.owner) + "</span></div></a>").join("") : "<div class='empty-state'><strong>No "+esc(filter)+" work.</strong><span>Create a bug, feature, investigation or maintenance item without involving an Agent.</span></div>"; }; draw(); document.querySelectorAll('[data-work-filter]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-work-filter]').forEach(x=>x.classList.toggle('active',x===b));draw(b.dataset.workFilter)});
     } catch (e) { list.innerHTML = "<p class='error'>" + esc(e.message) + "</p>"; }
   }
 
