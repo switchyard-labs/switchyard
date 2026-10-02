@@ -18,5 +18,12 @@
     "templates/head.html",
     "templates/template.html"
   ],
-  "reqs": []
+  "reqs": [
+    "public/assets/css/app.css",
+    "public/assets/images/favicon.webp",
+    "public/assets/js/app.js",
+    "public/index.html",
+    "public/repo.html",
+    "public/work.html"
+  ]
 }

@@ -6,11 +6,11 @@
 	<body>
 		<header class="site-header">
 			<div class="header-inner">
-				<a class="brand" href="/"><span class="brand-mark">S</span><span class="brand-name">Switchyard</span></a>
+				<a class="brand" href="@path('/')"><span class="brand-mark">S</span><span class="brand-name">Switchyard</span></a>
 				<nav class="site-nav" id="site-nav">
-					<a href="/">Dashboard</a>
-					<a href="/repos.html">Repositories</a>
-					<a href="/work.html">Work</a>
+					<a href="@path('/')">Dashboard</a>
+					<a href="@path('repo')">Repositories</a>
+					<a href="@path('work')">Work</a>
 				</nav>
 				<div class="header-right">
 					<span class="auth-state" id="auth-state"></span>
@@ -20,14 +20,14 @@
 		</header>
 		<nav class="mobile-menu" id="mobile-menu" hidden>
 			<div class="mobile-menu-head"><span class="brand-name">Switchyard</span><button class="hamburger" id="mobile-close" aria-label="Close menu">×</button></div>
-			<a href="/">Dashboard</a>
-			<a href="/repos.html">Repositories</a>
-			<a href="/work.html">Work</a>
+			<a href="@path('/')">Dashboard</a>
+			<a href="@path('repo')">Repositories</a>
+			<a href="@path('work')">Work</a>
 			<div class="mobile-auth" id="mobile-auth"></div>
 		</nav>
 		<main class="site-main">
 			@content
 		</main>
-		<script src="/assets/js/app.js"></script>
+		<script src="@path('public/assets/js/app.js')"></script>
 	</body>
 </html>
