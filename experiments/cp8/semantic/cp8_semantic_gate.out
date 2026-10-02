@@ -1,0 +1,20 @@
+[21:11:15] repo=cp8sem-1790975472 seeded
+[21:11:23] attempts A=wk_16c95ccad4ea6193 B=wk_6c7f587d7770aae4
+
+[21:11:23] ### 1. A integrates cleanly (api+consumer move together; contract holds)
+[21:11:30] A queue: done
+
+[21:11:30] ### 2. B preview: git merge CLEAN but semantic conflict detected
+{"attempt_id":"wk_6c7f587d7770aae4","conflict":false,"findings":[{"file":"api/version.json","message":"semantic conflict: git merge is clean but api/version.json:version (2) != consumers/gamma.json:requires_version (3)","severity":"error"}],"semantic_conflict":true,"status":"semantic_conflict"}
+
+[21:11:32] ### 3. semantic finding recorded
+["semantic conflict: git merge is clean but api/version.json:version (2) != consumers/gamma.json:requires_version (3)"]
+
+[21:11:32] ### 4. Integration Queue blocks B (semantic_conflict)
+[21:11:36] B queue: blocked error=semantic_conflict
+
+[21:11:36] ### 5. canonical holds only A's consistent change (B never leaked)
+[21:11:39] canonical api={"version":2} consumer={"requires_version":2} gamma-absent=yes
+
+[21:11:39] #### SEMANTIC-CONFLICT EXPERIMENT: 5/5 checks passed
+PASS=5/5

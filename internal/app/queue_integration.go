@@ -215,6 +215,24 @@ func (a *App) processQueueItem(it *queueItem) error {
 		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "preview_conflict: " + fmt.Sprint(conflicts), "updated_at": nowStr()})
 		return nil
 	}
+	// git merge is textually clean: validate repo contracts on the merged tree.
+	// A clean merge can still be a semantic conflict -> block.
+	sem, err := a.semanticFindings(it.repo, it.branch)
+	if err != nil {
+		return err
+	}
+	if len(sem) > 0 {
+		for _, f := range sem {
+			a.addFinding(it.prID, f["severity"].(string), f["message"].(string), f["file"].(string))
+		}
+		if prs, _ := a.Trestle.ListRecords("prs", `id = "`+it.prID+`"`); len(prs) > 0 {
+			if aid, _ := prs[0]["attempt_id"].(string); aid != "" {
+				a.patchAttempt(aid, map[string]any{"status": "semantic_conflict", "updated_at": nowStr()})
+			}
+		}
+		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "semantic_conflict", "updated_at": nowStr()})
+		return nil
+	}
 	// policy gate: risk-based escalation (CP12)
 	policyDecision, policyReason := a.policyGateIntegrate(it.repo, it.risk)
 	if policyDecision == "escalate" {

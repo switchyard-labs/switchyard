@@ -356,6 +356,51 @@ func (s *Service) PreviewMerge(repo, target, source string) ([]string, error) {
 	return conflicts, nil
 }
 
+// PreviewMergedTree returns the scratch directory containing the merged
+// working tree of the source branch into the target branch when the merge is
+// textually clean, or "" when it conflicts. The caller owns the returned
+// directory (remove it after use). Used by the semantic-conflict check: a
+// clean Git merge does NOT imply the combined tree is semantically valid.
+func (s *Service) PreviewMergedTree(repo, target, source string) (string, error) {
+	l := s.lock(repo, target)
+	l.Lock()
+	defer l.Unlock()
+	remote, err := s.remote(repo)
+	if err != nil {
+		return "", err
+	}
+	if _, ok, err := s.branchExists(remote, source); err != nil {
+		return "", err
+	} else if !ok {
+		return "", fmt.Errorf("preview-tree: source branch %s does not exist", source)
+	}
+	dir := filepath.Join(s.ScratchDir, "ptree-"+strings.ReplaceAll(repo+target+source, "/", "_"))
+	os.RemoveAll(dir)
+	os.MkdirAll(dir, 0755)
+	args, err := s.authArgs(repo)
+	if err != nil {
+		return "", err
+	}
+	c := append([]string{"clone", "--quiet"}, args...)
+	c = append(c, "--branch", target, remote, dir)
+	if err := git(dir, "", c...); err != nil {
+		return "", fmt.Errorf("preview-tree clone: %w", err)
+	}
+	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
+	f := append([]string{}, args...)
+	f = append(f, "fetch", "--quiet", remote, source+":"+"src")
+	if err := git(dir, "", f...); err != nil {
+		return "", fmt.Errorf("preview-tree fetch: %w", err)
+	}
+	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "merge", "--no-commit", "--no-ff", "src"); err != nil {
+		// textual conflict: no merged tree to validate
+		_ = git(dir, "", "merge", "--abort")
+		_ = os.RemoveAll(dir)
+		return "", nil
+	}
+	return dir, nil
+}
+
 // ResolveIntoSource performs a real three-way merge of the source branch into
 // the target branch, resolving any conflicts deterministically (git merge-file
 // three-way; if that still conflicts, the source's version wins with a

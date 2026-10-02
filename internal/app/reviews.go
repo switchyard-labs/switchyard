@@ -109,7 +109,22 @@ func (a *App) handlePreview(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "conflict": true, "conflicts": conflicts, "status": "conflict", "resolved_by": user})
 		return
 	}
-	writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "conflict": false, "conflicts": []string{}, "status": "ok"})
+	// git merge is textually clean: validate repo contracts on the merged tree
+	// (semantic-conflict detection). A clean merge can still be incompatible.
+	sem, err := a.semanticFindings(repo, branch)
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "semantic check failed: " + err.Error()})
+		return
+	}
+	if len(sem) > 0 {
+		for _, f := range sem {
+			a.addFinding(attemptID, f["severity"].(string), f["message"].(string), f["file"].(string))
+		}
+		a.patchAttempt(attemptID, map[string]any{"status": "semantic_conflict", "updated_at": nowStr()})
+		writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "conflict": false, "semantic_conflict": true, "findings": sem, "status": "semantic_conflict"})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "conflict": false, "conflicts": []string{}, "semantic_conflict": false, "status": "ok"})
 }
 
 // handleResolveConflict routes a conflicted attempt to the conflict-resolver
