@@ -1,0 +1,24 @@
+[20:21:29] repo=cp11-1790972486 seeded
+
+[20:21:29] ### 1. create a conflict: A integrates, B conflicts -> attempt parked in conflict
+[20:22:15] B queue status: blocked (expect blocked)
+[20:22:17] B attempt status: conflict (expect conflict)
+
+[20:22:17] ### 2. Needs Attention aggregates the conflict + open findings
+{"count":6,"items":[{"branch":"b1","created_at":"2026-10-02T20:22:17Z","kind":"attempt_conflict","repo":"cp11-1790972486","summary":"attempt is in conflict; resolve to integrate","target_id":"wk_5a4890e4d44d878a"},{"branch":"b1","created_at":"2026-10-02T20:21:57Z","kind":"queue_blocked","repo":"cp11-1790972486","summary":"integration blocked: preview_conflict: [ATTEMPT.md shared.txt]","target_id":"iq_339190d930"},{"branch":"","created_at":"2026-10-02T20:21:57Z","kind":"open_finding","repo":"","summary":"error finding: integration preview conflict in shared.txt (shared.txt)","target_id":"wk_c901fcb72b45e19e"},{"branch":"","created_at":"2026-10-02T20:21:57Z","kind":"open_finding","repo":"","summary":"error finding: integration preview conflict in ATTEMPT.md (ATTEMPT.md)","target_id":"wk_c901fcb72b45e19e"},{"branch":"","created_at":"2026-10-02T20:22:17Z","kind":"open_finding","repo":"","summary":"error finding: merge conflict with main in ATTEMPT.md (ATTEMPT.md)","target_id":"wk_5a4890e4d44d878a"},{"branch":"","created_at":"2026-10-02T20:22:17Z","kind":"open_finding","repo":"","summary":"error finding: merge conflict with main in shared.txt (shared.txt)","target_id":"wk_5a4890e4d44d878a"}]}
+[20:22:17] attention items: 6 (expect >=2)
+
+[20:22:17] ### 3. escalate B -> self-contained decision packet
+{"target_kind":"attempt_conflict","target_id":"wk_5a4890e4d44d878a","repo":"cp11-1790972486","branch":"b1","base":"main","files":["ATTEMPT.md","shared.txt"],"suggestions":["take_ours","take_theirs","three_way"]}
+
+[20:22:19] ### 4. human decides take_ours -> B resolved + requeued + integrated
+{"decided_by":"alice","decision":"take_ours","id":"esc_87dd36c290","outcome":{"attempt":"wk_5a4890e4d44d878a","decision":"take_ours","files":2,"status":"resolved"}}
+[20:22:28] B after decision + requeue: done (expect done)
+
+[20:22:28] ### 5. workflow waiting for approval appears in attention + approve flow
+[20:22:30] workflow run status: waiting_approval (expect waiting_approval)
+{"decided_by":"alice","decision":"approve","id":"esc_36df9a4ab0","outcome":{"status":"approved","workflow_run":"wfr_da3099a2b0"}}
+[20:22:32] workflow run after approve decision: completed (expect completed)
+
+[20:22:32] #### CP11 GATE: 9/7 checks passed
+PASS=9/7

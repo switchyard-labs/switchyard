@@ -64,6 +64,7 @@ func (a *App) Provision() error {
 		{"findings", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "target", Type: "text"}, {Name: "severity", Type: "text"}, {Name: "message", Type: "text"}, {Name: "file", Type: "text"}, {Name: "status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "resolved_at", Type: "text"}}},
 		{"iq", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "pr_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "base", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "status", Type: "text"}, {Name: "risk", Type: "text"}, {Name: "policy", Type: "text"}, {Name: "attempts", Type: "text"}, {Name: "error", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"drafts", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "path", Type: "text"}, {Name: "content", Type: "text"}, {Name: "user", Type: "text"}, {Name: "updated_at", Type: "text"}, {Name: "committed_at", Type: "text"}}},
+		{"escalations", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "packet", Type: "json"}, {Name: "status", Type: "text"}, {Name: "created_by", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "decision", Type: "text"}, {Name: "decided_by", Type: "text"}, {Name: "decided_at", Type: "text"}}},
 	} {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
 			return err
@@ -142,6 +143,12 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/attempts/{id}/preview", a.handlePreview)
 	mux.HandleFunc("POST /api/attempts/{id}/resolve", a.handleResolveConflict)
 	mux.HandleFunc("GET /api/findings", a.handleListFindings)
+
+	// needs attention + escalation (CP11)
+	mux.HandleFunc("GET /api/attention", a.handleNeedsAttention)
+	mux.HandleFunc("POST /api/attention/{kind}/{id}/escalate", a.handleEscalate)
+	mux.HandleFunc("GET /api/escalations", a.handleListEscalations)
+	mux.HandleFunc("POST /api/escalations/{id}/decide", a.handleDecide)
 
 	// editor (CP10)
 	mux.HandleFunc("POST /api/drafts", a.handleSaveDraft)

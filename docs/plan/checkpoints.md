@@ -185,6 +185,8 @@ browser; draft survives reload; Save ≠ Commit is honored.
 
 ## CP11 — Needs Attention + escalation
 
+- **Status: PASS** (handover: `handovers/CP11.md`; gate: `experiments/cp11/cp11_gate.sh`).
+
 **Objective:** escalation decision packets; human approval flows; policy-driven
 escalation.
 
