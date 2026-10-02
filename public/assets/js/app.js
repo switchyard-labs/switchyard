@@ -184,9 +184,14 @@
         document.getElementById("repo-branches").textContent=ov.branch_count||0;
         document.getElementById("repo-tags").textContent=ov.tag_count||0;
         document.getElementById("repo-commits").textContent=ov.commit_count_sample||0;
-        const dlg=document.getElementById("clone-dialog"), input=document.getElementById("clone-url"); input.value=ov.clone_https||"";
+        const dlg=document.getElementById("clone-dialog"), input=document.getElementById("clone-url");
+        input.value=ov.clone_https||"";
+        const cloneCmd=document.getElementById("clone-command"); if(cloneCmd) cloneCmd.textContent="git clone "+input.value;
+        const fetchCmd=document.getElementById("fetch-command"); if(fetchCmd) fetchCmd.textContent="git fetch origin";
+        const pushCmd=document.getElementById("push-command"); if(pushCmd) pushCmd.textContent="git push origin HEAD";
         document.getElementById("clone-toggle").onclick=()=>dlg.showModal();
-        document.getElementById("clone-copy").onclick=async()=>{await navigator.clipboard.writeText(input.value); document.getElementById("clone-copy").textContent="Copied";};
+        document.getElementById("clone-copy").onclick=async()=>{await navigator.clipboard.writeText(input.value); document.getElementById("clone-copy").textContent="Copied"; setTimeout(()=>document.getElementById("clone-copy").textContent="Copy",1200);};
+        dlg.querySelectorAll("[data-copy-target]").forEach(btn=>btn.onclick=async()=>{const target=document.getElementById(btn.dataset.copyTarget); if(!target)return; await navigator.clipboard.writeText(target.textContent); const prev=btn.textContent; btn.textContent="Copied"; setTimeout(()=>btn.textContent=prev,1200);});
         document.getElementById("tab-code").href=canonicalRepoURL(ctx);
         document.getElementById("tab-commits").href=canonicalRepoURL(ctx)+"/commits/"+encodeURIComponent(ctx.ref);
         document.getElementById("tab-prs").href=canonicalRepoURL(ctx)+"/pulls";
