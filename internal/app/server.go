@@ -99,6 +99,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/auth/login", a.handleLogin)
 	mux.HandleFunc("POST /api/auth/logout", a.handleLogout)
 	mux.HandleFunc("GET /api/auth/me", a.handleMe)
+	mux.HandleFunc("GET /api/owners/{slug}", a.handleGetOwnerProfile)
 	mux.HandleFunc("GET /api/users/{username}", a.handleGetUserProfile)
 	mux.HandleFunc("GET /api/users/{username}/repositories", a.handleUserRepositories)
 	mux.HandleFunc("GET /api/users/{username}/activity", a.handleUserActivity)
@@ -174,6 +175,10 @@ func (a *App) Handler() http.Handler {
 
 	// org/policy/risk/audit/fleet (CP12)
 	mux.HandleFunc("POST /api/orgs", a.handleCreateOrg)
+	mux.HandleFunc("GET /api/orgs/{id}", a.handleGetOrgProfile)
+	mux.HandleFunc("GET /api/orgs/{id}/repositories", a.handleOrgRepositories)
+	mux.HandleFunc("PATCH /api/orgs/{id}/profile", a.handleUpdateOrgProfile)
+	mux.HandleFunc("POST /api/orgs/{id}/avatar", a.handleUploadOrgAvatar)
 	mux.HandleFunc("POST /api/orgs/{id}/policies", a.handleCreatePolicy)
 	mux.HandleFunc("GET /api/orgs/{id}/fleet", a.handleFleet)
 	mux.HandleFunc("GET /api/audit", a.handleAudit)
