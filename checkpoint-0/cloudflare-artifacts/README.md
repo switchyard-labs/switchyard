@@ -1,20 +1,68 @@
 # Cloudflare Artifacts — Git plane research and round-trip scaffolding
 
-**Status:** live round trip **NOT executed** — no Cloudflare credentials are
-available in the environment or on the Linode. The full contract was extracted
-from the official Artifacts docs, and the round-trip Worker + scripts are
-staged here and ready to run the moment a token is provided.
+**Status:** live round trip **still NOT executed**. Authentication is now fully
+resolved (OAuth device flow via the official `cf` CLI; the OAuth token carries
+`artifacts.read`/`artifacts.write`), but the account is **not eligible** for
+Artifacts: it has zero subscriptions and zero entitlements (Workers Free / not
+enrolled). The blocker is now precisely characterized in "Live observations"
+below. The full contract was extracted from the docs, and the round-trip
+Worker + scripts are staged and ready to run the moment the account is eligible.
 
 ## What is required to run the round trip
 
 1. A Cloudflare account on the **Workers Paid plan** (Artifacts is Paid-only).
-2. An API token with Artifacts permissions:
-   `export CLOUDFLARE_API_TOKEN=...` (and the account id
-   `export CLOUDFLARE_ACCOUNT_ID=...`). wrangler is installed on the Linode
-   (`wrangler 4.146.0`); `wrangler login` device flow also works.
+   **This is the current blocker** — see Live observations.
+2. Artifacts access for the account (open beta; confirmed scoped token or OAuth
+   with `artifacts.read`/`artifacts.write`).
 3. An Artifacts namespace (created automatically on first repo, or via
    `POST /artifacts/namespaces`).
 4. A single-node Trestle instance to ingest the bridged event.
+
+## Authentication state (resolved)
+
+- The operator's `CLOUDFLARE_API_TOKEN` from `~/.bashrc` and the initial OAuth
+  attempts both fail Artifacts with `403 [10004] Access denied`.
+- The official Cloudflare **`cf` CLI** (`npm install -g cf`, v1.0.0-beta.11) was
+  used instead of wrangler. `cf auth login` uses **OAuth device authorization**
+  by default (`--device`), so there is **no localhost callback** and no SSH
+  forward is required. Token verification shows the granted OAuth scopes
+  include `artifacts.read` and `artifacts.write`.
+- OAuth token is stored on the Linode at
+  `/root/.config/cloudflare/config/default.json` (0600). No credentials are in
+  this repository.
+
+## Live observations (account-level, 2026-10-02)
+
+Facts learned by actually talking to the account, distinct from the docs:
+
+| Observation | Detail |
+| --- | --- |
+| Account | `b7f20353ee8a9e5d2003f52c74ba795e` ("Nicholas.charles.ham@gmail.com's Account") |
+| Token scopes OK | OAuth token has `artifacts.read`, `artifacts.write`, `workers` scopes |
+| Artifacts namespace list | `403 Forbidden [10004] Access denied` on `GET /accounts/{id}/artifacts/namespaces` |
+| Account subscriptions | `GET /accounts/{id}/subscriptions` → **empty** (no paid subscriptions) |
+| Account entitlements | `GET /accounts/{id}/entitlements` → **0 entitlements** |
+| Workers subscription route | `GET /accounts/{id}/workers/subscription` → `7003 Could not route …` (no subscription) |
+| `cf` tooling | `cf artifacts namespaces list` → same `10004 Access denied` |
+
+**Conclusion:** the account is on the Workers **Free** tier and has no Artifacts
+entitlement. Artifacts is documented as **Workers Paid only**. The 403 is an
+account-eligibility failure, not a token-scope failure. The fix is an account
+billing/enrollment action by the owner (upgrade to Workers Paid and confirm
+Artifacts open-beta access), which is out of scope for this phase and should
+not be performed silently.
+
+**Not exercised yet (blocked by eligibility):** repo create/import/fork,
+token minting, git clone/push, REST reads, `pushed` event delivery, the staged
+Worker bridge, Trestle ingestion. The staged `roundtrip/` code is expected to
+run unchanged once the account is eligible.
+
+**Implication for Switchyard:** no architecture change is warranted from this
+finding — the authority boundary (Artifacts = Git truth) does not depend on
+which Cloudflare plan hosts the account. It does add an **operational
+prerequisite**: a Workers Paid account with Artifacts access is required before
+any live Git-plane validation. Budget note: billing for Artifacts operations
+begins 2026-10-14.
 
 ## Contract (from developers.cloudflare.com/artifacts, open beta, Oct 2026)
 

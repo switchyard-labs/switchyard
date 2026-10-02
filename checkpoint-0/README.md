@@ -63,16 +63,20 @@ clustering has a real, now-reproduced defect (good — Switchyard should force
 its fix), and Strut main is capable of the experimental step-executor role
 (good — no architectural incompatibility). Two bounded items remain:
 
-1. **Cloudflare live exercise** (E and G): requires a Workers Paid account +
-   `CLOUDFLARE_API_TOKEN` with Artifacts permissions and a namespace. The
-   round-trip code is staged under `cloudflare-artifacts/` and runs unchanged
-   once the token is exported. This is the only hard blocker.
+1. **Cloudflare live exercise (E and G): blocked by account eligibility, now
+   precisely characterized.** Authentication is resolved (OAuth device flow via
+   the official `cf` CLI; token carries `artifacts.read/write`), but the
+   account has **zero subscriptions and zero entitlements** — it is not on the
+   Workers Paid plan that Artifacts requires. This is an account-owner billing
+   action, not a code or credentials issue. The round-trip code is staged under
+   `cloudflare-artifacts/roundtrip/` and is expected to run unchanged once the
+   account is eligible.
 2. **Reproduction note:** the `backend_baseline_certification.py` script failed
    once under concurrent load on the 1-vCPU Linode, then passed consistently in
    isolation. Treat as suspected timing sensitivity on constrained hardware,
    not a confirmed Strut defect; re-run before relying on it.
 
-Do not begin Checkpoint 1 until the Cloudflare credential gap is resolved and
+Do not begin Checkpoint 1 until the Cloudflare eligibility gap is resolved and
 the live round trip has been exercised.
 
 ## Secrets
