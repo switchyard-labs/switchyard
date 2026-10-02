@@ -196,6 +196,7 @@
         document.getElementById("clone-copy").onclick=async()=>{await navigator.clipboard.writeText(input.value); document.getElementById("clone-copy").textContent="Copied";};
         document.getElementById("tab-code").href=canonicalRepoURL(ctx);
         document.getElementById("tab-commits").href=canonicalRepoURL(ctx)+"/commits/"+encodeURIComponent(ctx.ref);
+        document.getElementById("tab-prs").href=canonicalRepoURL(ctx)+"/pulls";
         document.getElementById("tab-settings").href=canonicalRepoURL(ctx)+"/settings";
       }catch(e){ const strip=document.getElementById("repo-overview-strip"); if(strip)strip.innerHTML='<p class="error">'+esc(e.message)+'</p>'; }
     } else { const strip=document.getElementById("repo-overview-strip"); if(strip)strip.hidden=true; }

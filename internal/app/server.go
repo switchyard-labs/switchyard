@@ -156,6 +156,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/prs/{id}/check", a.handlePRCheck)
 	mux.HandleFunc("POST /api/prs/{id}/integrate", a.handlePRIntegrate)
 	mux.HandleFunc("GET /api/prs", a.handleListPRs)
+	mux.HandleFunc("GET /api/prs/{id}", a.handleGetPR)
 
 	// realtime + provenance (CP5)
 	mux.HandleFunc("GET /api/events/stream", a.handleEventStream)
@@ -245,6 +246,15 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path == "/settings" || strings.HasPrefix(r.URL.Path, "/settings/") {
 		http.ServeFile(w, r, filepath.Join(a.StaticDir, "settings.html"))
+		return
+	}
+	parts0 := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts0) == 3 && parts0[2] == "pulls" {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "pulls.html"))
+		return
+	}
+	if len(parts0) == 4 && parts0[2] == "pull" {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "pull.html"))
 		return
 	}
 	if len(strings.Split(strings.Trim(r.URL.Path, "/"), "/")) >= 3 {

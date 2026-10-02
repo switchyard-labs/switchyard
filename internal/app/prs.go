@@ -116,7 +116,11 @@ func (a *App) handleListPRs(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
 		return
 	}
-	items, err := a.Trestle.ListRecords("prs", "")
+	filter := ""
+	if repo := strings.TrimSpace(r.URL.Query().Get("repo")); repo != "" {
+		filter = `repo = "` + repo + `"`
+	}
+	items, err := a.Trestle.ListRecords("prs", filter)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -146,4 +150,40 @@ func (a *App) checkPassed(prID string) bool {
 	// the most recently created check must pass
 	latest := items[len(items)-1]
 	return latest["status"] == "pass"
+}
+
+// handleGetPR exposes a product-shaped pull request snapshot. Familiar Git
+// collaboration data is first; Switchyard-specific attempt/findings/queue data
+// is layered on top when present.
+func (a *App) handleGetPR(w http.ResponseWriter, r *http.Request) {
+	if a.currentUser(r) == "" {
+		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
+		return
+	}
+	id := r.PathValue("id")
+	pr := a.prByID(r, id)
+	if pr == nil {
+		writeJSON(w, 404, map[string]any{"error": "pr_not_found"})
+		return
+	}
+	checks, _ := a.Trestle.ListRecords("pr_checks", `pr_id = "`+id+`"`)
+	findings, _ := a.Trestle.ListRecords("findings", `target = "`+id+`"`)
+	queue, _ := a.Trestle.ListRecords("iq", `pr_id = "`+id+`"`)
+	attempt := map[string]any(nil)
+	if aid := strOr(pr["attempt_id"]); aid != "" {
+		if xs, _ := a.Trestle.ListRecords("attempts", `id = "`+aid+`"`); len(xs) > 0 {
+			attempt = xs[0]
+		}
+	}
+	work := map[string]any(nil)
+	if wid := strOr(pr["work_id"]); wid != "" {
+		if xs, _ := a.Trestle.ListRecords("work", `id = "`+wid+`"`); len(xs) > 0 {
+			work = xs[0]
+		}
+	}
+	diff, files := "", []string{}
+	if repo, base, branch := strOr(pr["repo"]), strOr(pr["base"]), strOr(pr["branch"]); repo != "" && base != "" && branch != "" {
+		diff, files, _ = a.Refs.DiffRefs(repo, base, branch)
+	}
+	writeJSON(w, 200, map[string]any{"pr": pr, "checks": checks, "findings": findings, "queue": queue, "attempt": attempt, "work": work, "files": files, "diff": diff})
 }
