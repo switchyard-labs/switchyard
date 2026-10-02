@@ -179,6 +179,26 @@
     const ctx=canonicalRepoContext();
     if(!ctx.legacy){const meta=await api(repoRoot(ctx));ctx.artifact=meta.artifact_name;nameEl.textContent=meta.slug||meta.display_name; document.getElementById("repo-owner").textContent=meta.owner_slug||ctx.owner; document.getElementById("repo-description").textContent=meta.description||""; const vis=document.getElementById("repo-visibility"); if(vis)vis.textContent=meta.visibility||"private"; if(!ctx.ref||ctx.ref==="main")ctx.ref=meta.default_branch||ctx.ref;} else nameEl.textContent=ctx.artifact;
     const sel=document.getElementById("repo-ref-select"); if(sel){try{const rr=await api(repoRoot(ctx)+"/refs"); const branches=Object.keys(rr.refs||{}).filter(x=>x.startsWith('refs/heads/')).map(x=>x.slice(11)); sel.innerHTML=branches.map(x=>'<option '+(x===ctx.ref?'selected':'')+'>'+esc(x)+'</option>').join('')||'<option>'+esc(ctx.ref)+'</option>'; sel.onchange=()=>{location.href=ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(sel.value):(canonicalRepoURL(ctx,'tree',sel.value,''));};}catch(e){}}
+    if(!ctx.legacy){
+      try{
+        const ov=await api(repoRoot(ctx)+"/overview");
+        const latest=ov.latest_commit||{};
+        const msg=(latest.Message||latest.message||"No commits yet").split("\n")[0];
+        document.getElementById("repo-latest").textContent=msg;
+        const hash=latest.Hash||latest.hash||"";
+        const ts=latest.Timestamp||latest.committedAt||latest.timestamp||0;
+        document.getElementById("repo-latest-meta").textContent=(hash?hash.slice(0,7)+" · ":"")+(ts?new Date(Number(ts)*1000).toLocaleString():"");
+        document.getElementById("repo-branches").textContent=ov.branch_count||0;
+        document.getElementById("repo-tags").textContent=ov.tag_count||0;
+        document.getElementById("repo-commits").textContent=ov.commit_count_sample||0;
+        const dlg=document.getElementById("clone-dialog"), input=document.getElementById("clone-url"); input.value=ov.clone_https||"";
+        document.getElementById("clone-toggle").onclick=()=>dlg.showModal();
+        document.getElementById("clone-copy").onclick=async()=>{await navigator.clipboard.writeText(input.value); document.getElementById("clone-copy").textContent="Copied";};
+        document.getElementById("tab-code").href=canonicalRepoURL(ctx);
+        document.getElementById("tab-commits").href=canonicalRepoURL(ctx)+"/commits/"+encodeURIComponent(ctx.ref);
+        document.getElementById("tab-settings").href=canonicalRepoURL(ctx)+"/settings";
+      }catch(e){ const strip=document.getElementById("repo-overview-strip"); if(strip)strip.innerHTML='<p class="error">'+esc(e.message)+'</p>'; }
+    } else { const strip=document.getElementById("repo-overview-strip"); if(strip)strip.hidden=true; }
     renderBreadcrumbs(ctx); loadTree(ctx,treeEl,viewEl);
   }
   async function loadTree(ctx,treeEl,viewEl){

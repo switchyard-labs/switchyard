@@ -2,9 +2,11 @@
 <section class="panel repo-shell">
   <div class="repo-head">
     <div><div class="repo-owner muted" id="repo-owner"></div><h1 id="repo-name">Repository</h1><p class="muted" id="repo-description"></p></div>
-    <div class="repo-actions"><span class="language-badge" id="repo-visibility">private</span></div>
+    <div class="repo-actions"><span class="language-badge" id="repo-visibility">private</span><button class="btn mini" id="clone-toggle" type="button">Clone</button></div>
   </div>
-  <nav class="repo-tabs" aria-label="Repository"><a class="active" href="#">Code</a><span>Work</span><span>Pull Requests</span><span>Workflows</span><span>Settings</span></nav>
+  <nav class="repo-tabs" aria-label="Repository"><a class="active" id="tab-code" href="#">Code</a><a id="tab-commits" href="#">Commits</a><a id="tab-work" href="/work.html">Work</a><a id="tab-prs" href="/pulls.html">Pull Requests</a><a id="tab-workflows" href="/operations.html#workflows">Workflows</a><a id="tab-settings" href="#">Settings</a></nav>
+  <section class="repo-overview-strip" id="repo-overview-strip"><div><strong id="repo-latest">Loading latest commit…</strong><span class="muted" id="repo-latest-meta"></span></div><div class="repo-stats"><span><strong id="repo-branches">—</strong> branches</span><span><strong id="repo-tags">—</strong> tags</span><span><strong id="repo-commits">—</strong> recent commits</span></div></section>
+  <dialog class="clone-dialog" id="clone-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button></form><h2>Clone repository</h2><label>HTTPS<input id="clone-url" readonly></label><div class="dialog-actions"><button class="btn" id="clone-copy" type="button">Copy URL</button></div><p class="muted">Authentication uses scoped Git credentials; the clone URL does not embed a secret.</p></dialog>
   <div class="repo-toolbar">
     <label>Branch <select id="repo-ref-select"><option>main</option></select></label>
     <div class="breadcrumbs" id="repo-breadcrumbs"></div>
