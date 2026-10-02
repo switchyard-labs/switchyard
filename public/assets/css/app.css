@@ -341,3 +341,19 @@ body.menu-open { overflow: hidden; }
 .image-preview { min-height:420px; display:grid; place-items:center; padding:24px; }
 .image-preview img { max-width:min(100%,900px); max-height:600px; object-fit:contain; border:1px solid var(--border); border-radius:var(--radius); }
 @media(max-width:760px){.repo-head{display:block}.repo-tabs{gap:16px}.repo-toolbar{flex-wrap:wrap;padding:8px 0}.file-view-toolbar{overflow:auto}.file-tree{max-height:220px}.file-view{min-height:360px}}
+
+/* PX7 sanitized Markdown / README presentation */
+.markdown-body { padding:28px clamp(18px,4vw,44px) 36px; border-top:1px solid var(--border); color:var(--text); line-height:1.68; max-width:100%; }
+.markdown-body h1,.markdown-body h2,.markdown-body h3,.markdown-body h4 { line-height:1.25; margin:1.6em 0 .65em; color:var(--text); }
+.markdown-body h1 { font-size:28px; border-bottom:1px solid var(--border); padding-bottom:10px; }
+.markdown-body h2 { font-size:22px; border-bottom:1px solid var(--border-subtle); padding-bottom:8px; }
+.markdown-body p,.markdown-body ul,.markdown-body blockquote { max-width:820px; }
+.markdown-body a { color:var(--accent-text); }
+.markdown-body img { max-width:100%; height:auto; border-radius:var(--radius); }
+.markdown-body blockquote { border-left:3px solid var(--border-strong); margin-left:0; padding:4px 18px; color:var(--text-dim); }
+.markdown-body code { font-family:var(--mono); background:var(--bg-code); border:1px solid var(--border-subtle); border-radius:4px; padding:1px 5px; }
+.markdown-body .md-code { overflow:auto; padding:16px; background:var(--bg-code); border:1px solid var(--border); border-radius:var(--radius); }
+.markdown-body .md-code code { border:0; padding:0; background:none; }
+.heading-anchor { opacity:0; margin-left:-22px; padding-right:8px; text-decoration:none; color:var(--text-faint)!important; }
+.markdown-body h1:hover .heading-anchor,.markdown-body h2:hover .heading-anchor,.markdown-body h3:hover .heading-anchor { opacity:1; }
+.readme-head { display:flex; align-items:center; gap:10px; padding:10px 18px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); font-size:13px; font-weight:700; }

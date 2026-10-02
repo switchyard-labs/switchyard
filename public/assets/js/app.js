@@ -186,6 +186,18 @@
     try{
       const root=repoRoot(ctx),t=await api(root+"/tree?ref="+encodeURIComponent(ctx.ref)),files=t.tree.map(it=>it.path).sort(); treeEl.innerHTML="";
       for(const f of files){const row=el("<div class='file' data-path='"+esc(f)+"'><span class='file-icon'>·</span>"+esc(f)+"</div>"); row.onclick=()=>location.href=ctx.legacy?"/repo.html?name="+encodeURIComponent(ctx.artifact)+"&ref="+encodeURIComponent(ctx.ref)+"&path="+encodeURIComponent(f):canonicalRepoURL(ctx,"blob",ctx.ref,f); treeEl.appendChild(row);}
+      if(!ctx.path){
+        const candidates=['README.md','README.markdown','README','docs/README.md'];
+        const found=candidates.find(x=>files.includes(x));
+        if(found){
+          const rr=await fetch(rawURL(ctx,found),{credentials:'same-origin'});
+          if(rr.ok){const md=await rr.text(), readme=document.getElementById('readme-view'); if(readme){
+            const base=found.includes('/')?found.slice(0,found.lastIndexOf('/')+1):'';
+            const resolver=(u,kind)=>{ if(/^https?:\/\//i.test(u)||u.startsWith('#')||u.startsWith('mailto:'))return u; let path=(base+u).split('/').reduce((a,x)=>{if(x==='..')a.pop();else if(x&&x!=='.')a.push(x);return a;},[]).join('/'); return kind==='image'?rawURL(ctx,path):(ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(ctx.ref)+'&path='+encodeURIComponent(path):canonicalRepoURL(ctx,'blob',ctx.ref,path)); };
+            readme.hidden=false; readme.innerHTML='<div class="readme-head">README</div>'+SwitchyardMarkdown.render(md,{resolve:resolver});
+          }}
+        }
+      }
       if(ctx.path){
         const edit=document.getElementById('edit-link'); if(edit)edit.href='/edit.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(ctx.ref)+'&path='+encodeURIComponent(ctx.path);
         document.getElementById('file-view-title').textContent=ctx.path; const raw=await fetch(rawURL(ctx,ctx.path),{credentials:'same-origin'}); if(!raw.ok)throw new Error('content request failed: '+raw.status); const ct=raw.headers.get('content-type')||''; const blob=await raw.blob(); const size=blob.size; document.getElementById('file-meta').textContent=size<1024?size+' B':(size/1024).toFixed(1)+' KB';
