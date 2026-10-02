@@ -205,6 +205,8 @@ case.
 
 ## CP13 — Dogfooding maturity
 
+- **Status: PASS** (handover: `handovers/CP13.md`; gate: `experiments/cp13/cp13_gate.sh`).
+
 **Objective:** Switchyard builds, reviews, and integrates its own work (see
 dogfooding progression below).
 

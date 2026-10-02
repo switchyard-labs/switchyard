@@ -1,0 +1,27 @@
+
+[20:47:36] ### 1. Switchyard-snapshot repo present
+[20:47:38] repo=switchyard-self-1790973430 commits: 1
+
+[20:47:38] ### 2. Work + Attempt on Switchyard's own repo
+[20:47:39] work=wk_d3357c040eba1568 attempt=wk_a8b535672a69f8bb
+
+[20:47:39] ### 3. durable workflow: implementer Agent edits Switchyard, check, review
+[20:47:45] dogfood workflow: completed output={"agent":{"execution":"exe_5d072afe","new_sha":"80bbc0b678430f623d2ce6b18e6c11db21eb82d3","output":"deterministic edit of docs/dogfood.md (+72 bytes) -> ","status":"ok"},"check":{"detail":"marker file valid","lines":2,"status":"pass"},"review":{"approved":true,"findings":[],"lines":2}}
+
+[20:47:45] ### 4. review produced findings (Switchyard reviews its own change)
+{"attempt_id":"wk_a8b535672a69f8bb","execution":"exe_2c1e74bd","findings":[{"file":"","message":"attempt touches 2 file(s)","severity":"info"}],"reviewed_by":"alice"}
+
+[20:47:47] ### 5. PR + preview clean
+[20:47:49] preview: {"attempt_id":"wk_a8b535672a69f8bb","conflict":false,"conflicts":[],"status":"ok"}
+
+[20:47:49] ### 6. Integration Queue integrates the Switchyard PR (Dogfood 5)
+[20:47:56] queue status: done (expect done)
+
+[20:47:56] ### 7. canonical Switchyard repo now carries the dogfood change
+[20:47:58] canonical docs/dogfood.md: dogfood-1790973642dogfood-1790973769dogfood-1790973919dogfood-1790974056 
+
+[20:47:58] ### provenance chain
+["work","attempt","pr","ref_update","ref_update","ref_update","ref_update","ref_update","ref_update","ref_update","event","event","event","event","event"] 
+
+[20:47:58] #### CP13 GATE: 7/7 checks passed
+PASS=7/7
