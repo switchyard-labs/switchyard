@@ -2,48 +2,78 @@
 <html lang="en" data-theme="dark">
 	<head>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Switchyard</title>
-		<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
-		<link rel="stylesheet" href="assets/css/theme.css">
-		<link rel="stylesheet" href="assets/css/app.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Switchyard</title>
+<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
+<link rel="stylesheet" href="assets/css/theme.css">
+<link rel="stylesheet" href="assets/css/app.css">
 	</head>
-	<body><a class="skip-link" href="#main-content">Skip to content</a>
+	<body>
+		<a class="skip-link" href="#main-content">Skip to content</a>
 		<header class="site-header">
 			<div class="header-inner">
-				<a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
-				<div class="header-right"><span class="auth-state" id="auth-state"></span><button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button></div>
+				<a class="brand" href="./"><img class="brand-mark-img" src="assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
+				<div class="header-right">
+					<span class="auth-state" id="auth-state"></span>
+					<button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button>
+				</div>
 			</div>
 		</header>
 		<nav class="mobile-menu" id="mobile-menu" aria-label="Switchyard" hidden>
-			<div class="mobile-menu-head"><a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
+			<div class="mobile-menu-head"><a class="brand" href="./"><img class="brand-mark-img" src="assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
 			<div class="menu-groups">
-				<details class="menu-group" open><summary>Explore</summary><div class="menu-links"><a href="/">Dashboard</a><a href="/repo.html">Repositories</a></div></details>
-				<details class="menu-group" open><summary>Collaborate</summary><div class="menu-links"><a href="/work.html">Work</a><span class="menu-future">Pull Requests <small>surface follows in Git-host parity</small></span><span class="menu-future">Workflows <small>surface follows in Git-host parity</small></span><span class="menu-future">Needs Attention <small>surface follows in Git-host parity</small></span></div></details>
-				<details class="menu-group" open><summary>Account</summary><div class="menu-links"><div class="mobile-auth" id="mobile-auth"></div><a href="/organizations">Organizations</a><a href="/settings">Settings</a></div></details>
+				<details class="menu-group" open><summary>Git</summary><div class="menu-links">
+					<a href="./">Dashboard</a>
+					<a href="repo.html">Repositories</a>
+					<a href="work.html">Work</a>
+				</div></details>
+				<details class="menu-group" open><summary>Agent-native</summary><div class="menu-links">
+					<a href="/operations#attention">Needs Attention</a>
+					<a href="/operations#queue">Integration Queue</a>
+					<a href="/operations#workflows">Workflows</a>
+					<a href="/operations#agents">Agents</a>
+				</div></details>
+				<details class="menu-group" open><summary>Account</summary><div class="menu-links">
+					<div class="mobile-auth" id="mobile-auth"></div>
+					<a href="/organizations">Organizations</a><a href="/settings">Settings</a>
+				</div></details>
 			</div>
 			<div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>
 		</nav>
 		<main class="site-main" id="main-content">
-			<main>
-				<section class="hero">
-					<h1>Agent-native Git collaboration</h1>
-					<p class="lede">Concurrent autonomous agents work in isolated Git state. Integration into canonical repositories flows through deterministic, policy-controlled serialized integration.</p>
-				</section>
-				<section class="panel">
-					<h2>Repositories</h2>
-					<div id="repos" class="list"><p class="muted">Loading…</p></div>
-				</section>
-				<section class="panel">
-					<h2>Recent work</h2>
-					<div id="work" class="list"><p class="muted">Loading…</p></div>
-				</section>
-				<section class="panel">
-					<h2>Live activity</h2>
-					<div id="live" class="list"><p class="muted">Sign in to stream live events.</p></div>
-				</section>
-			</main>
+			<div class="dashboard-shell">
+  <section class="hero">
+    <p class="eyebrow">Switchyard</p>
+    <h1>Repositories, work and agents —<br>without losing Git.</h1>
+    <p class="lede">Ordinary Git collaboration first. Concurrent human and agent work appears progressively when a repository needs it.</p>
+  </section>
+  <div class="dashboard-primary">
+    <section class="panel">
+      <div class="section-head"><div><p class="eyebrow">Git truth</p><h2>Repositories</h2></div><a class="btn mini" href="/organizations">Organizations</a></div>
+      <div id="repos" class="list"><p class="muted">Loading repositories…</p></div>
+    </section>
+    <section class="panel">
+      <div class="section-head"><div><p class="eyebrow">Intent</p><h2>Recent work</h2></div><a class="btn mini" href="/work.html">View Work</a></div>
+      <div id="work" class="list"><p class="muted">Loading work…</p></div>
+    </section>
+  </div>
+  <aside class="dashboard-side">
+    <section class="panel">
+      <p class="eyebrow">Realtime</p><h2>Live activity</h2>
+      <div id="live" class="list"><p class="muted">Sign in to stream repository activity.</p></div>
+    </section>
+    <section class="panel dashboard-guide">
+      <p class="eyebrow">How Switchyard works</p>
+      <h2>Work in parallel. Integrate deliberately.</h2>
+      <p class="muted">Attempts isolate concurrent changes. Reviews, checks and policy decide what can enter the Integration Queue.</p>
+      <a class="btn mini" href="/operations">Open operations</a>
+    </section>
+  </aside>
+</div>
+
 		</main>
+		<script src="assets/js/code-surface.js"></script>
+		<script src="assets/js/markdown.js"></script>
 		<script src="assets/js/app.js"></script>
 	</body>
 </html>

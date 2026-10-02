@@ -2,38 +2,56 @@
 <html lang="en" data-theme="dark">
 	<head>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Switchyard</title>
-		<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
-		<link rel="stylesheet" href="assets/css/theme.css">
-		<link rel="stylesheet" href="assets/css/app.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Switchyard</title>
+<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
+<link rel="stylesheet" href="assets/css/theme.css">
+<link rel="stylesheet" href="assets/css/app.css">
 	</head>
-	<body><a class="skip-link" href="#main-content">Skip to content</a>
+	<body>
+		<a class="skip-link" href="#main-content">Skip to content</a>
 		<header class="site-header">
 			<div class="header-inner">
-				<a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
-				<div class="header-right"><span class="auth-state" id="auth-state"></span><button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button></div>
+				<a class="brand" href="./"><img class="brand-mark-img" src="assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
+				<div class="header-right">
+					<span class="auth-state" id="auth-state"></span>
+					<button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button>
+				</div>
 			</div>
 		</header>
 		<nav class="mobile-menu" id="mobile-menu" aria-label="Switchyard" hidden>
-			<div class="mobile-menu-head"><a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
+			<div class="mobile-menu-head"><a class="brand" href="./"><img class="brand-mark-img" src="assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
 			<div class="menu-groups">
-				<details class="menu-group" open><summary>Explore</summary><div class="menu-links"><a href="/">Dashboard</a><a href="/repo.html">Repositories</a></div></details>
-				<details class="menu-group" open><summary>Collaborate</summary><div class="menu-links"><a href="/work.html">Work</a><span class="menu-future">Pull Requests <small>surface follows in Git-host parity</small></span><span class="menu-future">Workflows <small>surface follows in Git-host parity</small></span><span class="menu-future">Needs Attention <small>surface follows in Git-host parity</small></span></div></details>
-				<details class="menu-group" open><summary>Account</summary><div class="menu-links"><div class="mobile-auth" id="mobile-auth"></div><a href="/organizations">Organizations</a><a href="/settings">Settings</a></div></details>
+				<details class="menu-group" open><summary>Git</summary><div class="menu-links">
+					<a href="./">Dashboard</a>
+					<a href="repo.html">Repositories</a>
+					<a href="work.html">Work</a>
+				</div></details>
+				<details class="menu-group" open><summary>Agent-native</summary><div class="menu-links">
+					<a href="/operations#attention">Needs Attention</a>
+					<a href="/operations#queue">Integration Queue</a>
+					<a href="/operations#workflows">Workflows</a>
+					<a href="/operations#agents">Agents</a>
+				</div></details>
+				<details class="menu-group" open><summary>Account</summary><div class="menu-links">
+					<div class="mobile-auth" id="mobile-auth"></div>
+					<a href="/organizations">Organizations</a><a href="/settings">Settings</a>
+				</div></details>
 			</div>
 			<div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>
 		</nav>
-				<main class="site-main" id="main-content">
-<main>
+		<main class="site-main" id="main-content">
+			<main>
 <section class="panel repo-shell">
   <div class="repo-head">
     <div><div class="repo-owner muted" id="repo-owner"></div><h1 id="repo-name">Repository</h1><p class="muted" id="repo-description"></p></div>
-    <div class="repo-actions"><span class="language-badge" id="repo-visibility">private</span></div>
+    <div class="repo-actions"><span class="language-badge" id="repo-visibility">private</span><button class="btn mini" id="clone-toggle" type="button">Clone</button></div>
   </div>
-  <nav class="repo-tabs" aria-label="Repository"><a class="active" href="#">Code</a><span>Work</span><span>Pull Requests</span><span>Workflows</span><span>Settings</span></nav>
+  <nav class="repo-tabs" aria-label="Repository"><a class="active" id="tab-code" href="#">Code</a><a id="tab-commits" href="#">Commits</a><a id="tab-work" href="/work.html">Work</a><a id="tab-prs" href="/pulls.html">Pull Requests</a><a id="tab-workflows" href="/operations.html#workflows">Workflows</a><a id="tab-settings" href="#">Settings</a></nav>
+  <section class="repo-overview-strip" id="repo-overview-strip"><div><strong id="repo-latest">Loading latest commit…</strong><span class="muted" id="repo-latest-meta"></span></div><div class="repo-stats"><span><strong id="repo-branches">—</strong> branches</span><span><strong id="repo-tags">—</strong> tags</span><span><strong id="repo-commits">—</strong> recent commits</span></div></section>
+  <dialog class="clone-dialog" id="clone-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button></form><h2>Clone repository</h2><label>HTTPS<input id="clone-url" readonly></label><div class="dialog-actions"><button class="btn" id="clone-copy" type="button">Copy URL</button></div><p class="muted">Authentication uses scoped Git credentials; the clone URL does not embed a secret.</p></dialog>
   <div class="repo-toolbar">
-    <label>Branch <select aria-label="Repository branch" id="repo-ref-select"><option>main</option></select></label>
+    <label>Branch <select id="repo-ref-select"><option>main</option></select></label>
     <div class="breadcrumbs" id="repo-breadcrumbs"></div>
     <span class="spacer"></span><span class="language-badge" id="file-language">Plain text</span>
   </div>

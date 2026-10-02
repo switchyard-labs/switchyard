@@ -1,18 +1,29 @@
-<main>
-	<section class="hero">
-		<h1>Agent-native Git collaboration</h1>
-		<p class="lede">Concurrent autonomous agents work in isolated Git state. Integration into canonical repositories flows through deterministic, policy-controlled serialized integration.</p>
-	</section>
-	<section class="panel">
-		<h2>Repositories</h2>
-		<div id="repos" class="list"><p class="muted">Loading…</p></div>
-	</section>
-	<section class="panel">
-		<h2>Recent work</h2>
-		<div id="work" class="list"><p class="muted">Loading…</p></div>
-	</section>
-	<section class="panel">
-		<h2>Live activity</h2>
-		<div id="live" class="list"><p class="muted">Sign in to stream live events.</p></div>
-	</section>
-</main>
+<div class="dashboard-shell">
+  <section class="hero">
+    <p class="eyebrow">Switchyard</p>
+    <h1>Repositories, work and agents —<br>without losing Git.</h1>
+    <p class="lede">Ordinary Git collaboration first. Concurrent human and agent work appears progressively when a repository needs it.</p>
+  </section>
+  <div class="dashboard-primary">
+    <section class="panel">
+      <div class="section-head"><div><p class="eyebrow">Git truth</p><h2>Repositories</h2></div><a class="btn mini" href="/organizations">Organizations</a></div>
+      <div id="repos" class="list"><p class="muted">Loading repositories…</p></div>
+    </section>
+    <section class="panel">
+      <div class="section-head"><div><p class="eyebrow">Intent</p><h2>Recent work</h2></div><a class="btn mini" href="/work.html">View Work</a></div>
+      <div id="work" class="list"><p class="muted">Loading work…</p></div>
+    </section>
+  </div>
+  <aside class="dashboard-side">
+    <section class="panel">
+      <p class="eyebrow">Realtime</p><h2>Live activity</h2>
+      <div id="live" class="list"><p class="muted">Sign in to stream repository activity.</p></div>
+    </section>
+    <section class="panel dashboard-guide">
+      <p class="eyebrow">How Switchyard works</p>
+      <h2>Work in parallel. Integrate deliberately.</h2>
+      <p class="muted">Attempts isolate concurrent changes. Reviews, checks and policy decide what can enter the Integration Queue.</p>
+      <a class="btn mini" href="/operations">Open operations</a>
+    </section>
+  </aside>
+</div>

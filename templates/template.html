@@ -17,15 +17,16 @@
 		<nav class="mobile-menu" id="mobile-menu" aria-label="Switchyard" hidden>
 			<div class="mobile-menu-head"><a class="brand" href="@path('/')"><img class="brand-mark-img" src="@path('public/assets/images/favicon.webp')" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
 			<div class="menu-groups">
-				<details class="menu-group" open><summary>Explore</summary><div class="menu-links">
+				<details class="menu-group" open><summary>Git</summary><div class="menu-links">
 					<a href="@path('/')">Dashboard</a>
 					<a href="@path('repo')">Repositories</a>
-				</div></details>
-				<details class="menu-group" open><summary>Collaborate</summary><div class="menu-links">
 					<a href="@path('work')">Work</a>
-					<span class="menu-future">Pull Requests <small>open within a repository</small></span>
-					<a href="/operations#workflows">Workflows</a>
+				</div></details>
+				<details class="menu-group" open><summary>Agent-native</summary><div class="menu-links">
 					<a href="/operations#attention">Needs Attention</a>
+					<a href="/operations#queue">Integration Queue</a>
+					<a href="/operations#workflows">Workflows</a>
+					<a href="/operations#agents">Agents</a>
 				</div></details>
 				<details class="menu-group" open><summary>Account</summary><div class="menu-links">
 					<div class="mobile-auth" id="mobile-auth"></div>
