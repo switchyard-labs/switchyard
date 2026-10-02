@@ -23,6 +23,8 @@
   let committedText = "";
   let draftSaved = false;
   let view = null;
+  let currentRevision = "";
+  let baseSHA = "";
 
   $("editor-title").textContent = name + " · " + ref + " · " + path;
 
@@ -30,6 +32,13 @@
     const raw = await fetch("/api/repos/" + encodeURIComponent(name) + "/content?ref=" + encodeURIComponent(ref) + "&path=" + encodeURIComponent(path), { credentials: "same-origin" });
     committedText = raw.ok ? await raw.text() : "";
     return committedText;
+  }
+  async function loadRefSHA() {
+    try {
+      const refs = await api("/api/repos/" + encodeURIComponent(name) + "/refs");
+      const head = refs.refs && refs.refs["refs/heads/" + ref];
+      if (head) baseSHA = head;
+    } catch (e) { /* baseSHA stays empty -> commit falls back to ref CAS */ }
   }
 
   function makeEditor(initial) {
@@ -57,7 +66,11 @@
   async function refreshDraftState() {
     const d = await loadDraft();
     draftSaved = d !== null && d !== "";
-    $("draft-state").textContent = draftSaved ? "draft saved (not committed)" : "";
+    if (d !== null && d !== "") {
+      currentRevision = d.revision != null ? String(d.revision) : "";
+      if (d.base_sha) baseSHA = d.base_sha;
+    }
+    $("draft-state").textContent = draftSaved ? "draft saved rev " + (currentRevision || "?") + " (not committed)" : "";
   }
 
   async function showDiff() {
@@ -85,24 +98,43 @@
 
   $("btn-save").addEventListener("click", async () => {
     try {
-      const r = await api("/api/drafts", { method: "POST", body: JSON.stringify({ repo: name, branch: ref, path, content: view.state.doc.toString() }) });
+      const r = await api("/api/drafts", { method: "POST", body: JSON.stringify({ repo: name, branch: ref, path, content: view.state.doc.toString(), expected_revision: currentRevision, base_sha: baseSHA }) });
+      currentRevision = String(r.revision);
       draftSaved = true;
-      $("draft-state").textContent = "draft saved (not committed)";
+      $("draft-state").textContent = "draft saved rev " + currentRevision + " (not committed)";
       showDiff();
-    } catch (e) { alert("save failed: " + e.message); }
+    } catch (e) {
+      if (String(e.message).includes("draft_stale")) {
+        alert("Your draft is stale (someone saved a newer revision). Reloading the current draft.");
+        const d = await loadDraft();
+        if (d !== null && d !== "") { currentRevision = String(d.revision); view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: d.content } }); }
+        await refreshDraftState();
+      } else { alert("save failed: " + e.message); }
+    }
   });
 
   $("btn-commit").addEventListener("click", async () => {
     const message = prompt("Commit message:", "edit " + path + " via Switchyard editor");
     if (message === null) return;
     try {
-      const saved = await api("/api/drafts", { method: "POST", body: JSON.stringify({ repo: name, branch: ref, path, content: view.state.doc.toString() }) });
+      const saved = await api("/api/drafts", { method: "POST", body: JSON.stringify({ repo: name, branch: ref, path, content: view.state.doc.toString(), expected_revision: currentRevision, base_sha: baseSHA }) });
+      currentRevision = String(saved.revision);
       const r = await api("/api/drafts/" + saved.id + "/commit", { method: "POST", body: JSON.stringify({ message }) });
       committedText = view.state.doc.toString();
       draftSaved = false;
       $("draft-state").textContent = "committed " + String(r.new_sha).slice(0, 7);
       showDiff();
-    } catch (e) { alert("commit failed: " + e.message); }
+    } catch (e) {
+      if (String(e.message).includes("draft_stale")) {
+        alert("Your draft is stale; reloading the current draft.");
+        const d = await loadDraft();
+        if (d !== null && d !== "") { currentRevision = String(d.revision); view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: d.content } }); }
+      } else if (String(e.message).includes("stale_base")) {
+        alert("The branch moved after your draft was based. Reloading committed content; re-apply your edit and commit again.");
+        committedText = await loadCommitted();
+        await refreshDraftState();
+      } else { alert("commit failed: " + e.message); }
+    }
   });
 
   $("btn-agent").addEventListener("click", async () => {
@@ -120,6 +152,7 @@
   (async function init() {
     await window.refreshAuth();
     const committed = await loadCommitted();
+    await loadRefSHA();
     const draft = await loadDraft();
     makeEditor(draft !== null && draft !== "" ? draft : committed);
     await refreshDraftState();

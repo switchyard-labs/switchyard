@@ -1,0 +1,17 @@
+[21:20:28] repo=cp10draft-1790976025 seeded main@b618b149a55c5511e8148826c146967c8c9591da
+
+[21:20:28] ### Race A: two sessions — both loaded rev 1; second save is stale
+[21:20:28] baseline save: {"committed":false,"id":"draft_ee55941c55","revision":1,"saved":true}
+[21:20:28] S1 save (expected=1): {"committed":false,"id":"draft_ee55941c55","revision":2,"saved":true}
+[21:20:28] S2 save (expected=1, now 2): {"current_revision":"2","error":"draft_stale","expected_revision":"1","message":"draft moved on; reload and re-apply your edit"}
+
+[21:20:28] ### Race B: Agent-vs-human — agent result from an old revision is stale
+[21:20:28] human save (expected=2): {"committed":false,"id":"draft_ee55941c55","revision":3,"saved":true}
+[21:20:28] agent result (based on rev 2, now 3): {"current_revision":"3","error":"draft_stale","expected_revision":"2","message":"draft moved on; reload and re-apply your edit"}
+
+[21:20:28] ### Race C: external branch movement — commit rejects stale base
+[21:20:28] branch moved A=b618b149a55c5511e8148826c146967c8c9591da -> B=d5b6bcdf1f1862e31ef7fe588b297560125b097e (external push)
+[21:20:30] commit after external push: {"current_head":"d5b6bcdf1f1862e31ef7fe588b297560125b097e","draft_base_sha":"b618b149a55c5511e8148826c146967c8c9591da","error":"stale_base","guidance":"the branch moved after your draft was based; reload the committed content and re-apply your edit"}
+
+[21:20:30] #### DRAFT CAS GATE: 6/6 checks passed
+PASS=6/6

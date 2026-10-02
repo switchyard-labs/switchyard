@@ -21,10 +21,12 @@ func (a *App) handleSaveDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		Repo    string `json:"repo"`
-		Branch  string `json:"branch"`
-		Path    string `json:"path"`
-		Content string `json:"content"`
+		Repo             string `json:"repo"`
+		Branch           string `json:"branch"`
+		Path             string `json:"path"`
+		Content          string `json:"content"`
+		ExpectedRevision string `json:"expected_revision"`
+		BaseSHA          string `json:"base_sha"`
 	}
 	if err := readJSON(r, &in); err != nil || in.Repo == "" || in.Branch == "" || in.Path == "" {
 		writeJSON(w, 400, map[string]any{"error": "repo_branch_path_required"})
@@ -32,22 +34,68 @@ func (a *App) handleSaveDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	draftID := "draft_" + sha256Hex([]byte(user+"|"+in.Repo+"|"+in.Branch+"|"+in.Path))[:10]
 	at := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-	// upsert: unique idempotency key per save; if the deterministic id already
-	// exists (unique), patch the existing draft instead.
-	_, _, err := a.Trestle.CreateRecord("drafts", map[string]any{
-		"id": draftID, "repo": in.Repo, "branch": in.Branch, "path": in.Path,
-		"content": in.Content, "user": user, "updated_at": at,
-	}, "draft-"+draftID+"-"+at)
-	if err != nil {
-		if id, ver, _, e := a.Trestle.FindRecord("drafts", `id = "`+draftID+`"`); e == nil && id != "" {
-			_ = a.Trestle.PatchRecord("drafts", id, ver, map[string]any{"content": in.Content, "updated_at": at})
-			writeJSON(w, 200, map[string]any{"id": draftID, "saved": true, "patched": true, "saved_at": at, "committed": false})
+
+	existing, err := a.Trestle.ListRecords("drafts", `id = "`+draftID+`"`)
+	if err == nil && len(existing) > 0 {
+		// optimistic concurrency: reject a stale save instead of overwriting
+		currentRev := draftRevision(existing[0])
+		if in.ExpectedRevision != "" && atoiOr(in.ExpectedRevision, -1) != currentRev {
+			writeJSON(w, 409, map[string]any{
+				"error": "draft_stale", "expected_revision": in.ExpectedRevision,
+				"current_revision": itoa(currentRev),
+				"message":          "draft moved on; reload and re-apply your edit",
+			})
 			return
 		}
+		newRev := currentRev + 1
+		base := in.BaseSHA
+		if base == "" {
+			base, _ = existing[0]["base_sha"].(string)
+		}
+		if id, ver, _, e := a.Trestle.FindRecord("drafts", `id = "`+draftID+`"`); e == nil && id != "" {
+			_ = a.Trestle.PatchRecord("drafts", id, ver, map[string]any{
+				"content": in.Content, "revision": itoa(newRev), "base_sha": base, "updated_at": at,
+			})
+		}
+		writeJSON(w, 200, map[string]any{"id": draftID, "revision": newRev, "saved": true, "committed": false})
+		return
+	}
+	_, _, err = a.Trestle.CreateRecord("drafts", map[string]any{
+		"id": draftID, "repo": in.Repo, "branch": in.Branch, "path": in.Path,
+		"content": in.Content, "user": user, "revision": "1", "base_sha": in.BaseSHA,
+		"updated_at": at, "committed_at": "",
+	}, "draft-"+draftID+"-"+at)
+	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
-	writeJSON(w, 200, map[string]any{"id": draftID, "saved": true, "saved_at": at, "committed": false})
+	writeJSON(w, 200, map[string]any{"id": draftID, "revision": 1, "saved": true, "committed": false})
+}
+
+func draftRevision(d map[string]any) int {
+	if s, ok := d["revision"].(string); ok && s != "" {
+		return atoiOr(s, 1)
+	}
+	return 1
+}
+
+func atoiOr(s string, def int) int {
+	n := 0
+	neg := false
+	for i, c := range s {
+		if i == 0 && c == '-' {
+			neg = true
+			continue
+		}
+		if c < '0' || c > '9' {
+			return def
+		}
+		n = n*10 + int(c-'0')
+	}
+	if neg {
+		n = -n
+	}
+	return n
 }
 
 func (a *App) handleGetDraft(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +114,10 @@ func (a *App) handleGetDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, it := range items {
 		if it["branch"] == branch && it["path"] == path && it["user"] == user {
-			writeJSON(w, 200, map[string]any{"repo": repo, "branch": branch, "path": path, "content": it["content"], "updated_at": it["updated_at"]})
+			writeJSON(w, 200, map[string]any{
+				"id": it["id"], "repo": repo, "branch": branch, "path": path, "content": it["content"],
+				"revision": it["revision"], "base_sha": it["base_sha"], "updated_at": it["updated_at"],
+			})
 			return
 		}
 	}
@@ -102,6 +153,17 @@ func (a *App) handleCommitDraft(w http.ResponseWriter, r *http.Request) {
 	head, err := a.repoHead(repo, branch)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
+	// Race C: external branch movement — the draft was based on base_sha; if
+	// the branch moved since, surface reconcile guidance instead of silently
+	// committing on top of an unexpected base (the ref CAS substrate would
+	// still reject, but the user needs to reconcile the draft, not lose it).
+	if baseSHA, _ := d["base_sha"].(string); baseSHA != "" && baseSHA != head {
+		writeJSON(w, 409, map[string]any{
+			"error": "stale_base", "draft_base_sha": baseSHA, "current_head": head,
+			"guidance": "the branch moved after your draft was based; reload the committed content and re-apply your edit",
+		})
 		return
 	}
 	res, err := a.Refs.Update(repo, branch, head, []refs.Change{{Path: path, Content: content}}, in.Message, "editor:"+user+":"+draftID)
