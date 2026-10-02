@@ -105,6 +105,9 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("PATCH /api/settings/profile", a.handleUpdateUserProfile)
 	mux.HandleFunc("POST /api/settings/avatar", a.handleUploadUserAvatar)
 	mux.HandleFunc("DELETE /api/settings/avatar", a.handleDeleteUserAvatar)
+	mux.HandleFunc("POST /api/settings/password", a.handleChangePassword)
+	mux.HandleFunc("GET /api/settings/sessions", a.handleListSessions)
+	mux.HandleFunc("POST /api/settings/sessions/revoke-others", a.handleRevokeOtherSessions)
 	mux.HandleFunc("GET /api/avatars/{kind}/{id}", a.handleAvatar)
 
 	// repositories: legacy flat API plus canonical owner/repository metadata (PX2)
@@ -201,6 +204,10 @@ func (a *App) Handler() http.Handler {
 func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/") {
 		writeJSON(w, 404, map[string]any{"error": "not_found"})
+		return
+	}
+	if r.URL.Path == "/settings" || strings.HasPrefix(r.URL.Path, "/settings/") {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "settings.html"))
 		return
 	}
 	// Owner profile URLs use /{owner}. Reserved/static paths are filtered by

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"switchyard/internal/trestle"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const avatarMaxBytes = 2 << 20
@@ -70,3 +71,11 @@ func (a *App) handleUserActivity(w http.ResponseWriter,r *http.Request){
 	if refs,e:=a.Trestle.ListRecords("ref_updates","");e==nil{for _,x:=range refs{if strings.Contains(strOr(x["provenance"]),u){out=append(out,map[string]any{"type":"git","repo":x["repo"],"branch":x["branch"],"at":x["occurred_at"],"sha":x["new_sha"]})}}}
 	if len(out)>40{out=out[len(out)-40:]};writeJSON(w,200,map[string]any{"items":out})
 }
+
+func (a *App) handleChangePassword(w http.ResponseWriter,r *http.Request){
+	u:=a.currentUser(r);if u==""{writeJSON(w,401,map[string]any{"error":"unauthorized"});return}
+	var in struct{Current string `json:"current"`;New string `json:"new"`};if readJSON(r,&in)!=nil||len(in.New)<8{writeJSON(w,400,map[string]any{"error":"password_too_short"});return}
+	rid,ver,vals,err:=a.Trestle.FindRecord("users",`username = "`+u+`"`);if err!=nil||rid==""{writeJSON(w,404,map[string]any{"error":"user_not_found"});return};hash,_:=vals["password_hash"].(string);if bcrypt.CompareHashAndPassword([]byte(hash),[]byte(in.Current))!=nil{writeJSON(w,403,map[string]any{"error":"current_password_invalid"});return};nh,err:=bcrypt.GenerateFromPassword([]byte(in.New),bcrypt.DefaultCost);if err!=nil{writeJSON(w,500,map[string]any{"error":"internal"});return};if err:=a.Trestle.PatchRecord("users",rid,ver,map[string]any{"password_hash":string(nh)});err!=nil{writeJSON(w,409,map[string]any{"error":"account_changed_retry"});return};writeJSON(w,200,map[string]any{"ok":true})
+}
+func (a *App) handleListSessions(w http.ResponseWriter,r *http.Request){u:=a.currentUser(r);if u==""{writeJSON(w,401,map[string]any{"error":"unauthorized"});return};current:="";if c,e:=r.Cookie("switchyard_session");e==nil{current=c.Value};it,err:=a.Trestle.ListRecords("sessions",`username = "`+u+`"`);if err!=nil{writeJSON(w,502,map[string]any{"error":err.Error()});return};out:=[]map[string]any{};for _,x:=range it{tok,_:=x["token"].(string);out=append(out,map[string]any{"id":sha256Hex([]byte(tok))[:10],"current":tok==current,"expires_at":x["expires_at"]})};writeJSON(w,200,map[string]any{"items":out})}
+func (a *App) handleRevokeOtherSessions(w http.ResponseWriter,r *http.Request){u:=a.currentUser(r);if u==""{writeJSON(w,401,map[string]any{"error":"unauthorized"});return};current:="";if c,e:=r.Cookie("switchyard_session");e==nil{current=c.Value};it,_:=a.Trestle.ListRecords("sessions",`username = "`+u+`"`);n:=0;for _,x:=range it{tok,_:=x["token"].(string);if tok==""||tok==current{continue};if rid,ver,_,e:=a.Trestle.FindRecord("sessions",`token = "`+tok+`"`);e==nil&&rid!=""{if a.Trestle.DeleteRecord("sessions",rid,ver)==nil{n++}}};writeJSON(w,200,map[string]any{"revoked":n})}
