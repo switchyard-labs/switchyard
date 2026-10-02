@@ -60,3 +60,44 @@ containing a secret**. E4 supports the no-secret-in-repo/provenance boundary.
 selects a role whose credential only exists in the org/user store without
 leakage or a confusing indirection layer; what happens when a repo config
 references a role the org forbids.
+---
+
+## Implementation evidence to date (updated post-CP13, for the independent review)
+
+### T1 — Ref-update primitive / Artifacts contention semantics
+Strong evidence now exists from CP1 (E1 ref race), CP3 (per-ref CAS + stale
+handling), CP4 (three-writer CAS: ok/stale/ok, tree reflects only successful
+writers), and CP9 (queue contention: strict FIFO + CAS-guarded canonical-head
+freshness + bounded stale requeue). Direct human pushes are observed and
+reconciled (CP5). Ask Codex to validate the reconciliation contract, the
+force-push policy mechanism, whether per-ref in-process serialization is needed
+given Git CAS, and exact stale-detection/retry semantics for queued integration
+under external movement.
+
+### T2 — Agent runner adapter contract
+The deterministic runner adapter is production-shaped and exercised across the
+campaign (CP4–CP13: executions, roles, workflows, review, dogfood). The
+provider-backed coding-Agent CLI adapter remains **unexercised** (CP6 bounded
+condition: no CLI/credential on the control-plane host). Ask Codex to review the
+substrate interface (context in, events out, cancellation, budget, output
+classification) with the caveat that the CLI/provider-API sharing question is
+still answered only by design, not by a real runner.
+
+### T3 — Interactive-draft → Attempt takeover semantics
+CP10 provides the first real editor/Attempt evidence: durable drafts with
+revision CAS (Save ≠ Commit, no last-writer-wins), commit through the shared
+substrate, and an Agent panel that today runs the **formal Attempt** path (not
+interactive draft-assistance). The interactive-draft → Attempt takeover flow is
+recorded as a CP14/v1 gap. Ask Codex to review checkpoint-commit-before-Attempt
+vs initial-working-tree, attribution of the initial state, implicit Work
+creation, and whether an Attempt can exist without a Work item — informed by the
+new draft CAS semantics.
+
+### T4 — Role configuration precedence + repo→org secret resolution
+CP12 provides real role/policy/org evidence: org→repo grouping, policy
+evaluation at run choke points (agent deny_paths, integration risk escalation,
+workflow budgets), audit trail, fleet view. Org-secret **resolution** remains
+less proven than the credential store itself (CP6 AES-GCM + metadata-only API,
+zero leakage). Ask Codex to review precedence/portability semantics and the
+repo→org secret-resolution indirection, noting that the org secret lifecycle
+and enterprise authorization are later hardening.
