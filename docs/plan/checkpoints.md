@@ -102,23 +102,26 @@ in provenance; integration lands only via the queue.
 
 ## CP5 — Events, provenance, realtime
 
-- **Status: PASS** (corrective follow-up; handover: `handovers/CP05.md` +
-  addendum below; gate: `experiments/cp5/cp5_gate.sh`; event-path gate:
+- **Status: CONDITIONAL PASS** (post-cp13 review; handover: `handovers/CP05.md`
+  + addenda; gates: `experiments/cp5/cp5_gate.sh`,
   `experiments/cp5/event/cp5_event_gate.sh`).
 - **History preserved:** the original `0461e61` was accepted too broadly
-  (reconciliation + SSE + provenance were proven, but the real Cloudflare Queue
-  event fast path was not yet wired). That is recorded in the corrective
-  commit. The follow-up commit below wires and gates the fast path and upgrades
-  to PASS.
-- **Live observation (upstream condition, documented honestly):** as of the
-  corrective gate, Cloudflare event-subscription → Queue delivery for
-  `cf.artifacts.repo.pushed` stopped delivering account-wide (identical
-  subscription config delivered in CP0; recreated fresh for new repos; nothing
-  delivered). The Switchyard fast-path implementation is therefore gated with
-  real-schema `cf.artifacts.repo.pushed` envelopes carrying genuinely observed
-  SHAs (Queues push API), covering both orderings, duplicate delivery, and
-  offline convergence. Reconciliation guarantees eventual convergence
-  regardless; re-verify live delivery when the upstream delivery resumes.
+  (reconciliation + SSE + provenance proven, real fast path not yet wired);
+  that is recorded in the corrective commits. The follow-up commit wired and
+  gated the fast path.
+- **Condition (bounded, upstream):** Switchyard's event fast path is
+  implemented and gated from the Queue onward (pull consumer → shared
+  idempotent ingest → Trestle → SSE), and CP0 previously proved Artifacts
+  event delivery. But the full live `Artifacts push → event subscription →
+  Queue` production leg is currently blocked by an observed upstream
+  Cloudflare delivery issue and must be re-certified when that service resumes.
+  The final gate injected a real-schema `cf.artifacts.repo.pushed` envelope
+  into the Queue (real observed SHAs); it proves the consumer, queue
+  pull/ack, normalization, idempotency, duplicate delivery, event/reconciliation
+  ordering, offline recovery, and SSE — not the upstream subscription leg.
+  This is not a Switchyard architecture failure; reconciliation guarantees
+  correctness meanwhile. Upgrade to PASS in a follow-up commit once a real
+  auto-delivered push flows end-to-end.
 
 **Objective:** full event bridge; provenance graph; browser realtime.
 
@@ -156,9 +159,15 @@ workflow can spawn a child workflow and wait on an approval.
 ## CP8 — Reviews/findings + conflict
 
 - **Status: PASS** (handover: `handovers/CP08.md`; gate: `experiments/cp8/cp8_gate.sh`).
+- **Terminology (post-cp13 review):** CP8 proves **textual/Git merge conflict**
+  detection during preview integration + a deterministic repair loop. It is NOT
+  semantic-conflict detection: the CP8 gate exercised overlapping edits to the
+  same lines/files (real Git conflicts). Preview integration is the substrate on
+  which semantic checks can later run; the semantic-conflict experiment lives in
+  `experiments/cp8/semantic/`.
 
 **Objective:** structured Review Findings; draft contention; preview-based
-structural/semantic detection; conflict routing.
+conflict detection; conflict routing.
 
 **Gate:** two competing Attempts produce comparable PRs; a semantic conflict is
 caught by preview integration; findings have a bounded repair loop.
