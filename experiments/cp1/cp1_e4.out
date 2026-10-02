@@ -1,0 +1,6 @@
+child stdout: child-ok len=31
+secret file exists after run: False
+secret in child output: False
+no secret in child env: True
+expiry enforced -> secret expired
+E4 spike done

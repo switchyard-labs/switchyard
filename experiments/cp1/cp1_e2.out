@@ -1,0 +1,9 @@
+save#1 -> OK rev=1  persist_latency_ms=0.27
+reload -> rev=2 files=['src/auth.p'] content_end=HUMAN-edit
+device2 -> rev=2
+agent stale save -> STALE (current rev 2)
+merge(different lines) conflicted=True
+  'line1\n<<<<<<< /tmp/tmp8447p9km/ours\nline2\nHUMAN-edit\n=======\nAGENT-edit\nline3\n>>>>>>> /tmp/tmp8447p9km/theirs\n'
+merge(overlap line2) conflicted=True (markers present: True)
+expiry enforced -> draft expired
+E2 spike done

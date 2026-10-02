@@ -1,0 +1,23 @@
+### create repo cp1-race-1790956016
+remote=https://b7f20353ee8a9e5d2003f52c74ba795e.artifacts.cloudflare.net/git/switchyard-cp0/cp1-race-1790956016.git
+### A pushes baseline (X)
+base SHA=46b261f04babef25d2b5dcb78e46ae2ae4dafe1a
+### A and B both clone at X
+### A commits + pushes (ref moves to Y)
+A pushed; head now 6d7a25f2eb2e1629dd2435ad7076d156d0cc2426
+### B commits from X (stale base), attempts normal push
+--- B push output ---
+B push rc=1
+To https://b7f20353ee8a9e5d2003f52c74ba795e.artifacts.cloudflare.net/git/switchyard-cp0/cp1-race-1790956016.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://b7f20353ee8a9e5d2003f52c74ba795e.artifacts.cloudflare.net/git/switchyard-cp0/cp1-race-1790956016.git'
+hint: Updates were rejected because the remote contains work that you do not
+hint: have locally. This is usually caused by another repository pushing to
+hint: the same ref. If you want to integrate the remote changes, use
+hint: 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+### B with --force (what a misbehaving writer could do)
+B force-push rc=0
+To https://b7f20353ee8a9e5d2003f52c74ba795e.artifacts.cloudflare.net/git/switchyard-cp0/cp1-race-1790956016.git
+ + 6d7a25f...ce070e1 main -> main (forced update)
+### head after experiment

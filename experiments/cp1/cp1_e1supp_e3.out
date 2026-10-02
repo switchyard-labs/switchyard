@@ -1,0 +1,22 @@
+========== E1-supp: read ref SHA via ls-remote ==========
+HEAD1=ce96120dcf6c1dee8a0546e9168528c560f577bd
+--- ls-remote before ---
+--- ls-remote with auth ---
+  ce96120dcf6c1dee8a0546e9168528c560f577bd	HEAD
+  ce96120dcf6c1dee8a0546e9168528c560f577bd	refs/heads/main
+--- second commit; ls-remote reflects new head ---
+  975e58c25c10500615da4e74ff76ab59ed8d2518	HEAD
+  975e58c25c10500615da4e74ff76ab59ed8d2518	refs/heads/main
+expected HEAD2=975e58c25c10500615da4e74ff76ab59ed8d2518
+========== E3: three-way merge via git merge-file ==========
+case2 (non-overlap) rc=0 merged:
+  human-edit-1
+  human-edit-2
+  line3
+  line4
+  agent-edit-5
+  agent-edit-6
+case2 conflicts:
+0
+case3 (overlap) rc=0
+=== E3 conclusion: git merge-file gives deterministic three-way merge; overlap yields markers ===

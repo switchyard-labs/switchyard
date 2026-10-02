@@ -13,6 +13,8 @@ Living checklist, not a waterfall. Gates at the end of every checkpoint:
 
 ## CP1 — Architecture synthesis + contract verification
 
+- **Status: PASS** (handover: `handovers/CP01.md`; evidence: `experiments/cp1/`).
+
 **Objective:** turn the design handover into a durable architecture and close the
 highest-risk assumptions before building. **No product implementation.**
 
