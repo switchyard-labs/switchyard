@@ -55,7 +55,7 @@ func runGitOut(dir string, args ...string) (string, error) {
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 	out, err := cmd.Output()
 	if err != nil {
-		return "", err
+		return string(out), &gitError{Out: string(out)}
 	}
 	return string(out), nil
 }

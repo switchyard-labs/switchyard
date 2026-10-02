@@ -182,6 +182,10 @@
         treeEl.appendChild(row);
       }
       if (activePath) {
+        const editLink = document.getElementById("edit-link");
+        if (editLink) editLink.href = "/edit.html?name=" + encodeURIComponent(name) + "&ref=" + encodeURIComponent(ref) + "&path=" + encodeURIComponent(activePath);
+        const titleEl = document.getElementById("file-view-title");
+        if (titleEl) titleEl.textContent = activePath;
         const data = await api("/api/repos/" + encodeURIComponent(name) + "/content?ref=" + encodeURIComponent(ref) + "&path=" + encodeURIComponent(activePath), { headers: {} });
         // content endpoint returns raw bytes; fetch directly
         const raw = await fetch("/api/repos/" + encodeURIComponent(name) + "/content?ref=" + encodeURIComponent(ref) + "&path=" + encodeURIComponent(activePath), { credentials: "same-origin" });
@@ -208,6 +212,8 @@
     });
     es.onerror = () => { /* EventSource auto-reconnects */ };
   }
+
+  window.refreshAuth = refreshAuth;
 
   document.addEventListener("DOMContentLoaded", async () => {
     startLive();

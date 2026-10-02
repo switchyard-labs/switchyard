@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Switchyard — Editor</title>
+		<link rel="icon" type="image/webp" href="/assets/images/favicon.webp">
+		<link rel="stylesheet" href="/assets/css/app.css">
+		<link rel="stylesheet" href="/assets/css/editor.css">
+	</head>
+	<body>
+		<header class="site-header">
+			<div class="header-inner">
+				<a class="brand" href="/"><span class="brand-mark">S</span><span class="brand-name">Switchyard</span></a>
+				<nav class="site-nav" id="site-nav">
+					<a href="/">Dashboard</a>
+					<a href="/repos.html">Repositories</a>
+					<a href="/work.html">Work</a>
+				</nav>
+				<div class="header-right">
+					<span class="auth-state" id="auth-state"></span>
+					<button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>
+				</div>
+			</div>
+		</header>
+		<nav class="mobile-menu" id="mobile-menu" hidden>
+			<div class="mobile-menu-head"><span class="brand-name">Switchyard</span><button class="hamburger" id="mobile-close" aria-label="Close menu">×</button></div>
+			<a href="/">Dashboard</a>
+			<a href="/repos.html">Repositories</a>
+			<a href="/work.html">Work</a>
+			<div class="mobile-auth" id="mobile-auth"></div>
+		</nav>
+		<main class="site-main editor-main">
+			<section class="panel editor-panel">
+				<div class="editor-toolbar">
+					<span id="editor-title" class="muted">Loading…</span>
+					<span id="draft-state" class="draft-state"></span>
+					<span class="spacer"></span>
+					<button class="btn" id="btn-save">Save draft</button>
+					<button class="btn primary" id="btn-commit">Commit</button>
+				</div>
+				<div class="editor-body">
+					<div class="editor-col"><div id="editor"></div></div>
+					<aside class="side-col">
+						<div class="side-head"><strong>Diff</strong><span id="diff-state" class="muted"></span></div>
+						<pre class="diff-view" id="diff-view"><p class="muted">Save a draft to see the diff.</p></pre>
+						<div class="side-head"><strong>Findings</strong></div>
+						<div class="findings" id="findings"><p class="muted">No findings loaded.</p></div>
+						<div class="side-head">
+							<strong>Agent</strong>
+							<button class="btn mini" id="btn-agent">Run implementer</button>
+						</div>
+						<div class="agent-panel" id="agent-panel"><p class="muted">Run an agent against this attempt branch.</p></div>
+					</aside>
+				</div>
+			</section>
+		</main>
+		<script src="/assets/js/cm6.bundle.js"></script>
+		<script src="/assets/js/app.js"></script>
+		<script src="/assets/js/app-editor.js"></script>
+	</body>
+</html>

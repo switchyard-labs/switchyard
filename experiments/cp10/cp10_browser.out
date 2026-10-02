@@ -1,0 +1,14 @@
+PASS sign in - 200
+PASS session cookie set
+PASS CM6 editor renders
+PASS editor title set
+PASS Save draft shows 'draft saved (not committed)'
+PASS draft survives reload (Save != Commit) - editor-has-draft=true editor-ne-committed=true
+PASS diff surface shows draft vs committed
+PASS Commit applies via shared substrate
+PASS committed content on branch
+PASS draft cleared after commit
+PASS agent panel runs implementer
+PASS agent edit lands in editor
+PASS agent edit committed to attempt branch
+CP10_BROWSER 13/13

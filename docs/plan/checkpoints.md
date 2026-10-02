@@ -175,6 +175,8 @@ canonical changes only when policy allows.
 
 ## CP10 — Browser editor + Agent panel
 
+- **Status: PASS** (handover: `handovers/CP10.md`; gate: `experiments/cp10/cp10_browser.mjs`, real Chromium, 13/13).
+
 **Objective:** CM6 editor, draft state, Save ≠ Commit, shared diff surface,
 findings gutters, hideable Agent panel; commit via the shared substrate.
 

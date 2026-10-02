@@ -1,0 +1,28 @@
+.editor-main { max-width: 1400px; }
+.editor-panel { display: flex; flex-direction: column; }
+.editor-toolbar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border, #2b2f3a); }
+.editor-toolbar .spacer { flex: 1; }
+.draft-state { font-size: 12px; color: #d9a441; }
+.btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border, #2b2f3a); background: #22262f; color: #e6e8ee; cursor: pointer; }
+.btn.primary { background: #3b6ef6; border-color: #3b6ef6; color: #fff; }
+.btn.mini { padding: 3px 8px; font-size: 12px; }
+.editor-body { display: flex; gap: 0; min-height: 520px; }
+.editor-col { flex: 1; min-width: 0; }
+.editor-col .cm-editor { height: 100%; }
+.editor-col .cm-scroller { min-height: 520px; }
+.side-col { width: 360px; border-left: 1px solid var(--border, #2b2f3a); display: flex; flex-direction: column; max-height: 640px; }
+.side-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--border, #2b2f3a); }
+.side-head strong { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.diff-view { flex: 1; min-height: 120px; max-height: 200px; overflow: auto; font-size: 12px; padding: 10px 12px; margin: 0; background: #171a21; }
+.findings { padding: 8px 12px; font-size: 13px; }
+.finding { padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; background: #1c2029; }
+.finding.error { border-left: 3px solid #e5484d; }
+.finding.warning { border-left: 3px solid #d9a441; }
+.finding.info { border-left: 3px solid #3b6ef6; }
+.finding .sev { font-weight: 700; text-transform: uppercase; font-size: 11px; }
+.agent-panel { padding: 8px 12px; font-size: 13px; }
+.agent-panel pre { font-size: 12px; white-space: pre-wrap; }
+.repo-browse { display: flex; }
+.file-view-wrap { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.file-view-toolbar { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-bottom: 1px solid var(--border, #2b2f3a); }
+.file-view-toolbar a.btn { text-decoration: none; font-size: 12px; }

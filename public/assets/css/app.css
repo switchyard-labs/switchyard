@@ -76,6 +76,8 @@ main {
 	cursor: pointer;
 }
 
+.mobile-menu[hidden] { display: none; }
+
 .mobile-menu {
 	position: fixed;
 	inset: 0;
