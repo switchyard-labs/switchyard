@@ -205,9 +205,17 @@ human can decide without reconstructing history.
 ## CP12 — Organisation/enterprise + policy/risk
 
 - **Status: PASS** (handover: `handovers/CP12.md`; gate: `experiments/cp12/cp12_gate.sh`).
-
-**Objective:** risk model (blast radius × uncertainty), org policies, budgets,
-audit, fleet view; per-domain queues where justified.
+- **Wording (post-cp13 review):** this proves the **organisation/policy
+  architecture** (org→repo grouping, policy evaluation at run choke points,
+  risk-based escalation, budgets, audit, fleet view). The risk model is a
+  **v1/prototype signal set** (file count / footprint, preview-conflict state)
+  — a proof that risk-derived policy can alter autonomy, NOT the full
+  conceptual `blast radius × uncertainty` model (auth sensitivity, schema/data
+  migration, external side effects, billing, public API compatibility,
+  reversibility, etc. are future signals). "Enterprise security complete" is
+  not claimed: membership role enforcement, per-repo permission matrices, SSO,
+  org-secret lifecycle, compliance retention, and fleet-scale throughput
+  belong to later hardening/expansion.
 
 **Gate:** policy constrains an org's agents without breaking the simple repo
 case.
