@@ -131,11 +131,13 @@ func (a *App) handleRepoContent(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := a.Artifacts.RawFile(name, ref, path)
 	if err != nil {
-		writeJSON(w, 404, map[string]any{"error": strings.TrimPrefix(err.Error(), "raw ") })
+		writeJSON(w, 404, map[string]any{"error": strings.TrimPrefix(err.Error(), "raw ")})
 		return
 	}
 	ct := http.DetectContentType(data)
-	if strings.HasPrefix(ct, "text/plain") { ct = "text/plain; charset=utf-8" }
+	if strings.HasPrefix(ct, "text/plain") {
+		ct = "text/plain; charset=utf-8"
+	}
 	w.Header().Set("Content-Type", ct)
 	w.Write(data)
 }

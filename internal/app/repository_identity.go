@@ -266,7 +266,9 @@ func (a *App) handleCanonicalRepoContent(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	ct := http.DetectContentType(data)
-	if strings.HasPrefix(ct, "text/plain") { ct = "text/plain; charset=utf-8" }
+	if strings.HasPrefix(ct, "text/plain") {
+		ct = "text/plain; charset=utf-8"
+	}
 	w.Header().Set("Content-Type", ct)
 	_, _ = w.Write(data)
 }
@@ -296,12 +298,23 @@ func parseRepositoryRoute(p string) (repositoryRoute, bool) {
 
 func (a *App) handleCanonicalRepoRefs(w http.ResponseWriter, r *http.Request) {
 	_, artifact, ok := a.resolveCanonicalRepository(w, r)
-	if !ok { return }
+	if !ok {
+		return
+	}
 	repo, err := a.Artifacts.GetRepo(artifact)
-	if err != nil { writeJSON(w, 502, map[string]any{"error": err.Error()}); return }
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
 	tok, err := a.Refs.GitToken(artifact)
-	if err != nil { writeJSON(w, 502, map[string]any{"error": err.Error()}); return }
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
 	refsMap, err := artifacts.LsRemote(repo.Remote, tok)
-	if err != nil { writeJSON(w, 502, map[string]any{"error": err.Error()}); return }
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
 	writeJSON(w, 200, map[string]any{"refs": refsMap})
 }

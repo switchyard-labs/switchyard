@@ -72,11 +72,10 @@
     const state = document.getElementById("auth-state");
     const mAuth = document.getElementById("mobile-auth");
     if (state) {
-      state.textContent = user ? "Signed in as " + user : "";
-      if (!user) state.innerHTML = '<a href="/signin.html">Sign in</a>';
+      state.innerHTML = user ? '<a class="account-chip" href="/'+encodeURIComponent(user)+'"><img src="/api/avatars/user/'+encodeURIComponent(user)+'" alt=""><span>'+esc(user)+'</span></a>' : '<a href="/signin.html">Sign in</a>';
     }
     if (mAuth) mAuth.innerHTML = user
-      ? "<a href='#' id='logout-mobile'>Sign out (" + esc(user) + ")</a>"
+      ? '<a href="/'+encodeURIComponent(user)+'">Profile</a><a href="/settings">Settings</a><a href="#" id="logout-mobile">Sign out ('+esc(user)+')</a>'
       : '<a href="/signin.html">Sign in</a>';
     const lo = document.getElementById("logout-mobile");
     if (lo) lo.onclick = async (e) => { e.preventDefault(); await api("/api/auth/logout", { method: "POST" }); location.reload(); };

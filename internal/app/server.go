@@ -73,10 +73,14 @@ func (a *App) Provision() error {
 		}
 	}
 	for _, c := range collaborationCollections() {
-		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil { return err }
+		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
+			return err
+		}
 	}
 	for _, c := range profileCollections() {
-		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil { return err }
+		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
+			return err
+		}
 	}
 	for _, c := range policyCollections() {
 		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
@@ -178,6 +182,7 @@ func (a *App) Handler() http.Handler {
 
 	// org/policy/risk/audit/fleet (CP12)
 	mux.HandleFunc("POST /api/orgs", a.handleCreateOrg)
+	mux.HandleFunc("GET /api/orgs", a.handleListOrganizations)
 	mux.HandleFunc("GET /api/orgs/{id}", a.handleGetOrgProfile)
 	mux.HandleFunc("GET /api/orgs/{id}/repositories", a.handleOrgRepositories)
 	mux.HandleFunc("GET /api/orgs/{id}/members", a.handleOrgMembers)
@@ -224,6 +229,10 @@ func (a *App) Handler() http.Handler {
 func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/") {
 		writeJSON(w, 404, map[string]any{"error": "not_found"})
+		return
+	}
+	if r.URL.Path == "/organizations" || r.URL.Path == "/organizations/" {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "organizations.html"))
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/organizations/") && strings.Contains(r.URL.Path, "/settings") {

@@ -32,7 +32,7 @@ func (a *App) handleSaveDraft(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "repo_branch_path_required"})
 		return
 	}
-	draftID := "draft_" + sha256Hex([]byte(user+"|"+in.Repo+"|"+in.Branch+"|"+in.Path))[:10]
+	draftID := "draft_" + sha256Hex([]byte(user + "|" + in.Repo + "|" + in.Branch + "|" + in.Path))[:10]
 	at := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 
 	existing, err := a.Trestle.ListRecords("drafts", `id = "`+draftID+`"`)
@@ -166,8 +166,10 @@ func (a *App) handleCommitDraft(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	prov := "editor:"+user+":"+draftID
-	if ae, _ := d["last_agent_execution"].(string); ae != "" { prov += " agent:"+ae }
+	prov := "editor:" + user + ":" + draftID
+	if ae, _ := d["last_agent_execution"].(string); ae != "" {
+		prov += " agent:" + ae
+	}
 	res, err := a.Refs.Update(repo, branch, head, []refs.Change{{Path: path, Content: content}}, in.Message, prov)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
@@ -220,33 +222,71 @@ func (a *App) handleDiff(w http.ResponseWriter, r *http.Request) {
 }
 
 var _ = time.RFC3339
+
 // handleAgentProposeDraft runs the shared Agent runner against an explicit
 // draft revision and CAS-applies the result back to working state. It never
 // commits Git. Formal Attempts remain a separate autonomous path.
 func (a *App) handleAgentProposeDraft(w http.ResponseWriter, r *http.Request) {
 	user := a.currentUser(r)
-	if user == "" { writeJSON(w, 401, map[string]any{"error":"unauthorized"}); return }
+	if user == "" {
+		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
+		return
+	}
 	draftID := r.PathValue("id")
-	var in struct { Prompt string `json:"prompt"`; ExpectedRevision string `json:"expected_revision"` }
-	if err := readJSON(r, &in); err != nil || strings.TrimSpace(in.Prompt)=="" { writeJSON(w,400,map[string]any{"error":"prompt_required"}); return }
+	var in struct {
+		Prompt           string `json:"prompt"`
+		ExpectedRevision string `json:"expected_revision"`
+	}
+	if err := readJSON(r, &in); err != nil || strings.TrimSpace(in.Prompt) == "" {
+		writeJSON(w, 400, map[string]any{"error": "prompt_required"})
+		return
+	}
 	items, err := a.Trestle.ListRecords("drafts", `id = "`+draftID+`"`)
-	if err != nil || len(items)==0 { writeJSON(w,404,map[string]any{"error":"draft_not_found"}); return }
+	if err != nil || len(items) == 0 {
+		writeJSON(w, 404, map[string]any{"error": "draft_not_found"})
+		return
+	}
 	d := items[0]
-	if d["user"] != user { writeJSON(w,403,map[string]any{"error":"draft_owner_required"}); return }
+	if d["user"] != user {
+		writeJSON(w, 403, map[string]any{"error": "draft_owner_required"})
+		return
+	}
 	startRev := draftRevision(d)
-	if in.ExpectedRevision!="" && atoiOr(in.ExpectedRevision,-1)!=startRev { writeJSON(w,409,map[string]any{"error":"draft_stale","current_revision":itoa(startRev)}); return }
-	path, _ := d["path"].(string); cur, _ := d["content"].(string)
+	if in.ExpectedRevision != "" && atoiOr(in.ExpectedRevision, -1) != startRev {
+		writeJSON(w, 409, map[string]any{"error": "draft_stale", "current_revision": itoa(startRev)})
+		return
+	}
+	path, _ := d["path"].(string)
+	cur, _ := d["content"].(string)
 	appendLine := "\n// Agent proposal: " + strings.TrimSpace(in.Prompt) + "\n"
 	ex, err := a.runViaSubstrate("implementer", "draft:"+draftID, strOr(d["repo"]), strOr(d["branch"]), path, cur, appendLine)
-	if err != nil { writeJSON(w,502,map[string]any{"error":err.Error()}); return }
-	proposed := ""; if ex.Result!=nil { proposed=ex.Result[path] }
-	if proposed=="" { writeJSON(w,502,map[string]any{"error":"agent_produced_no_change"}); return }
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
+	proposed := ""
+	if ex.Result != nil {
+		proposed = ex.Result[path]
+	}
+	if proposed == "" {
+		writeJSON(w, 502, map[string]any{"error": "agent_produced_no_change"})
+		return
+	}
 	// Re-read after the potentially long Agent call. A newer human save wins.
 	rid, ver, vals, err := a.Trestle.FindRecord("drafts", `id = "`+draftID+`"`)
-	if err != nil || rid=="" { writeJSON(w,404,map[string]any{"error":"draft_not_found"}); return }
+	if err != nil || rid == "" {
+		writeJSON(w, 404, map[string]any{"error": "draft_not_found"})
+		return
+	}
 	currentRev := draftRevision(vals)
-	if currentRev != startRev { writeJSON(w,409,map[string]any{"error":"draft_stale","expected_revision":itoa(startRev),"current_revision":itoa(currentRev),"execution":ex.ID}); return }
-	newRev := currentRev+1
-	if err := a.Trestle.PatchRecord("drafts",rid,ver,map[string]any{"content":proposed,"revision":itoa(newRev),"last_agent_execution":ex.ID,"last_agent_prompt":strings.TrimSpace(in.Prompt),"updated_at":nowStr()}); err != nil { writeJSON(w,409,map[string]any{"error":"draft_stale","execution":ex.ID}); return }
-	writeJSON(w,200,map[string]any{"id":draftID,"revision":newRev,"content":proposed,"execution":ex.ID,"status":"proposed","committed":false})
+	if currentRev != startRev {
+		writeJSON(w, 409, map[string]any{"error": "draft_stale", "expected_revision": itoa(startRev), "current_revision": itoa(currentRev), "execution": ex.ID})
+		return
+	}
+	newRev := currentRev + 1
+	if err := a.Trestle.PatchRecord("drafts", rid, ver, map[string]any{"content": proposed, "revision": itoa(newRev), "last_agent_execution": ex.ID, "last_agent_prompt": strings.TrimSpace(in.Prompt), "updated_at": nowStr()}); err != nil {
+		writeJSON(w, 409, map[string]any{"error": "draft_stale", "execution": ex.ID})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"id": draftID, "revision": newRev, "content": proposed, "execution": ex.ID, "status": "proposed", "committed": false})
 }
