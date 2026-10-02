@@ -24,21 +24,32 @@
 			</div>
 			<div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>
 		</nav>
-		<main class="site-main">
-			<main>
-				<section class="panel">
-					<div class="repo-head">
-						<h1 id="repo-name">Repository</h1>
-						<span class="muted" id="repo-ref">ref: main</span>
-						<p class="muted" id="repo-description"></p>
-					</div>
-					<div class="repo-browse">
-						<aside class="file-tree" id="file-tree"><p class="muted">Loading files…</p></aside>
-						<pre class="file-view" id="file-view">&lt;p class="muted">Select a file.&lt;/p></pre>
-					</div>
-				</section>
-			</main>
+				<main class="site-main">
+<main>
+<section class="panel repo-shell">
+  <div class="repo-head">
+    <div><div class="repo-owner muted" id="repo-owner"></div><h1 id="repo-name">Repository</h1><p class="muted" id="repo-description"></p></div>
+    <div class="repo-actions"><span class="language-badge" id="repo-visibility">private</span></div>
+  </div>
+  <nav class="repo-tabs" aria-label="Repository"><a class="active" href="#">Code</a><span>Work</span><span>Pull Requests</span><span>Workflows</span><span>Settings</span></nav>
+  <div class="repo-toolbar">
+    <label>Branch <select id="repo-ref-select"><option>main</option></select></label>
+    <div class="breadcrumbs" id="repo-breadcrumbs"></div>
+    <span class="spacer"></span><span class="language-badge" id="file-language">Plain text</span>
+  </div>
+  <div class="repo-browse">
+    <aside class="file-tree" id="file-tree"><p class="muted">Loading files…</p></aside>
+    <section class="file-view-wrap">
+      <div class="file-view-toolbar"><strong id="file-view-title">Select a file</strong><span id="file-meta" class="muted"></span><span class="spacer"></span><button class="btn mini" id="copy-path" type="button">Copy path</button><button class="btn mini" id="copy-file" type="button">Copy file</button><a class="btn mini" id="raw-link" target="_blank">Raw</a><a class="btn mini" id="edit-link">Edit</a></div>
+      <div class="file-view code-surface" id="file-view"><p class="muted">Select a file.</p></div>
+      <article class="readme markdown-body" id="readme-view" hidden></article>
+    </section>
+  </div>
+</section>
+</main>
 		</main>
+		<script src="assets/js/code-surface.js"></script>
+		<script src="assets/js/markdown.js"></script>
 		<script src="assets/js/app.js"></script>
 	</body>
 </html>

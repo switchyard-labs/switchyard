@@ -134,6 +134,8 @@ func (a *App) handleRepoContent(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 404, map[string]any{"error": strings.TrimPrefix(err.Error(), "raw ") })
 		return
 	}
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	ct := http.DetectContentType(data)
+	if strings.HasPrefix(ct, "text/plain") { ct = "text/plain; charset=utf-8" }
+	w.Header().Set("Content-Type", ct)
 	w.Write(data)
 }

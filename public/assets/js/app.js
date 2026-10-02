@@ -163,66 +163,41 @@
 
   /* repo browser */
   function canonicalRepoContext() {
-    const params = new URLSearchParams(location.search);
-    const legacy = params.get("name");
-    if (legacy) return { legacy: true, artifact: legacy, owner: "", repo: "", ref: params.get("ref") || "main", path: params.get("path") || "" };
-    const parts = location.pathname.split("/").filter(Boolean).map(decodeURIComponent);
-    if (parts.length < 2) return { legacy: true, artifact: "", owner: "", repo: "", ref: "main", path: "" };
-    const out = { legacy: false, owner: parts[0], repo: parts[1], artifact: "", ref: "main", path: "" };
-    if (parts.length >= 4 && (parts[2] === "blob" || parts[2] === "tree")) {
-      out.kind = parts[2]; out.ref = parts[3]; out.path = parts.slice(4).join("/");
-    }
+    const params = new URLSearchParams(location.search), legacy=params.get("name");
+    if (legacy) return {legacy:true,artifact:legacy,owner:"",repo:"",ref:params.get("ref")||"main",path:params.get("path")||""};
+    const parts=location.pathname.split("/").filter(Boolean).map(decodeURIComponent);
+    if(parts.length<2) return {legacy:true,artifact:"",owner:"",repo:"",ref:"main",path:""};
+    const out={legacy:false,owner:parts[0],repo:parts[1],artifact:"",ref:"main",path:""};
+    if(parts.length>=4&&(parts[2]==="blob"||parts[2]==="tree")){out.kind=parts[2];out.ref=parts[3];out.path=parts.slice(4).join("/");}
     return out;
   }
-  function canonicalRepoURL(ctx, kind, ref, path) {
-    const base = "/" + encodeURIComponent(ctx.owner) + "/" + encodeURIComponent(ctx.repo);
-    if (!kind) return base;
-    const tail = path ? "/" + path.split("/").map(encodeURIComponent).join("/") : "";
-    return base + "/" + kind + "/" + encodeURIComponent(ref || "main") + tail;
+  function canonicalRepoURL(ctx,kind,ref,path){const base="/"+encodeURIComponent(ctx.owner)+"/"+encodeURIComponent(ctx.repo); if(!kind)return base; const tail=path?"/"+path.split("/").map(encodeURIComponent).join("/"):""; return base+"/"+kind+"/"+encodeURIComponent(ref||"main")+tail;}
+  function repoRoot(ctx){return ctx.legacy?"/api/repos/"+encodeURIComponent(ctx.artifact):"/api/repositories/"+encodeURIComponent(ctx.owner)+"/"+encodeURIComponent(ctx.repo);}
+  function rawURL(ctx,path){return repoRoot(ctx)+"/content?ref="+encodeURIComponent(ctx.ref)+"&path="+encodeURIComponent(path);}
+  function renderBreadcrumbs(ctx){const el=document.getElementById("repo-breadcrumbs"); if(!el)return; const ps=(ctx.path||"").split("/").filter(Boolean); let cur=""; el.innerHTML='<a href="'+(ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact):canonicalRepoURL(ctx))+ '">'+esc(ctx.repo||ctx.artifact)+'</a>'+ps.map((p,i)=>{cur+=(cur?"/":"")+p; return '<span>/</span><a href="'+(i===ps.length-1?'#':(ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(ctx.ref)+'&path='+encodeURIComponent(cur):canonicalRepoURL(ctx,'tree',ctx.ref,cur)))+'">'+esc(p)+'</a>';}).join('');}
+  async function renderRepo(){
+    const nameEl=document.getElementById("repo-name"),treeEl=document.getElementById("file-tree"),viewEl=document.getElementById("file-view"); if(!nameEl)return;
+    const ctx=canonicalRepoContext();
+    if(!ctx.legacy){const meta=await api(repoRoot(ctx));ctx.artifact=meta.artifact_name;nameEl.textContent=meta.slug||meta.display_name; document.getElementById("repo-owner").textContent=meta.owner_slug||ctx.owner; document.getElementById("repo-description").textContent=meta.description||""; const vis=document.getElementById("repo-visibility"); if(vis)vis.textContent=meta.visibility||"private"; if(!ctx.ref||ctx.ref==="main")ctx.ref=meta.default_branch||ctx.ref;} else nameEl.textContent=ctx.artifact;
+    const sel=document.getElementById("repo-ref-select"); if(sel){try{const rr=await api(repoRoot(ctx)+"/refs"); const branches=Object.keys(rr.refs||{}).filter(x=>x.startsWith('refs/heads/')).map(x=>x.slice(11)); sel.innerHTML=branches.map(x=>'<option '+(x===ctx.ref?'selected':'')+'>'+esc(x)+'</option>').join('')||'<option>'+esc(ctx.ref)+'</option>'; sel.onchange=()=>{location.href=ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(sel.value):(canonicalRepoURL(ctx,'tree',sel.value,''));};}catch(e){}}
+    renderBreadcrumbs(ctx); loadTree(ctx,treeEl,viewEl);
   }
-  async function renderRepo() {
-    const nameEl = document.getElementById("repo-name");
-    const treeEl = document.getElementById("file-tree");
-    const viewEl = document.getElementById("file-view");
-    if (!nameEl) return;
-    const ctx = canonicalRepoContext();
-    if (!ctx.legacy) {
-      const meta = await api("/api/repositories/" + encodeURIComponent(ctx.owner) + "/" + encodeURIComponent(ctx.repo));
-      ctx.artifact = meta.artifact_name;
-      nameEl.textContent = meta.full_name;
-      const desc = document.getElementById("repo-description"); if (desc) desc.textContent = meta.description || "";
-    } else {
-      nameEl.textContent = ctx.artifact;
-    }
-    document.getElementById("repo-ref").textContent = "ref: " + ctx.ref;
-    loadTree(ctx, treeEl, viewEl);
-  }
-  async function loadTree(ctx, treeEl, viewEl) {
-    try {
-      const root = ctx.legacy
-        ? "/api/repos/" + encodeURIComponent(ctx.artifact)
-        : "/api/repositories/" + encodeURIComponent(ctx.owner) + "/" + encodeURIComponent(ctx.repo);
-      const t = await api(root + "/tree?ref=" + encodeURIComponent(ctx.ref));
-      const files = t.tree.map((it) => it.path).sort();
-      treeEl.innerHTML = "";
-      for (const f of files) {
-        const row = el("<div class='file' data-path='" + esc(f) + "'>" + esc(f) + "</div>");
-        row.onclick = () => {
-          location.href = ctx.legacy
-            ? "/repo.html?name=" + encodeURIComponent(ctx.artifact) + "&ref=" + encodeURIComponent(ctx.ref) + "&path=" + encodeURIComponent(f)
-            : canonicalRepoURL(ctx, "blob", ctx.ref, f);
-        };
-        treeEl.appendChild(row);
+  async function loadTree(ctx,treeEl,viewEl){
+    try{
+      const root=repoRoot(ctx),t=await api(root+"/tree?ref="+encodeURIComponent(ctx.ref)),files=t.tree.map(it=>it.path).sort(); treeEl.innerHTML="";
+      for(const f of files){const row=el("<div class='file' data-path='"+esc(f)+"'><span class='file-icon'>·</span>"+esc(f)+"</div>"); row.onclick=()=>location.href=ctx.legacy?"/repo.html?name="+encodeURIComponent(ctx.artifact)+"&ref="+encodeURIComponent(ctx.ref)+"&path="+encodeURIComponent(f):canonicalRepoURL(ctx,"blob",ctx.ref,f); treeEl.appendChild(row);}
+      if(ctx.path){
+        const edit=document.getElementById('edit-link'); if(edit)edit.href='/edit.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(ctx.ref)+'&path='+encodeURIComponent(ctx.path);
+        document.getElementById('file-view-title').textContent=ctx.path; const raw=await fetch(rawURL(ctx,ctx.path),{credentials:'same-origin'}); if(!raw.ok)throw new Error('content request failed: '+raw.status); const ct=raw.headers.get('content-type')||''; const blob=await raw.blob(); const size=blob.size; document.getElementById('file-meta').textContent=size<1024?size+' B':(size/1024).toFixed(1)+' KB';
+        document.getElementById('raw-link').href=rawURL(ctx,ctx.path); document.getElementById('copy-path').onclick=()=>navigator.clipboard&&navigator.clipboard.writeText(ctx.path);
+        const lang=window.SwitchyardCode?SwitchyardCode.detectLanguage(ctx.path):'text'; document.getElementById('file-language').textContent=window.SwitchyardCode?SwitchyardCode.labelFor(lang):lang;
+        const image=/^image\//.test(ct)||/\.(png|jpe?g|gif|webp|svg)$/i.test(ctx.path);
+        const text=!image?await blob.text():'';
+        if(image){viewEl.innerHTML='<div class="image-preview"><img alt="'+esc(ctx.path)+'" src="'+rawURL(ctx,ctx.path)+'"></div>';}
+        else {viewEl.innerHTML=SwitchyardCode.lines(text,lang); document.getElementById('copy-file').onclick=()=>navigator.clipboard&&navigator.clipboard.writeText(text);}
+        renderBreadcrumbs(ctx);
       }
-      if (ctx.path) {
-        const editLink = document.getElementById("edit-link");
-        if (editLink) editLink.href = "/edit.html?name=" + encodeURIComponent(ctx.artifact) + "&ref=" + encodeURIComponent(ctx.ref) + "&path=" + encodeURIComponent(ctx.path);
-        const titleEl = document.getElementById("file-view-title"); if (titleEl) titleEl.textContent = ctx.path;
-        const raw = await fetch(root + "/content?ref=" + encodeURIComponent(ctx.ref) + "&path=" + encodeURIComponent(ctx.path), { credentials: "same-origin" });
-        if (!raw.ok) throw new Error("content request failed: " + raw.status);
-        viewEl.textContent = await raw.text();
-      }
-    } catch (e) { treeEl.innerHTML = "<p class='error'>" + esc(e.message) + "</p>"; }
+    }catch(e){treeEl.innerHTML="<p class='error'>"+esc(e.message)+"</p>";}
   }
 
   async function startLive() {

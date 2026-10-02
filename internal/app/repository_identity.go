@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"switchyard/internal/artifacts"
 )
 
 var ownerSlugRE = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?$`)
@@ -259,7 +261,9 @@ func (a *App) handleCanonicalRepoContent(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, 404, map[string]any{"error": strings.TrimPrefix(err.Error(), "raw ")})
 		return
 	}
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	ct := http.DetectContentType(data)
+	if strings.HasPrefix(ct, "text/plain") { ct = "text/plain; charset=utf-8" }
+	w.Header().Set("Content-Type", ct)
 	_, _ = w.Write(data)
 }
 
@@ -284,4 +288,16 @@ func parseRepositoryRoute(p string) (repositoryRoute, bool) {
 		return r, true
 	}
 	return repositoryRoute{}, false
+}
+
+func (a *App) handleCanonicalRepoRefs(w http.ResponseWriter, r *http.Request) {
+	_, artifact, ok := a.resolveCanonicalRepository(w, r)
+	if !ok { return }
+	repo, err := a.Artifacts.GetRepo(artifact)
+	if err != nil { writeJSON(w, 502, map[string]any{"error": err.Error()}); return }
+	tok, err := a.Refs.GitToken(artifact)
+	if err != nil { writeJSON(w, 502, map[string]any{"error": err.Error()}); return }
+	refsMap, err := artifacts.LsRemote(repo.Remote, tok)
+	if err != nil { writeJSON(w, 502, map[string]any{"error": err.Error()}); return }
+	writeJSON(w, 200, map[string]any{"refs": refsMap})
 }

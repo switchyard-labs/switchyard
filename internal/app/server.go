@@ -103,6 +103,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}", a.handleGetRepositoryMeta)
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/tree", a.handleCanonicalRepoTree)
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/content", a.handleCanonicalRepoContent)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/refs", a.handleCanonicalRepoRefs)
 
 	// repos (legacy compatibility)
 	mux.HandleFunc("GET /api/repos", a.handleListRepos)
