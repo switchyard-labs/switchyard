@@ -100,6 +100,8 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/auth/logout", a.handleLogout)
 	mux.HandleFunc("GET /api/auth/me", a.handleMe)
 	mux.HandleFunc("GET /api/users/{username}", a.handleGetUserProfile)
+	mux.HandleFunc("GET /api/users/{username}/repositories", a.handleUserRepositories)
+	mux.HandleFunc("GET /api/users/{username}/activity", a.handleUserActivity)
 	mux.HandleFunc("PATCH /api/settings/profile", a.handleUpdateUserProfile)
 	mux.HandleFunc("POST /api/settings/avatar", a.handleUploadUserAvatar)
 	mux.HandleFunc("DELETE /api/settings/avatar", a.handleDeleteUserAvatar)
@@ -199,6 +201,13 @@ func (a *App) Handler() http.Handler {
 func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/") {
 		writeJSON(w, 404, map[string]any{"error": "not_found"})
+		return
+	}
+	// Owner profile URLs use /{owner}. Reserved/static paths are filtered by
+	// validOwnerSlug; repository routes below take precedence for two segments.
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts) == 1 && validOwnerSlug(parts[0]) {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "profile.html"))
 		return
 	}
 	// Canonical Git-host repository URLs use /{owner}/{repo}[/(blob|tree)/{ref}/...].
