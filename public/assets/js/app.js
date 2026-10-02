@@ -90,12 +90,9 @@
     const user = await refreshAuth();
     if (!user) { reposEl.innerHTML = '<p class="muted">Sign in to browse repositories.</p>'; workEl.innerHTML = ""; return; }
     try {
-      const repos = await api("/api/repos");
+      const repos = await api("/api/repositories");
       reposEl.innerHTML = repos.items.length
-        ? repos.items.map((r) =>
-            "<div class='list-item'><a href='/repo.html?name=" + esc(r.name) + "'>" + esc(r.name) + "</a>" +
-            "<span class='muted'>" + esc(r.default_branch) + "</span>" +
-            (r.registered ? "<span class='muted'>registered</span>" : "") + "</div>").join("")
+        ? repos.items.map((r) => "<div class='list-item'><a href='/"+encodeURIComponent(r.owner_slug)+"/"+encodeURIComponent(r.slug)+"'>" + esc(r.full_name) + "</a><span class='muted'>" + esc(r.default_branch) + " · "+esc(r.visibility)+"</span></div>").join("")
         : "<p class='muted'>No repositories.</p>";
     } catch (e) { reposEl.innerHTML = "<p class='error'>" + esc(e.message) + "</p>"; }
     try {
@@ -249,7 +246,10 @@
 
   window.refreshAuth = refreshAuth;
 
+  async function renderDemoBanner(){ try{const d=await api("/api/demo"); if(d.enabled){let b=document.getElementById("demo-banner");if(!b){b=document.createElement("div");b.id="demo-banner";b.className="demo-banner";document.body.prepend(b)}b.textContent=d.guest?"Public demo · read-only guest browsing":"Demo environment";b.hidden=false}}catch(_){}}
+
   document.addEventListener("DOMContentLoaded", async () => {
+    renderDemoBanner();
     startLive();
     if (document.getElementById("repos") || document.getElementById("work")) await renderDashboard();
     if (document.getElementById("signin-form")) renderSignin();

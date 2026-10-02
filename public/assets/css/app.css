@@ -384,3 +384,6 @@ body.menu-open { overflow: hidden; }
 
 /* PX21 advanced operations */
 .operations-page{min-height:600px}.ops-pane{padding:20px 0}.ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.attention-card,.queue-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:13px 14px;border:1px solid var(--border);border-radius:9px;background:var(--panel-soft);margin:8px 0}.attention-card>div,.queue-row>div{display:grid;gap:3px}.attention-card span,.queue-row span{font-size:12px;color:var(--muted)}.queue-meta{text-align:right}.ops-tabs button{cursor:pointer}@media(max-width:760px){.ops-grid{grid-template-columns:1fr}.attention-card,.queue-row{grid-template-columns:auto 1fr}.attention-card .btn,.queue-meta{grid-column:2;text-align:left}}
+
+/* PX23 public demo mode */
+.demo-banner{position:sticky;top:0;z-index:100;background:var(--signal-amber);color:#1b1409;text-align:center;font-size:12px;font-weight:750;letter-spacing:.04em;padding:5px 12px}.demo-banner+ .site-header{top:27px}

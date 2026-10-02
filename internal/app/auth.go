@@ -9,8 +9,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const demoGuestKey ctxKey = 1
+
 func contextWithUser(r context.Context, user string) context.Context {
 	return context.WithValue(r, userKey, user)
+}
+func contextWithDemoGuest(r context.Context, v bool) context.Context {
+	return context.WithValue(r, demoGuestKey, v)
+}
+func (a *App) isDemoGuest(r *http.Request) bool {
+	v, _ := r.Context().Value(demoGuestKey).(bool)
+	return v
 }
 
 func (a *App) currentUser(r *http.Request) string {
@@ -125,4 +134,13 @@ func (a *App) handleMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]any{"authed": true, "user": user})
+}
+
+func (a *App) handleDemoStatus(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, map[string]any{"enabled": a.DemoMode, "guest": a.isDemoGuest(r), "mode": func() string {
+		if a.DemoMode {
+			return "public-read-only"
+		}
+		return "off"
+	}()})
 }

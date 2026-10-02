@@ -33,6 +33,7 @@ type App struct {
 	Runner    agent.Runner
 	Roles     []agent.Role
 	Queue     *QueueConsumer
+	DemoMode  bool
 
 	wfMu       sync.Mutex
 	wfInFlight map[string]bool
@@ -42,7 +43,7 @@ type App struct {
 func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App {
 	scratch := filepath.Join(dataDir, "scratch")
 	os.MkdirAll(scratch, 0700)
-	return &App{Trestle: t, Artifacts: a, Refs: refs.NewService(a, t, scratch), StaticDir: staticDir, DataDir: dataDir, Hub: NewHub(), wfInFlight: map[string]bool{}}
+	return &App{Trestle: t, Artifacts: a, Refs: refs.NewService(a, t, scratch), StaticDir: staticDir, DataDir: dataDir, Hub: NewHub(), DemoMode: strings.EqualFold(strings.TrimSpace(os.Getenv("SWITCHYARD_DEMO_MODE")), "true"), wfInFlight: map[string]bool{}}
 }
 
 // Provision creates the Switchyard coordination collections if missing.
@@ -113,6 +114,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/auth/login", a.handleLogin)
 	mux.HandleFunc("POST /api/auth/logout", a.handleLogout)
 	mux.HandleFunc("GET /api/auth/me", a.handleMe)
+	mux.HandleFunc("GET /api/demo", a.handleDemoStatus)
 	mux.HandleFunc("GET /api/owners/{slug}", a.handleGetOwnerProfile)
 	mux.HandleFunc("GET /api/users/{username}", a.handleGetUserProfile)
 	mux.HandleFunc("GET /api/users/{username}/repositories", a.handleUserRepositories)
@@ -323,12 +325,21 @@ func (a *App) withSession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/api/") {
 			user := ""
+			demoGuest := false
 			if c, err := r.Cookie("switchyard_session"); err == nil {
 				if u, ok := a.userForSession(r, c.Value); ok {
 					user = u
 				}
 			}
-			ctx := contextWithUser(r.Context(), user)
+			if user == "" && a.DemoMode && (r.Method == http.MethodGet || r.Method == http.MethodHead) {
+				user = "demo"
+				demoGuest = true
+			}
+			if user == "" && a.DemoMode && r.Method != http.MethodGet && r.Method != http.MethodHead && !strings.HasPrefix(r.URL.Path, "/api/auth/") {
+				writeJSON(w, 403, map[string]any{"error": "demo_read_only"})
+				return
+			}
+			ctx := contextWithDemoGuest(contextWithUser(r.Context(), user), demoGuest)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}

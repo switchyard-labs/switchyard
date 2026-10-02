@@ -72,6 +72,15 @@ func (a *App) handleListRepositoryMeta(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("repository_meta", "")
+	if a.isDemoGuest(r) {
+		filtered := []map[string]any{}
+		for _, it := range items {
+			if strOr(it["visibility"]) == "public" {
+				filtered = append(filtered, it)
+			}
+		}
+		items = filtered
+	}
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return

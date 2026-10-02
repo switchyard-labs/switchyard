@@ -7,6 +7,10 @@ import (
 )
 
 func (a *App) handleListRepos(w http.ResponseWriter, r *http.Request) {
+	if a.isDemoGuest(r) {
+		writeJSON(w, 403, map[string]any{"error": "demo_use_canonical_public_repositories"})
+		return
+	}
 	if a.currentUser(r) == "" {
 		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
 		return
@@ -37,6 +41,10 @@ func (a *App) handleListRepos(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleGetRepo(w http.ResponseWriter, r *http.Request) {
+	if a.isDemoGuest(r) {
+		writeJSON(w, 403, map[string]any{"error": "demo_legacy_repository_routes_disabled"})
+		return
+	}
 	if a.currentUser(r) == "" {
 		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
 		return
@@ -64,6 +72,10 @@ func (a *App) handleGetRepo(w http.ResponseWriter, r *http.Request) {
 // which is the honest read path for a branch). Falls back to the commit log if
 // the branch is empty.
 func (a *App) handleRepoTree(w http.ResponseWriter, r *http.Request) {
+	if a.isDemoGuest(r) {
+		writeJSON(w, 403, map[string]any{"error": "demo_legacy_repository_routes_disabled"})
+		return
+	}
 	if a.currentUser(r) == "" {
 		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
 		return
@@ -119,6 +131,10 @@ func (a *App) gitTree(name, ref string) ([]map[string]any, error) {
 
 // handleRepoContent returns a file's bytes at ref/path.
 func (a *App) handleRepoContent(w http.ResponseWriter, r *http.Request) {
+	if a.isDemoGuest(r) {
+		writeJSON(w, 403, map[string]any{"error": "demo_legacy_repository_routes_disabled"})
+		return
+	}
 	if a.currentUser(r) == "" {
 		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
 		return
