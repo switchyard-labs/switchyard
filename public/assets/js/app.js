@@ -33,6 +33,7 @@
   function openMenu() {
     if (!mobileMenu) return;
     mobileMenu.hidden = false;
+    document.body.classList.add("menu-open");
     hamburger.setAttribute("aria-expanded", "true");
     mobileClose.focus();
     document.addEventListener("keydown", trap);
@@ -40,6 +41,7 @@
   function closeMenu() {
     if (!mobileMenu) return;
     mobileMenu.hidden = true;
+    document.body.classList.remove("menu-open");
     hamburger.setAttribute("aria-expanded", "false");
     document.removeEventListener("keydown", trap);
     hamburger.focus();
@@ -47,7 +49,7 @@
   function trap(e) {
     if (e.key === "Escape") closeMenu();
     if (e.key === "Tab") {
-      const focusables = [...mobileMenu.querySelectorAll("a, button")];
+      const focusables = [...mobileMenu.querySelectorAll("a[href], button, summary")].filter((x) => !x.hasAttribute("disabled"));
       const first = focusables[0], last = focusables[focusables.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
@@ -55,6 +57,13 @@
   }
   if (hamburger) hamburger.addEventListener("click", openMenu);
   if (mobileClose) mobileClose.addEventListener("click", closeMenu);
+  if (mobileMenu) mobileMenu.addEventListener("click", (e) => { if (e.target.closest("a[href]")) closeMenu(); });
+  if (mobileMenu) {
+    const here = location.pathname.replace(/\/index\.html$/, "/");
+    mobileMenu.querySelectorAll("a[href]").forEach((a) => {
+      try { const p = new URL(a.href, location.href).pathname.replace(/\/index\.html$/, "/"); if (p === here) a.setAttribute("aria-current", "page"); } catch (_) {}
+    });
+  }
 
   /* auth state */
   async function refreshAuth() {

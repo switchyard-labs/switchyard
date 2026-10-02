@@ -287,3 +287,38 @@ button, .btn, input, select { transition: border-color .15s ease, background-col
 .error { color: var(--danger); }
 .status-success { color: var(--positive); }
 .status-warning { color: var(--warning); }
+
+/* PX4 full-screen navigation: desktop + mobile, collapsible sections */
+.hamburger { display: inline-flex; align-items: center; justify-content: center; }
+body.menu-open { overflow: hidden; }
+.mobile-menu {
+	padding: 24px clamp(20px, 4vw, 56px) 36px;
+	background: rgba(11, 12, 15, .985);
+	backdrop-filter: blur(12px);
+	overflow-y: auto;
+}
+.mobile-menu-head { max-width: 1180px; width: 100%; margin: 0 auto 34px; }
+.menu-groups {
+	max-width: 1180px; width: 100%; margin: 0 auto;
+	display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px;
+}
+.menu-group { border-top: 1px solid var(--border); padding-top: 12px; }
+.menu-group summary {
+	cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
+	font-size: 12px; text-transform: uppercase; letter-spacing: .13em; color: var(--accent-text); font-weight: 700; padding: 4px 0 10px;
+}
+.menu-group summary::-webkit-details-marker { display: none; }
+.menu-group summary::after { content: '+'; font-family: var(--mono); color: var(--text-dim); font-size: 17px; }
+.menu-group[open] summary::after { content: '−'; }
+.menu-links { display: flex; flex-direction: column; gap: 3px; padding: 2px 0 14px; }
+.mobile-menu .menu-links a { border: 0; padding: 8px 0; font-size: 20px; font-weight: 600; }
+.mobile-menu .menu-links a:hover, .mobile-menu .menu-links a[aria-current="page"] { color: var(--accent-text); }
+.menu-future { color: var(--text-faint); padding: 8px 0; font-size: 17px; }
+.menu-future small { display: block; font-size: 11px; margin-top: 2px; color: var(--text-faint); }
+.menu-footer { max-width: 1180px; width: 100%; margin: auto auto 0; border-top: 1px solid var(--border); padding-top: 18px; color: var(--text-dim); font-size: 13px; }
+@media (max-width: 760px) {
+	.menu-groups { grid-template-columns: 1fr; gap: 14px; }
+	.mobile-menu { padding: 18px 20px 28px; }
+	.mobile-menu-head { margin-bottom: 20px; }
+	.mobile-menu .menu-links a { font-size: 18px; }
+}

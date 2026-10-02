@@ -13,23 +13,17 @@
 		<header class="site-header">
 			<div class="header-inner">
 				<a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
-				<nav class="site-nav" id="site-nav">
-					<a href="/">Dashboard</a>
-					<a href="/repos.html">Repositories</a>
-					<a href="/work.html">Work</a>
-				</nav>
-				<div class="header-right">
-					<span class="auth-state" id="auth-state"></span>
-					<button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>
-				</div>
+				<div class="header-right"><span class="auth-state" id="auth-state"></span><button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button></div>
 			</div>
 		</header>
-		<nav class="mobile-menu" id="mobile-menu" hidden>
-			<div class="mobile-menu-head"><span class="brand-name">Switchyard</span><button class="hamburger" id="mobile-close" aria-label="Close menu">×</button></div>
-			<a href="/">Dashboard</a>
-			<a href="/repos.html">Repositories</a>
-			<a href="/work.html">Work</a>
-			<div class="mobile-auth" id="mobile-auth"></div>
+		<nav class="mobile-menu" id="mobile-menu" aria-label="Switchyard" hidden>
+			<div class="mobile-menu-head"><a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
+			<div class="menu-groups">
+				<details class="menu-group" open><summary>Explore</summary><div class="menu-links"><a href="/">Dashboard</a><a href="/repo.html">Repositories</a></div></details>
+				<details class="menu-group" open><summary>Collaborate</summary><div class="menu-links"><a href="/work.html">Work</a><span class="menu-future">Pull Requests <small>surface follows in Git-host parity</small></span><span class="menu-future">Workflows <small>surface follows in Git-host parity</small></span><span class="menu-future">Needs Attention <small>surface follows in Git-host parity</small></span></div></details>
+				<details class="menu-group" open><summary>Account</summary><div class="menu-links"><div class="mobile-auth" id="mobile-auth"></div><span class="menu-future">Profile &amp; settings <small>Identity phase</small></span></div></details>
+			</div>
+			<div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>
 		</nav>
 		<main class="site-main editor-main">
 			<section class="panel editor-panel">
