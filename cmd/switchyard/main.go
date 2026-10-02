@@ -38,6 +38,8 @@ func main() {
 	data := flag.String("data", envOr("SWITCHYARD_DATA_DIR", "./data"), "control-plane data dir")
 	strutBin := flag.String("strut-bin", envOr("SWITCHYARD_STRUT_BIN", "/opt/cp0/switchyard/deterministic-worker"), "Strut worker binary")
 	reconcile := flag.String("reconcile-interval", envOr("SWITCHYARD_RECONCILE_INTERVAL", "15s"), "reconciliation interval")
+	queueID := flag.String("queue-id", envOr("SWITCHYARD_QUEUE_ID", ""), "Cloudflare queue id for Artifacts events (fast path)")
+	queueInt := flag.String("queue-pull-interval", envOr("SWITCHYARD_QUEUE_PULL_INTERVAL", "5s"), "queue pull interval")
 	flag.Parse()
 
 	if *trePass == "" {
@@ -79,6 +81,14 @@ func main() {
 	}
 	if d, err := time.ParseDuration(*reconcile); err == nil {
 		a.StartReconciler(context.Background(), d)
+	}
+	// event-driven fast path (Cloudflare queue) — optional; reconciliation
+	// remains the safety net if no queue is configured.
+	if *queueID != "" {
+		a.Queue = app.NewQueueConsumer(*acc, *queueID, art.AccountToken)
+	}
+	if qi, err := time.ParseDuration(*queueInt); err == nil {
+		a.StartEventConsumer(context.Background(), qi)
 	}
 	log.Printf("switchyard control plane listening on %s (trestle=%s, namespace=%s)", *listen, *treBase, *ns)
 	log.Fatal(http.ListenAndServe(*listen, a.Handler()))

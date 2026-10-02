@@ -31,6 +31,7 @@ type App struct {
 	Secrets   *agent.CredentialStore
 	Runner    agent.Runner
 	Roles     []agent.Role
+	Queue     *QueueConsumer
 }
 
 func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App {

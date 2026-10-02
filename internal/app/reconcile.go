@@ -66,15 +66,13 @@ func (a *App) reconcileRef(repo, branch, sha string) {
 	if latest == sha {
 		return
 	}
-	now := time.Now().UTC().Format(time.RFC3339)
-	// record the observation (append-only history)
-	_, _, _ = a.Trestle.CreateRecord("ref_obs", map[string]any{
-		"repo": repo, "branch": branch, "sha": sha, "seen_at": now,
-	}, "refobs-"+repo+"-"+branch+"-"+sha+"-"+now)
-	// emit a normalized event; broadcast to browsers
-	typ := "git.ref_changed"
-	payload := map[string]any{"repo": repo, "branch": "refs/heads/" + branch, "after": sha, "old": latest, "seen_at": now, "source": "reconciliation"}
-	a.broadcast(typ, repo, payload)
+	// shared normalized ingest (also used by the queue fast path); domain
+	// event is deduplicated by ref-transition identity (repo, ref, before,
+	// after), so reconciliation never duplicates what the queue already
+	// recorded, and vice versa.
+	if _, err := a.observeTransition(repo, branch, latest, sha, "reconciliation"); err != nil {
+		log.Printf("reconcile %s/%s: %v", repo, branch, err)
+	}
 }
 
 func (a *App) latestRefObs(repo, branch string) (string, error) {
