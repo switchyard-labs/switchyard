@@ -1220,3 +1220,11 @@ At the end of PX0, return:
 ```
 
 Do not begin the implementation-heavy checkpoints merely because the direction seems obvious. The point of PX0 is to make the rest of the campaign evidence-driven.
+
+---
+
+# Campaign completion note
+
+PX0–PX25 have now been executed in checkpoint commits. See `PX00.md` … `PX25.md` and `docs/plan/product-certification.md`.
+
+The campaign closes as a **CONDITIONAL product certification**, not a release certificate: the supplied artifact runner cannot perform the declared Go 1.26/live Trestle/Artifacts/cross-browser gates. The next engineering phase is CP14 hardening, starting by closing those live conditions.

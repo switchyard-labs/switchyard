@@ -1,0 +1,4 @@
+PX25 artifact-runner Go test attempt (GOTOOLCHAIN=local):
+go: go.mod requires go >= 1.26 (running go 1.23.2; GOTOOLCHAIN=local)
+
+The workspace declares Go 1.26. The supplied runner has an older local toolchain and no network access to download Go 1.26/modules. This is an environment limitation and remains a normal-environment certification gate.
