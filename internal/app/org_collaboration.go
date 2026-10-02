@@ -167,12 +167,20 @@ func (a *App) handleRemoveOrgMember(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "cannot_remove_primary_owner"})
 		return
 	}
-	rid, ver, _, e := a.Trestle.FindRecord("org_memberships", `org_id = "`+strOr(o["id"])+`" AND username = "`+u+`"`)
-	if e != nil || rid == "" {
+	rid, ver := "", ""
+	if items, e := a.Trestle.ListRecords("org_memberships", `org_id = "`+strOr(o["id"])+`"`); e == nil {
+		for _, m := range items {
+			if strOr(m["username"]) == u {
+				rid, ver, _, _ = a.Trestle.FindRecord("org_memberships", `id = "`+strOr(m["id"])+`"`)
+				break
+			}
+		}
+	}
+	if rid == "" {
 		writeJSON(w, 404, map[string]any{"error": "member_not_found"})
 		return
 	}
-	if e = a.Trestle.DeleteRecord("org_memberships", rid, ver); e != nil {
+	if e := a.Trestle.DeleteRecord("org_memberships", rid, ver); e != nil {
 		writeJSON(w, 409, map[string]any{"error": e.Error()})
 		return
 	}
