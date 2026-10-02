@@ -66,6 +66,20 @@ func (a *App) reconcileRef(repo, branch, sha string) {
 	if latest == sha {
 		return
 	}
+	// First observation of this branch: record a baseline observation only,
+	// with no domain event. Reconciliation cannot distinguish "branch just
+	// created then pushed" from "already existed", so a fabricated before=""
+	// transition would collide with the queue event's authoritative before and
+	// create a second domain fact. The queue event (if any) carries the true
+	// `before`; the baseline here makes later transitions (before -> after)
+	// well-defined.
+	if latest == "" {
+		now := time.Now().UTC().Format(time.RFC3339)
+		_, _, _ = a.Trestle.CreateRecord("ref_obs", map[string]any{
+			"repo": repo, "branch": branch, "sha": sha, "seen_at": now,
+		}, "refobs-"+repo+"-"+branch+"-"+sha+"-baseline-"+now)
+		return
+	}
 	// shared normalized ingest (also used by the queue fast path); domain
 	// event is deduplicated by ref-transition identity (repo, ref, before,
 	// after), so reconciliation never duplicates what the queue already

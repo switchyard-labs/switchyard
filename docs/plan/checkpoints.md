@@ -102,17 +102,23 @@ in provenance; integration lands only via the queue.
 
 ## CP5 — Events, provenance, realtime
 
-- **Status: CONDITIONAL PASS** (corrective; handover: `handovers/CP05.md` +
-  addendum below; gate: `experiments/cp5/cp5_gate.sh`).
-- **Condition (bounded, non-foundational):** the CP5 gate proved
-  reconciliation (periodic `git ls-remote` → normalized `git.ref_changed` →
-  Trestle → control-plane SSE) + provenance + browser realtime, which is the
-  **safety net**, not the full event bridge. The real
-  `Artifacts push → cf.artifacts.repo.pushed → Cloudflare Queue → Switchyard
-  consumer → idempotent ingest → Trestle → SSE` fast path was originally
-  mis-described as PASS; it is being wired as a corrective follow-up. See the
-  CP5 addendum. On live event-path gate: upgrade to **PASS** via a follow-up
-  commit.
+- **Status: PASS** (corrective follow-up; handover: `handovers/CP05.md` +
+  addendum below; gate: `experiments/cp5/cp5_gate.sh`; event-path gate:
+  `experiments/cp5/event/cp5_event_gate.sh`).
+- **History preserved:** the original `0461e61` was accepted too broadly
+  (reconciliation + SSE + provenance were proven, but the real Cloudflare Queue
+  event fast path was not yet wired). That is recorded in the corrective
+  commit. The follow-up commit below wires and gates the fast path and upgrades
+  to PASS.
+- **Live observation (upstream condition, documented honestly):** as of the
+  corrective gate, Cloudflare event-subscription → Queue delivery for
+  `cf.artifacts.repo.pushed` stopped delivering account-wide (identical
+  subscription config delivered in CP0; recreated fresh for new repos; nothing
+  delivered). The Switchyard fast-path implementation is therefore gated with
+  real-schema `cf.artifacts.repo.pushed` envelopes carrying genuinely observed
+  SHAs (Queues push API), covering both orderings, duplicate delivery, and
+  offline convergence. Reconciliation guarantees eventual convergence
+  regardless; re-verify live delivery when the upstream delivery resumes.
 
 **Objective:** full event bridge; provenance graph; browser realtime.
 

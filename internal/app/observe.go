@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"time"
 )
 
@@ -46,6 +47,15 @@ func (a *App) observeTransition(repo, branch, before, after, source string) (rep
 		"type": "git.ref_changed", "repo_name": repo, "payload": payload, "occurred_at": now,
 	}, key)
 	if err != nil {
+		// Trestle Idempotency-Key returns replayed=true only for byte-identical
+		// content. A 409 idempotency_conflict means the same transition
+		// identity already exists with different path metadata (seen_at/source)
+		// — i.e. the OTHER path (queue vs reconciliation) already durably
+		// recorded this transition. Treat that as convergence: the domain fact
+		// exists exactly once, so the caller should not retry or broadcast.
+		if strings.Contains(err.Error(), "idempotency_conflict") {
+			return true, nil
+		}
 		return false, err
 	}
 	if !replayed {

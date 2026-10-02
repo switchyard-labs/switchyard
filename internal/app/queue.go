@@ -148,8 +148,16 @@ func (a *App) consumeOnce() error {
 				After  string `json:"after"`
 			} `json:"payload"`
 		}
+		// Cloudflare queue message bodies are JSON-encoded strings (the CP0
+		// peek shows "body":"{\"type\":...}"), so decode the string first,
+		// then the envelope.
+		var bodyStr string
+		if err := json.Unmarshal(m.Body, &bodyStr); err == nil {
+			m.Body = json.RawMessage(bodyStr)
+		}
 		if err := json.Unmarshal(m.Body, &ev); err != nil {
 			// malformed message: ack (nothing useful to retry forever)
+			log.Printf("queue consumer: malformed message %s: %v", m.ID, err)
 			acked = append(acked, m.LeaseID)
 			continue
 		}

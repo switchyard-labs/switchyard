@@ -1,0 +1,24 @@
+[18:15:04] repo=cp5evt2-1790964897 seeded main@2deb826ef7ed9df30f42b3de441d961f73e6f2b6
+[18:15:04] ### A: disable reconciliation, enable queue; prove fast path + SSE
+[18:15:10] pushed main 2deb826ef7ed9df30f42b3de441d961f73e6f2b6 -> 3650d91f01e58feea6f3b818ef28f0bead0e130c (real push); injecting real-schema pushed event into queue
+true
+[18:15:13] domain facts for B: 1 sources=["queue"] (expect ["queue"] after fast path)
+[18:15:13] SSE frames: 1 (expect >=1)
+[18:15:17] after idle: 1 (expect still 1)
+[18:15:17] ### B: duplicate queue delivery converges to one domain fact
+true
+true
+[18:15:25] domain facts for B2 after duplicate delivery: 1 (expect 1)
+[18:15:25] ### C: reconciliation-only ingest (queue disabled), then late event dedups
+[18:15:31] pushed main f2dc3157859536d25dfd0f95bd6283d91cd863a7 -> 6d96052e8a3a95e64d282430e8bab90a5d596c8d with queue consumer disabled; waiting for reconciliation...
+[18:15:37] reconciliation-only domain facts for C: 1 sources=["reconciliation"] (expect ["reconciliation"])
+true
+[18:16:00] after late queue event for C: 1 facts sources=["reconciliation"] (expect 1 total)
+[18:16:00] ### D: control plane down during push; converges with no duplicates
+ 57946true
+[18:16:03] pushed main 6d96052e8a3a95e64d282430e8bab90a5d596c8d -> 2a92184c99622d7c9ad5bca0f9d3c12061163949 while control plane down; event queued
+[18:16:18] after restart: 1 facts for D sources=["queue"] (expect 1)
+
+[18:16:18] #### CP5 EVENT GATE v2: 6/6 checks passed
+PASS=6/6
+REPO=cp5evt2-1790964897
