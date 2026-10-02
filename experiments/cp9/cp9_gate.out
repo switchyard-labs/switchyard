@@ -1,0 +1,31 @@
+[19:17:42] repo=cp9-1790968659 seeded (ATTEMPT.md valid, counter.txt)
+
+[19:17:42] ### 1. policy: failing check cannot enqueue
+[19:17:45] enqueue failing-check PR: {"error":"check_not_passed"}
+
+[19:17:45] ### 2. clean churn: 3 PRs integrate FIFO, canonical has all features
+[19:18:13] done items: 3 (expect 3)
+[19:18:13] queue view: [{"status":"done","risk":"low"},{"status":"done","risk":"low"},{"status":"done","risk":"low"}]
+[19:18:14] canonical files: 4 commits; feature files present:
+  f1.txt: 200
+  f2.txt: 200
+  f3.txt: 200
+[19:18:20] churn wall time (3 PRs): 22124 ms
+
+[19:18:20] ### 3. conflict blocked -> repair loop -> requeue -> done
+[19:18:38] after both enqueued: [{"pr_id":"wk_d8ec174c26457e3f","status":"blocked"},{"pr_id":"wk_9890beab060512fa","status":"done"},{"pr_id":"wk_a24ce76775d33e31","status":"done"},{"pr_id":"wk_09edeb4ef9caa203","status":"done"},{"pr_id":"wk_8a0063517a61649b","status":"done"}]
+[19:18:40] resolve attempt: resolved
+[19:18:46] conflict PR after repair loop: done (expect done)
+[19:18:47] canonical counter.txt: count=2
+
+[19:18:47] ### 4. risk classes
+[19:18:52] 10-file PR enqueue: {"id":"iq_2266bc4a29","policy":"check_pass + preview_clean","pr_id":"wk_a4c9a4a8ba412453","risk":"high","status":"queued"}
+
+[19:18:52] ### 5. UI observability (API surface)
+[19:18:52] queue states observed: ["done","queued"]
+
+[19:18:52] ### 6. performance: 10-PR concurrent enqueue scenario
+[19:20:18] 10-PR scenario: enqueue phase 10052 ms; full queue-to-done 42440 ms (10 done)
+
+[19:20:18] #### CP9 GATE: 8/8 checks passed
+PASS=8/8

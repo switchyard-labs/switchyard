@@ -165,6 +165,8 @@ caught by preview integration; findings have a bounded repair loop.
 
 ## CP9 — Integration Queue full semantics
 
+- **Status: PASS** (handover: `handovers/CP09.md`; gate: `experiments/cp9/cp9_gate.sh`).
+
 **Objective:** ordering, canonical-head freshness, policy, repair loops, risk
 classes, preview.
 

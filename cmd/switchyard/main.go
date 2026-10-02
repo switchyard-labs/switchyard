@@ -41,6 +41,7 @@ func main() {
 	queueID := flag.String("queue-id", envOr("SWITCHYARD_QUEUE_ID", ""), "Cloudflare queue id for Artifacts events (fast path)")
 	queueInt := flag.String("queue-pull-interval", envOr("SWITCHYARD_QUEUE_PULL_INTERVAL", "5s"), "queue pull interval")
 	wfInt := flag.String("workflow-interval", envOr("SWITCHYARD_WORKFLOW_INTERVAL", "2s"), "workflow runner interval")
+	iqInt := flag.String("queue-integrate-interval", envOr("SWITCHYARD_QUEUE_INTEGRATE_INTERVAL", "3s"), "integration queue worker interval")
 	flag.Parse()
 
 	if *trePass == "" {
@@ -94,6 +95,10 @@ func main() {
 	// durable workflow runner (CP7)
 	if wi, err := time.ParseDuration(*wfInt); err == nil {
 		a.StartWorkflowRunner(context.Background(), wi)
+	}
+	// integration queue worker (CP9)
+	if qi2, err := time.ParseDuration(*iqInt); err == nil {
+		a.StartIntegrationQueue(context.Background(), qi2)
 	}
 	log.Printf("switchyard control plane listening on %s (trestle=%s, namespace=%s)", *listen, *treBase, *ns)
 	log.Fatal(http.ListenAndServe(*listen, a.Handler()))
