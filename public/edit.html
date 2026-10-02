@@ -1,57 +1,41 @@
 <!doctype html>
 <html lang="en" data-theme="dark">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Switchyard</title>
-		<link rel="icon" type="image/webp" href="/assets/images/favicon.webp">
-		<link rel="stylesheet" href="/assets/css/theme.css">
-		<link rel="stylesheet" href="/assets/css/app.css">
-		<link rel="stylesheet" href="/assets/css/editor.css">
-	</head>
-	<body>
-		<header class="site-header">
-			<div class="header-inner">
-				<a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
-				<div class="header-right"><span class="auth-state" id="auth-state"></span><button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button></div>
-			</div>
-		</header>
-		<nav class="mobile-menu" id="mobile-menu" aria-label="Switchyard" hidden>
-			<div class="mobile-menu-head"><a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
-			<div class="menu-groups">
-				<details class="menu-group" open><summary>Explore</summary><div class="menu-links"><a href="/">Dashboard</a><a href="/repo.html">Repositories</a></div></details>
-				<details class="menu-group" open><summary>Collaborate</summary><div class="menu-links"><a href="/work.html">Work</a><span class="menu-future">Pull Requests <small>surface follows in Git-host parity</small></span><span class="menu-future">Workflows <small>surface follows in Git-host parity</small></span><span class="menu-future">Needs Attention <small>surface follows in Git-host parity</small></span></div></details>
-				<details class="menu-group" open><summary>Account</summary><div class="menu-links"><div class="mobile-auth" id="mobile-auth"></div><span class="menu-future">Profile &amp; settings <small>Identity phase</small></span></div></details>
-			</div>
-			<div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>
-		</nav>
-		<main class="site-main editor-main">
-			<section class="panel editor-panel">
-				<div class="editor-toolbar">
-					<span id="editor-title" class="muted">Loading…</span>
-					<span id="draft-state" class="draft-state"></span>
-					<span class="spacer"></span>
-					<button class="btn" id="btn-save">Save draft</button>
-					<button class="btn primary" id="btn-commit">Commit</button>
-				</div>
-				<div class="editor-body">
-					<div class="editor-col"><div id="editor"></div></div>
-					<aside class="side-col">
-						<div class="side-head"><strong>Diff</strong><span id="diff-state" class="muted"></span></div>
-						<pre class="diff-view" id="diff-view"><p class="muted">Save a draft to see the diff.</p></pre>
-						<div class="side-head"><strong>Findings</strong></div>
-						<div class="findings" id="findings"><p class="muted">No findings loaded.</p></div>
-						<div class="side-head">
-							<strong>Agent</strong>
-							<button class="btn mini" id="btn-agent">Run implementer</button>
-						</div>
-						<div class="agent-panel" id="agent-panel"><p class="muted">Run an agent against this attempt branch.</p></div>
-					</aside>
-				</div>
-			</section>
-		</main>
-		<script src="/assets/js/cm6.bundle.js"></script>
-		<script src="/assets/js/app.js"></script>
-		<script src="/assets/js/app-editor.js"></script>
-	</body>
-</html>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Switchyard</title>
+  <link rel="icon" type="image/webp" href="/assets/images/favicon.webp">
+  <link rel="stylesheet" href="/assets/css/theme.css"><link rel="stylesheet" href="/assets/css/app.css"><link rel="stylesheet" href="/assets/css/editor.css">
+</head>
+<body class="workbench-page">
+<header class="site-header"><div class="header-inner"><a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span>Switchyard</span></a><div class="header-right"><span class="auth-state" id="auth-state"></span><a class="btn mini" id="back-to-repo" href="/">Repository</a><button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button></div></div></header>
+<nav class="mobile-menu" id="mobile-menu" aria-label="Switchyard" hidden><div class="mobile-menu-head"><a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span>Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div><div class="menu-groups"><details class="menu-group" open><summary>Explore</summary><div class="menu-links"><a href="/">Dashboard</a><a href="/repo.html">Repositories</a><a href="/work.html">Work</a></div></details></div></nav>
+<main class="editor-main">
+<section class="editor-shell">
+  <div class="editor-topbar">
+    <div><strong id="editor-title">Loading…</strong><div class="muted editor-context" id="editor-context"></div></div>
+    <span class="spacer"></span><span id="draft-state" class="draft-state"></span><button class="btn" id="btn-save">Save draft</button><button class="btn primary" id="btn-commit">Commit</button>
+  </div>
+  <div class="mobile-workbench-switcher" role="tablist"><button data-pane="files" class="active">Files</button><button data-pane="editor">Editor</button><button data-pane="agent">Agent</button></div>
+  <div class="workbench">
+    <aside class="workbench-sidebar" data-pane="files">
+      <div class="workbench-modes"><button class="active" data-mode="files">Files</button><button data-mode="search">Search</button><button data-mode="source">Source</button></div>
+      <div class="sidebar-tools"><input id="file-filter" placeholder="Filter files…" aria-label="Filter files"><button class="btn mini" id="new-file">＋</button></div>
+      <div class="workspace-tree" id="workspace-tree"><p class="muted">Loading repository…</p></div>
+      <div class="workspace-search" id="workspace-search" hidden><input id="repo-search" placeholder="Search filenames…"><div id="search-results"></div></div>
+      <div class="workspace-source" id="workspace-source" hidden><button class="btn mini" id="rename-file">Rename</button><button class="btn mini danger" id="delete-file">Delete</button><p class="muted">File actions use the same CAS ref substrate as the rest of Switchyard.</p></div>
+    </aside>
+    <section class="editor-center" data-pane="editor">
+      <div class="editor-tabs" id="editor-tabs"></div>
+      <div class="editor-col"><div id="editor"></div></div>
+      <div class="editor-status"><span id="status-branch">main</span><span id="status-language">Plain text</span><span id="status-position">Ln 1, Col 1</span><span class="spacer"></span><span id="status-message"></span></div>
+    </section>
+    <aside class="side-col" data-pane="agent">
+      <details open><summary class="side-head"><strong>Diff</strong><span id="diff-state" class="muted"></span></summary><pre class="diff-view code-surface" id="diff-view">Save a draft to see the diff.</pre></details>
+      <details open><summary class="side-head"><strong>Findings</strong></summary><div class="findings" id="findings"><p class="muted">No findings loaded.</p></div></details>
+      <details open><summary class="side-head"><strong>Agent</strong></summary><div class="agent-controls"><textarea id="agent-prompt" rows="3" placeholder="Ask the Agent to help with this draft…"></textarea><div><button class="btn mini" id="btn-agent-draft">Propose draft edit</button><button class="btn mini" id="btn-agent">Formal Attempt run</button></div></div><div class="agent-panel" id="agent-panel"><p class="muted">Interactive assistance proposes draft changes; formal Attempt mode may commit autonomously.</p></div></details>
+    </aside>
+  </div>
+</section>
+</main>
+<div class="modal" id="commit-modal" hidden><form class="modal-card" id="commit-form"><h2>Commit changes</h2><label>Commit message<input id="commit-message" required></label><div class="modal-actions"><button type="button" class="btn" id="commit-cancel">Cancel</button><button class="btn primary">Commit</button></div></form></div>
+<script src="/assets/js/cm6.bundle.js"></script><script src="/assets/js/code-surface.js"></script><script src="/assets/js/app.js"></script><script src="/assets/js/app-editor.js"></script>
+</body></html>

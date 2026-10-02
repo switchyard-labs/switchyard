@@ -1,162 +1,37 @@
-/* Switchyard browser editor (CP10): CM6, draft Save != Commit, diff surface,
-   findings, hideable Agent panel, commit via the shared substrate. */
-(function () {
-  "use strict";
-  const params = new URLSearchParams(location.search);
-  const name = params.get("name");
-  const ref = params.get("ref") || "main";
-  const path = params.get("path");
-  const attempt = params.get("attempt") || "";
-  if (!name || !path) {
-    document.getElementById("editor-title").textContent = "Missing ?name=&path=";
-    return;
-  }
-  const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  async function api(p, opts) {
-    const r = await fetch(p, Object.assign({ credentials: "same-origin", headers: { "Content-Type": "application/json" } }, opts));
-    const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body.error || r.statusText);
-    return body;
-  }
-
-  let committedText = "";
-  let draftSaved = false;
-  let view = null;
-  let currentRevision = "";
-  let baseSHA = "";
-
-  $("editor-title").textContent = name + " · " + ref + " · " + path;
-
-  async function loadCommitted() {
-    const raw = await fetch("/api/repos/" + encodeURIComponent(name) + "/content?ref=" + encodeURIComponent(ref) + "&path=" + encodeURIComponent(path), { credentials: "same-origin" });
-    committedText = raw.ok ? await raw.text() : "";
-    return committedText;
-  }
-  async function loadRefSHA() {
-    try {
-      const refs = await api("/api/repos/" + encodeURIComponent(name) + "/refs");
-      const head = refs.refs && refs.refs["refs/heads/" + ref];
-      if (head) baseSHA = head;
-    } catch (e) { /* baseSHA stays empty -> commit falls back to ref CAS */ }
-  }
-
-  function makeEditor(initial) {
-    view = new CM6.EditorView({
-      state: CM6.EditorState.create({
-        doc: initial,
-        extensions: [
-          CM6.basicSetup,
-          CM6.keymap.of([...CM6.defaultKeymap, CM6.indentWithTab])
-        ]
-      }),
-      parent: $("editor")
-    });
-  }
-
-  async function loadDraft() {
-    try {
-      const d = await api("/api/drafts/" + encodeURIComponent(name) + "/" + encodeURIComponent(ref) + "/" + encodeURIComponent(path));
-      return d.content;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  async function refreshDraftState() {
-    const d = await loadDraft();
-    draftSaved = d !== null && d !== "";
-    if (d !== null && d !== "") {
-      currentRevision = d.revision != null ? String(d.revision) : "";
-      if (d.base_sha) baseSHA = d.base_sha;
-    }
-    $("draft-state").textContent = draftSaved ? "draft saved rev " + (currentRevision || "?") + " (not committed)" : "";
-  }
-
-  async function showDiff() {
-    const newText = view.state.doc.toString();
-    if (newText === committedText) { $("diff-view").textContent = "(no changes)"; return; }
-    try {
-      const d = await api("/api/diff", { method: "POST", body: JSON.stringify({ path, old: committedText, new: newText }) });
-      $("diff-view").textContent = d.diff || "(no diff)";
-      $("diff-state").textContent = "draft vs committed";
-    } catch (e) {
-      $("diff-view").textContent = "diff failed: " + e.message;
-    }
-  }
-
-  async function loadFindings() {
-    if (!attempt) return;
-    try {
-      const f = await api("/api/findings");
-      const mine = f.items.filter((x) => x.target === attempt && x.file === path);
-      $("findings").innerHTML = mine.length ? mine.map((x) =>
-        "<div class='finding " + esc(x.severity) + "'><span class='sev'>" + esc(x.severity) + "</span> " + esc(x.message) + " <span class='muted'>(" + esc(x.status) + ")</span></div>"
-      ).join("") : "<p class='muted'>No findings for this file.</p>";
-    } catch (e) { $("findings").textContent = "findings unavailable"; }
-  }
-
-  $("btn-save").addEventListener("click", async () => {
-    try {
-      const r = await api("/api/drafts", { method: "POST", body: JSON.stringify({ repo: name, branch: ref, path, content: view.state.doc.toString(), expected_revision: currentRevision, base_sha: baseSHA }) });
-      currentRevision = String(r.revision);
-      draftSaved = true;
-      $("draft-state").textContent = "draft saved rev " + currentRevision + " (not committed)";
-      showDiff();
-    } catch (e) {
-      if (String(e.message).includes("draft_stale")) {
-        alert("Your draft is stale (someone saved a newer revision). Reloading the current draft.");
-        const d = await loadDraft();
-        if (d !== null && d !== "") { currentRevision = String(d.revision); view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: d.content } }); }
-        await refreshDraftState();
-      } else { alert("save failed: " + e.message); }
-    }
-  });
-
-  $("btn-commit").addEventListener("click", async () => {
-    const message = prompt("Commit message:", "edit " + path + " via Switchyard editor");
-    if (message === null) return;
-    try {
-      const saved = await api("/api/drafts", { method: "POST", body: JSON.stringify({ repo: name, branch: ref, path, content: view.state.doc.toString(), expected_revision: currentRevision, base_sha: baseSHA }) });
-      currentRevision = String(saved.revision);
-      const r = await api("/api/drafts/" + saved.id + "/commit", { method: "POST", body: JSON.stringify({ message }) });
-      committedText = view.state.doc.toString();
-      draftSaved = false;
-      $("draft-state").textContent = "committed " + String(r.new_sha).slice(0, 7);
-      showDiff();
-    } catch (e) {
-      if (String(e.message).includes("draft_stale")) {
-        alert("Your draft is stale; reloading the current draft.");
-        const d = await loadDraft();
-        if (d !== null && d !== "") { currentRevision = String(d.revision); view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: d.content } }); }
-      } else if (String(e.message).includes("stale_base")) {
-        alert("The branch moved after your draft was based. Reloading committed content; re-apply your edit and commit again.");
-        committedText = await loadCommitted();
-        await refreshDraftState();
-      } else { alert("commit failed: " + e.message); }
-    }
-  });
-
-  $("btn-agent").addEventListener("click", async () => {
-    const panel = $("agent-panel");
-    panel.textContent = "running implementer on attempt " + attempt + " …";
-    try {
-      const r = await api("/api/attempts/" + attempt + "/run", { method: "POST", body: "{}" });
-      panel.innerHTML = "<div>execution " + esc(r.execution) + " → " + esc(r.status) + "</div><pre>" + esc(r.output || "") + "</pre>";
-      committedText = await loadCommitted();
-      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: committedText } });
-      showDiff();
-    } catch (e) { panel.textContent = "agent run failed: " + e.message; }
-  });
-
-  (async function init() {
-    await window.refreshAuth();
-    const committed = await loadCommitted();
-    await loadRefSHA();
-    const draft = await loadDraft();
-    makeEditor(draft !== null && draft !== "" ? draft : committed);
-    await refreshDraftState();
-    loadFindings();
-    $("editor-title").textContent = name + " · " + ref + " · " + path;
-  })();
+/* Switchyard workbench: multi-file navigation, draft CAS, shared language ids,
+   diff/findings and distinct interactive-vs-formal Agent modes. */
+(function(){
+"use strict";
+const q=new URLSearchParams(location.search), name=q.get("name"), ref=q.get("ref")||"main"; let path=q.get("path")||""; const attempt=q.get("attempt")||"";
+const $=id=>document.getElementById(id), esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function api(p,o){const r=await fetch(p,Object.assign({credentials:"same-origin",headers:{"Content-Type":"application/json"}},o));const b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b.error||r.statusText);return b;}
+let committedText="",view=null,currentRevision="",baseSHA="",files=[],tabs=[],dirty=false;
+function status(msg,kind){const e=$("status-message");e.textContent=msg||"";e.className=kind?"status-"+kind:"";}
+function contentURL(p){return "/api/repos/"+encodeURIComponent(name)+"/content?ref="+encodeURIComponent(ref)+"&path="+encodeURIComponent(p);}
+function editorURL(p){const x=new URLSearchParams({name,ref,path:p}); if(attempt)x.set("attempt",attempt); return "/edit.html?"+x.toString();}
+function detect(){const id=SwitchyardCode.detectLanguage(path);$("status-language").textContent=SwitchyardCode.labelFor(id);return id;}
+function renderTabs(){const el=$("editor-tabs");el.innerHTML=tabs.map(t=>'<button class="editor-tab '+(t===path?'active':'')+'" data-path="'+esc(t)+'">'+esc(t.split('/').pop())+(dirty&&t===path?' <span class="dirty-dot">●</span>':'')+'</button>').join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>openFile(b.dataset.path));}
+function setPath(p){path=p; q.set('path',p); history.replaceState(null,'',location.pathname+'?'+q.toString()); if(!tabs.includes(p))tabs.push(p);renderTabs();$("editor-title").textContent=p||"New file";$("editor-context").textContent=name+" · "+ref;$("status-branch").textContent=ref;detect();}
+async function loadCommitted(){const r=await fetch(contentURL(path),{credentials:'same-origin'}); committedText=r.ok?await r.text():"";return committedText;}
+async function loadRefSHA(){try{const rr=await api('/api/repos/'+encodeURIComponent(name)+'/refs');baseSHA=(rr.refs||{})['refs/heads/'+ref]||"";}catch(e){}}
+async function loadDraft(){try{return await api('/api/drafts/'+encodeURIComponent(name)+'/'+encodeURIComponent(ref)+'/'+encodeURIComponent(path));}catch(e){return null;}}
+function makeEditor(initial){if(view)view.destroy();view=new CM6.EditorView({state:CM6.EditorState.create({doc:initial,extensions:[CM6.basicSetup,CM6.keymap.of([...CM6.defaultKeymap,CM6.indentWithTab]),CM6.EditorView.updateListener.of(u=>{if(u.docChanged){dirty=true;renderTabs();}if(u.selectionSet||u.docChanged){const h=u.state.selection.main.head,line=u.state.doc.lineAt(h);$("status-position").textContent=`Ln ${line.number}, Col ${h-line.from+1}`;}})]}),parent:$("editor")});}
+async function openFile(p){if(!p)return;setPath(p);const committed=await loadCommitted(),d=await loadDraft();currentRevision=d&&d.revision?String(d.revision):"";if(d&&d.base_sha)baseSHA=d.base_sha;makeEditor(d?d.content:committed);dirty=false;renderTabs();$("draft-state").textContent=d?'draft rev '+currentRevision+' (not committed)':"";await showDiff();loadFindings();}
+async function loadTree(){try{const t=await api('/api/repos/'+encodeURIComponent(name)+'/tree?ref='+encodeURIComponent(ref));files=t.tree.map(x=>x.path).sort();renderTree(files);}catch(e){$("workspace-tree").innerHTML='<p class="error">'+esc(e.message)+'</p>';}}
+function renderTree(list){$("workspace-tree").innerHTML=list.map(f=>'<button class="tree-file '+(f===path?'active':'')+'" data-path="'+esc(f)+'"><span>·</span>'+esc(f)+'</button>').join('')||'<p class="muted">Empty repository.</p>';$("workspace-tree").querySelectorAll('button').forEach(b=>b.onclick=()=>openFile(b.dataset.path));}
+async function saveDraft(){const r=await api('/api/drafts',{method:'POST',body:JSON.stringify({repo:name,branch:ref,path,content:view.state.doc.toString(),expected_revision:currentRevision,base_sha:baseSHA})});currentRevision=String(r.revision);dirty=false;renderTabs();$("draft-state").textContent='draft rev '+currentRevision+' (not committed)';status('Draft saved','success');await showDiff();return r;}
+async function showDiff(){if(!view)return;const now=view.state.doc.toString();if(now===committedText){$("diff-view").textContent='(no changes)';return;}try{const d=await api('/api/diff',{method:'POST',body:JSON.stringify({path,old:committedText,new:now})});$("diff-view").textContent=d.diff||'(no diff)';$("diff-state").textContent='draft vs committed';}catch(e){$("diff-view").textContent='diff unavailable: '+e.message;}}
+async function loadFindings(){if(!attempt){$("findings").innerHTML='<p class="muted">No Attempt context.</p>';return;}try{const f=await api('/api/findings'),mine=f.items.filter(x=>x.target===attempt&&(!x.file||x.file===path));$("findings").innerHTML=mine.length?mine.map(x=>'<div class="finding '+esc(x.severity)+'"><span class="sev">'+esc(x.severity)+'</span> '+esc(x.message)+'</div>').join(''):'<p class="muted">No findings for this file.</p>';}catch(e){}}
+$("btn-save").onclick=async()=>{try{await saveDraft();}catch(e){if(String(e.message).includes('draft_stale')){status('Draft is stale; reload before saving.','warning');}else status('Save failed: '+e.message,'warning');}};
+$("btn-commit").onclick=()=>{$("commit-message").value='edit '+path+' via Switchyard';$("commit-modal").hidden=false;$("commit-message").focus();};$("commit-cancel").onclick=()=>$("commit-modal").hidden=true;
+$("commit-form").onsubmit=async e=>{e.preventDefault();try{const saved=await saveDraft();const r=await api('/api/drafts/'+saved.id+'/commit',{method:'POST',body:JSON.stringify({message:$("commit-message").value})});committedText=view.state.doc.toString();$("draft-state").textContent='committed '+String(r.new_sha).slice(0,7);$("commit-modal").hidden=true;dirty=false;renderTabs();status('Committed','success');showDiff();}catch(err){status('Commit failed: '+err.message,'warning');}};
+$("file-filter").oninput=e=>renderTree(files.filter(x=>x.toLowerCase().includes(e.target.value.toLowerCase())));$("repo-search").oninput=e=>{$("search-results").innerHTML=files.filter(x=>x.toLowerCase().includes(e.target.value.toLowerCase())).slice(0,80).map(x=>'<button class="tree-file" data-path="'+esc(x)+'">'+esc(x)+'</button>').join('');$("search-results").querySelectorAll('button').forEach(b=>b.onclick=()=>openFile(b.dataset.path));};
+document.querySelectorAll('.workbench-modes button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.workbench-modes button').forEach(x=>x.classList.toggle('active',x===b));['files','search','source'].forEach(m=>{const e=$(m==='files'?'workspace-tree':'workspace-'+m);if(e)e.hidden=m!==b.dataset.mode;});});
+$("new-file").onclick=()=>{const p=prompt('New file path:');if(p)openFile(p.replace(/^\/+/,''));};
+$("rename-file").onclick=async()=>{const np=prompt('Rename to:',path);if(!np||np===path)return;try{const h=(await api('/api/repos/'+encodeURIComponent(name)+'/refs')).refs['refs/heads/'+ref]||'';const r=await api('/api/refs/update',{method:'POST',body:JSON.stringify({repo:name,branch:ref,expected_sha:h,message:'rename '+path+' to '+np,changes:[{path:np,content:view.state.doc.toString()},{path,delete:true}]})});status(r.status==='ok'?'Renamed':'Branch moved; retry.','success');if(r.status==='ok'){files=files.filter(x=>x!==path);files.push(np);openFile(np);}}catch(e){status('Rename failed: '+e.message,'warning');}};
+$("delete-file").onclick=async()=>{if(!confirm('Delete '+path+'?'))return;try{const h=(await api('/api/repos/'+encodeURIComponent(name)+'/refs')).refs['refs/heads/'+ref]||'';const r=await api('/api/refs/update',{method:'POST',body:JSON.stringify({repo:name,branch:ref,expected_sha:h,message:'delete '+path,changes:[{path,delete:true}]})});if(r.status==='ok'){status('Deleted','success');files=files.filter(x=>x!==path);renderTree(files);openFile(files[0]||'README.md');}}catch(e){status('Delete failed: '+e.message,'warning');}};
+$("btn-agent").onclick=async()=>{if(!attempt){status('Formal Agent run requires an Attempt context.','warning');return;}$("agent-panel").textContent='Running formal Attempt…';try{const r=await api('/api/attempts/'+attempt+'/run',{method:'POST',body:'{}'});$("agent-panel").innerHTML='<strong>'+esc(r.status)+'</strong><pre>'+esc(r.output||'')+'</pre>';await openFile(path);}catch(e){$("agent-panel").textContent='Agent run failed: '+e.message;}};
+document.querySelectorAll('.mobile-workbench-switcher button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mobile-workbench-switcher button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-pane]').forEach(x=>{if(x.classList.contains('mobile-workbench-switcher'))return;x.classList.toggle('mobile-pane-active',x.dataset.pane===b.dataset.pane);});});
+window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();$("btn-save").click();}});
+(async()=>{await window.refreshAuth();await loadRefSHA();await loadTree();setPath(path||files[0]||'README.md');await openFile(path);const back=$("back-to-repo");back.href='/repo.html?name='+encodeURIComponent(name)+'&ref='+encodeURIComponent(ref)+'&path='+encodeURIComponent(path);})();
 })();

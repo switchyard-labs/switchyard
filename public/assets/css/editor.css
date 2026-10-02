@@ -26,3 +26,35 @@
 .file-view-wrap { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .file-view-toolbar { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-bottom: 1px solid var(--border, #2b2f3a); }
 .file-view-toolbar a.btn { text-decoration: none; font-size: 12px; }
+/* PX8 Warden-inspired Switchyard workbench */
+.workbench-page { overflow:hidden; }
+.editor-main { max-width:none; padding:0; }
+.editor-shell { height:calc(100vh - 47px); display:flex; flex-direction:column; background:var(--bg); }
+.editor-topbar { min-height:58px; display:flex; align-items:center; gap:12px; padding:8px 16px; border-bottom:1px solid var(--border); }
+.editor-context { font-size:11px; font-family:var(--mono); margin-top:3px; }
+.workbench { flex:1; min-height:0; display:grid; grid-template-columns:minmax(190px,260px) minmax(0,1fr) minmax(280px,360px); }
+.workbench-sidebar { border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:0; background:var(--bg-panel); resize:horizontal; overflow:auto; }
+.workbench-modes { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid var(--border); }
+.workbench-modes button,.mobile-workbench-switcher button { border:0; background:none; color:var(--text-dim); padding:9px 5px; font-size:12px; cursor:pointer; }
+.workbench-modes button.active,.mobile-workbench-switcher button.active { color:var(--text); background:var(--bg-elevated); box-shadow:inset 0 -2px var(--accent); }
+.sidebar-tools { display:flex; gap:6px; padding:8px; border-bottom:1px solid var(--border); }
+.sidebar-tools input,.workspace-search input,.agent-controls textarea { min-width:0; width:100%; background:var(--bg-input); border:1px solid var(--border); color:var(--text); border-radius:var(--radius-sm); padding:7px 9px; }
+.workspace-tree,.workspace-search,.workspace-source { overflow:auto; padding:7px; }
+.tree-file { display:flex; width:100%; gap:7px; text-align:left; border:0; background:none; color:var(--text-dim); padding:5px 7px; border-radius:4px; font:12px var(--mono); cursor:pointer; }
+.tree-file:hover,.tree-file.active { background:var(--bg-elevated); color:var(--text); }
+.editor-center { display:flex; min-width:0; min-height:0; flex-direction:column; }
+.editor-tabs { min-height:37px; display:flex; overflow:auto; border-bottom:1px solid var(--border); background:var(--bg-panel); }
+.editor-tab { border:0; border-right:1px solid var(--border); background:none; color:var(--text-dim); padding:8px 12px; font:12px var(--mono); white-space:nowrap; cursor:pointer; }
+.editor-tab.active { color:var(--text); background:var(--bg-code); }
+.dirty-dot { color:var(--warning); font-size:8px; margin-left:5px; }
+.editor-col { flex:1; min-height:0; }
+.editor-col .cm-editor,.editor-col .cm-scroller { height:100%; }
+.editor-status { min-height:27px; display:flex; gap:14px; align-items:center; padding:4px 10px; border-top:1px solid var(--border); font:11px var(--mono); color:var(--text-dim); background:var(--bg-panel); }
+.side-col { width:auto; max-height:none; min-width:0; resize:horizontal; overflow:auto; background:var(--bg-panel); }
+.side-col details { border-bottom:1px solid var(--border); }
+.side-col summary { list-style:none; cursor:pointer; }
+.agent-controls { padding:10px; display:grid; gap:8px; }
+.agent-controls div { display:flex; gap:6px; flex-wrap:wrap; }
+.mobile-workbench-switcher { display:none; }
+.modal[hidden]{display:none}.modal{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.68);display:grid;place-items:center;padding:20px}.modal-card{width:min(520px,100%);background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}.modal-card input{width:100%;box-sizing:border-box;margin-top:6px;background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:9px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.btn.danger{color:var(--danger)}
+@media(max-width:900px){.workbench{display:block;position:relative}.mobile-workbench-switcher{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)}.workbench>[data-pane]{display:none;height:calc(100vh - 145px);width:100%;resize:none}.workbench>[data-pane].mobile-pane-active{display:flex}.workbench-sidebar.mobile-pane-active{display:flex}.side-col.mobile-pane-active{display:block}.editor-center.mobile-pane-active{display:flex}.editor-center{display:flex!important}.workbench-sidebar,.side-col{display:none}.editor-topbar{padding:7px 10px}.editor-topbar #editor-context{display:none}}
