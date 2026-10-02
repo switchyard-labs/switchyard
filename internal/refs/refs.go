@@ -531,3 +531,44 @@ func gitOut(dir string, args ...string) (string, error) {
 	}
 	return string(out), nil
 }
+
+// DiffRefs returns a unified diff and changed-file list between two refs without
+// modifying remote refs. It uses a disposable authenticated clone so Git remains
+// the source of truth for comparison semantics.
+func (s *Service) DiffRefs(repo, base, head string) (string, []string, error) {
+	remote, err := s.remote(repo)
+	if err != nil {
+		return "", nil, err
+	}
+	dir := filepath.Join(s.ScratchDir, "compare-"+strings.ReplaceAll(repo+base+head, "/", "_"))
+	_ = os.RemoveAll(dir)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", nil, err
+	}
+	defer os.RemoveAll(dir)
+	args, err := s.authArgs(repo)
+	if err != nil {
+		return "", nil, err
+	}
+	c := append([]string{"clone", "--quiet"}, args...)
+	c = append(c, "--branch", base, remote, dir)
+	if err := git(dir, "", c...); err != nil {
+		return "", nil, fmt.Errorf("compare clone: %w", err)
+	}
+	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
+	f := append([]string{}, args...)
+	f = append(f, "fetch", "--quiet", remote, head+":"+"compare-head")
+	if err := git(dir, "", f...); err != nil {
+		return "", nil, fmt.Errorf("compare fetch: %w", err)
+	}
+	diff, err := gitOut(dir, "diff", "--no-ext-diff", "--find-renames", base+"...compare-head")
+	if err != nil {
+		return "", nil, err
+	}
+	names, _ := gitOut(dir, "diff", "--name-only", base+"...compare-head")
+	files := []string{}
+	for _, n := range strings.Fields(names) {
+		files = append(files, n)
+	}
+	return diff, files, nil
+}

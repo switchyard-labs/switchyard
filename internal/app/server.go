@@ -126,6 +126,9 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/content", a.handleCanonicalRepoContent)
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/refs", a.handleCanonicalRepoRefs)
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/overview", a.handleRepositoryOverview)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/commits", a.handleRepositoryCommits)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/commits/{sha}", a.handleRepositoryCommit)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/compare", a.handleRepositoryCompare)
 
 	// repos (legacy compatibility)
 	mux.HandleFunc("GET /api/repos", a.handleListRepos)
@@ -243,6 +246,13 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/settings" || strings.HasPrefix(r.URL.Path, "/settings/") {
 		http.ServeFile(w, r, filepath.Join(a.StaticDir, "settings.html"))
 		return
+	}
+	if len(strings.Split(strings.Trim(r.URL.Path, "/"), "/")) >= 3 {
+		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(parts) >= 3 && parts[2] == "commits" {
+			http.ServeFile(w, r, filepath.Join(a.StaticDir, "history.html"))
+			return
+		}
 	}
 	// Owner profile URLs use /{owner}. Reserved/static paths are filtered by
 	// validOwnerSlug; repository routes below take precedence for two segments.
