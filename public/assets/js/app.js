@@ -153,42 +153,64 @@
   }
 
   /* repo browser */
-  function renderRepo() {
+  function canonicalRepoContext() {
+    const params = new URLSearchParams(location.search);
+    const legacy = params.get("name");
+    if (legacy) return { legacy: true, artifact: legacy, owner: "", repo: "", ref: params.get("ref") || "main", path: params.get("path") || "" };
+    const parts = location.pathname.split("/").filter(Boolean).map(decodeURIComponent);
+    if (parts.length < 2) return { legacy: true, artifact: "", owner: "", repo: "", ref: "main", path: "" };
+    const out = { legacy: false, owner: parts[0], repo: parts[1], artifact: "", ref: "main", path: "" };
+    if (parts.length >= 4 && (parts[2] === "blob" || parts[2] === "tree")) {
+      out.kind = parts[2]; out.ref = parts[3]; out.path = parts.slice(4).join("/");
+    }
+    return out;
+  }
+  function canonicalRepoURL(ctx, kind, ref, path) {
+    const base = "/" + encodeURIComponent(ctx.owner) + "/" + encodeURIComponent(ctx.repo);
+    if (!kind) return base;
+    const tail = path ? "/" + path.split("/").map(encodeURIComponent).join("/") : "";
+    return base + "/" + kind + "/" + encodeURIComponent(ref || "main") + tail;
+  }
+  async function renderRepo() {
     const nameEl = document.getElementById("repo-name");
     const treeEl = document.getElementById("file-tree");
     const viewEl = document.getElementById("file-view");
     if (!nameEl) return;
-    const params = new URLSearchParams(location.search);
-    const name = params.get("name") || "";
-    const ref = params.get("ref") || "main";
-    const path = params.get("path") || "";
-    nameEl.textContent = name;
-    document.getElementById("repo-ref").textContent = "ref: " + ref;
-    loadTree(name, ref, treeEl, viewEl, path);
+    const ctx = canonicalRepoContext();
+    if (!ctx.legacy) {
+      const meta = await api("/api/repositories/" + encodeURIComponent(ctx.owner) + "/" + encodeURIComponent(ctx.repo));
+      ctx.artifact = meta.artifact_name;
+      nameEl.textContent = meta.full_name;
+      const desc = document.getElementById("repo-description"); if (desc) desc.textContent = meta.description || "";
+    } else {
+      nameEl.textContent = ctx.artifact;
+    }
+    document.getElementById("repo-ref").textContent = "ref: " + ctx.ref;
+    loadTree(ctx, treeEl, viewEl);
   }
-  async function loadTree(name, ref, treeEl, viewEl, activePath) {
+  async function loadTree(ctx, treeEl, viewEl) {
     try {
-      const t = await api("/api/repos/" + encodeURIComponent(name) + "/tree?ref=" + encodeURIComponent(ref));
-      const dirs = {}, files = [];
-      for (const it of t.tree) {
-        const top = it.path.split("/")[0];
-        if (it.type === "tree") dirs[top] = 1; else files.push(it.path);
-      }
+      const root = ctx.legacy
+        ? "/api/repos/" + encodeURIComponent(ctx.artifact)
+        : "/api/repositories/" + encodeURIComponent(ctx.owner) + "/" + encodeURIComponent(ctx.repo);
+      const t = await api(root + "/tree?ref=" + encodeURIComponent(ctx.ref));
+      const files = t.tree.map((it) => it.path).sort();
       treeEl.innerHTML = "";
-      for (const d of Object.keys(dirs)) treeEl.appendChild(el("<div class='dir'>" + esc(d) + "/</div>"));
-      for (const f of files.sort()) {
+      for (const f of files) {
         const row = el("<div class='file' data-path='" + esc(f) + "'>" + esc(f) + "</div>");
-        row.onclick = () => { location.href = "/repo.html?name=" + encodeURIComponent(name) + "&ref=" + encodeURIComponent(ref) + "&path=" + encodeURIComponent(f); };
+        row.onclick = () => {
+          location.href = ctx.legacy
+            ? "/repo.html?name=" + encodeURIComponent(ctx.artifact) + "&ref=" + encodeURIComponent(ctx.ref) + "&path=" + encodeURIComponent(f)
+            : canonicalRepoURL(ctx, "blob", ctx.ref, f);
+        };
         treeEl.appendChild(row);
       }
-      if (activePath) {
+      if (ctx.path) {
         const editLink = document.getElementById("edit-link");
-        if (editLink) editLink.href = "/edit.html?name=" + encodeURIComponent(name) + "&ref=" + encodeURIComponent(ref) + "&path=" + encodeURIComponent(activePath);
-        const titleEl = document.getElementById("file-view-title");
-        if (titleEl) titleEl.textContent = activePath;
-        const data = await api("/api/repos/" + encodeURIComponent(name) + "/content?ref=" + encodeURIComponent(ref) + "&path=" + encodeURIComponent(activePath), { headers: {} });
-        // content endpoint returns raw bytes; fetch directly
-        const raw = await fetch("/api/repos/" + encodeURIComponent(name) + "/content?ref=" + encodeURIComponent(ref) + "&path=" + encodeURIComponent(activePath), { credentials: "same-origin" });
+        if (editLink) editLink.href = "/edit.html?name=" + encodeURIComponent(ctx.artifact) + "&ref=" + encodeURIComponent(ctx.ref) + "&path=" + encodeURIComponent(ctx.path);
+        const titleEl = document.getElementById("file-view-title"); if (titleEl) titleEl.textContent = ctx.path;
+        const raw = await fetch(root + "/content?ref=" + encodeURIComponent(ctx.ref) + "&path=" + encodeURIComponent(ctx.path), { credentials: "same-origin" });
+        if (!raw.ok) throw new Error("content request failed: " + raw.status);
         viewEl.textContent = await raw.text();
       }
     } catch (e) { treeEl.innerHTML = "<p class='error'>" + esc(e.message) + "</p>"; }

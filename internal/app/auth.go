@@ -37,6 +37,14 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "username_or_password_too_short"})
 		return
 	}
+	if !validOwnerSlug(in.Username) {
+		writeJSON(w, 400, map[string]any{"error": "username_invalid"})
+		return
+	}
+	if ns, _ := a.Trestle.ListRecords("owner_namespaces", `slug = "`+normalizeOwnerSlug(in.Username)+`"`); len(ns) > 0 {
+		writeJSON(w, 409, map[string]any{"error": "username_taken"})
+		return
+	}
 	existing, err := a.Trestle.ListRecords("users", `username = "`+in.Username+`"`)
 	if err == nil && len(existing) > 0 {
 		writeJSON(w, 409, map[string]any{"error": "username_taken"})
@@ -58,6 +66,10 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}, "user-"+in.Username)
 	if err != nil {
 		writeJSON(w, 500, map[string]any{"error": "create_user_failed"})
+		return
+	}
+	if err := a.ensureOwnerNamespace(in.Username, "user", in.Username); err != nil {
+		writeJSON(w, 409, map[string]any{"error": "owner_namespace_conflict"})
 		return
 	}
 	a.startSession(w, in.Username)

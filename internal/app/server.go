@@ -34,9 +34,9 @@ type App struct {
 	Roles     []agent.Role
 	Queue     *QueueConsumer
 
-	wfMu      sync.Mutex
+	wfMu       sync.Mutex
 	wfInFlight map[string]bool
-	iqBusy    bool
+	iqBusy     bool
 }
 
 func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App {
@@ -51,6 +51,8 @@ func (a *App) Provision() error {
 		{"users", []trestle.CollectionField{{Name: "username", Type: "text", Unique: true}, {Name: "password_hash", Type: "text", Required: true}, {Name: "display_name", Type: "text"}}},
 		{"sessions", []trestle.CollectionField{{Name: "token", Type: "text", Unique: true}, {Name: "username", Type: "text"}, {Name: "expires_at", Type: "text"}}},
 		{"repos", []trestle.CollectionField{{Name: "name", Type: "text", Unique: true}, {Name: "default_branch", Type: "text"}, {Name: "remote", Type: "text"}, {Name: "registered_at", Type: "text"}}},
+		{"owner_namespaces", []trestle.CollectionField{{Name: "slug", Type: "text", Unique: true}, {Name: "owner_type", Type: "text"}, {Name: "owner_id", Type: "text"}, {Name: "created_at", Type: "text"}}},
+		{"repository_meta", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "full_name", Type: "text", Unique: true}, {Name: "owner_type", Type: "text"}, {Name: "owner_id", Type: "text"}, {Name: "owner_slug", Type: "text"}, {Name: "slug", Type: "text"}, {Name: "display_name", Type: "text"}, {Name: "description", Type: "text"}, {Name: "visibility", Type: "text"}, {Name: "default_branch", Type: "text"}, {Name: "artifact_name", Type: "text", Unique: true}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"work", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "title", Type: "text"}, {Name: "kind", Type: "text"}, {Name: "status", Type: "text"}, {Name: "owner", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"events", []trestle.CollectionField{{Name: "type", Type: "text"}, {Name: "repo_name", Type: "text"}, {Name: "payload", Type: "json"}, {Name: "occurred_at", Type: "text"}}},
 		{"ref_updates", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "old_sha", Type: "text"}, {Name: "new_sha", Type: "text"}, {Name: "provenance", Type: "text"}, {Name: "occurred_at", Type: "text"}}},
@@ -95,7 +97,14 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/auth/logout", a.handleLogout)
 	mux.HandleFunc("GET /api/auth/me", a.handleMe)
 
-	// repos
+	// repositories: legacy flat API plus canonical owner/repository metadata (PX2)
+	mux.HandleFunc("GET /api/repositories", a.handleListRepositoryMeta)
+	mux.HandleFunc("POST /api/repositories/register", a.handleRegisterRepositoryMeta)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}", a.handleGetRepositoryMeta)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/tree", a.handleCanonicalRepoTree)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/content", a.handleCanonicalRepoContent)
+
+	// repos (legacy compatibility)
 	mux.HandleFunc("GET /api/repos", a.handleListRepos)
 	mux.HandleFunc("GET /api/repos/{name}", a.handleGetRepo)
 	mux.HandleFunc("GET /api/repos/{name}/tree", a.handleRepoTree)
@@ -180,6 +189,13 @@ func (a *App) Handler() http.Handler {
 func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/") {
 		writeJSON(w, 404, map[string]any{"error": "not_found"})
+		return
+	}
+	// Canonical Git-host repository URLs use /{owner}/{repo}[/(blob|tree)/{ref}/...].
+	// They render the existing repository shell; the browser resolves the canonical
+	// metadata/API path. Physical Artifacts names never appear in the public URL.
+	if _, ok := parseRepositoryRoute(r.URL.Path); ok {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "repo.html"))
 		return
 	}
 	p := filepath.Join(a.StaticDir, filepath.Clean("/"+r.URL.Path))

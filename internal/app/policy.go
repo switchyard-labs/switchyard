@@ -164,6 +164,15 @@ func (a *App) handleCreateOrg(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "name_required"})
 		return
 	}
+	orgSlug := normalizeOwnerSlug(in.Name)
+	if !validOwnerSlug(orgSlug) {
+		writeJSON(w, 400, map[string]any{"error": "org_name_invalid"})
+		return
+	}
+	if ns, _ := a.Trestle.ListRecords("owner_namespaces", `slug = "`+orgSlug+`"`); len(ns) > 0 {
+		writeJSON(w, 409, map[string]any{"error": "owner_namespace_taken"})
+		return
+	}
 	id := "org_" + randHex(8)
 	_, _, err := a.Trestle.CreateRecord("orgs", map[string]any{
 		"id": id, "name": in.Name, "owner": user, "members": in.Members, "repos": in.Repos, "created_at": nowStr(),
@@ -172,7 +181,11 @@ func (a *App) handleCreateOrg(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
-	writeJSON(w, 201, map[string]any{"id": id, "name": in.Name, "owner": user})
+	if err := a.ensureOwnerNamespace(orgSlug, "org", id); err != nil {
+		writeJSON(w, 409, map[string]any{"error": "owner_namespace_conflict"})
+		return
+	}
+	writeJSON(w, 201, map[string]any{"id": id, "name": in.Name, "slug": orgSlug, "owner": user})
 }
 
 func (a *App) handleCreatePolicy(w http.ResponseWriter, r *http.Request) {
@@ -218,12 +231,12 @@ func (a *App) handleFleet(w http.ResponseWriter, r *http.Request) {
 	runs, _ := a.Trestle.ListRecords("workflow_runs", "")
 	escs, _ := a.Trestle.ListRecords("escalations", "")
 	writeJSON(w, 200, map[string]any{
-		"org":        orgView,
-		"repos":      len(repos),
-		"queue_items": len(queue),
+		"org":           orgView,
+		"repos":         len(repos),
+		"queue_items":   len(queue),
 		"workflow_runs": len(runs),
 		"escalations":   len(escs),
-		"queue": queue,
+		"queue":         queue,
 	})
 }
 
