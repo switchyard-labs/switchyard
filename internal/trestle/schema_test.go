@@ -43,8 +43,17 @@ func (f *schemaFixture) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case "POST", "PATCH":
 			f.writes++
 			f.acknowledged = f.acknowledged || r.Header.Get("X-Trestle-Acknowledge-Schema") == "true"
-			var collection Collection
-			json.NewDecoder(r.Body).Decode(&collection)
+			var payload struct {
+				Name   string            `json:"name"`
+				Fields []CollectionField `json:"fields"`
+			}
+			decoder := json.NewDecoder(r.Body)
+			decoder.DisallowUnknownFields()
+			if err := decoder.Decode(&payload); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			collection := Collection{Name: payload.Name, Fields: payload.Fields}
 			collection.Kind = "base"
 			f.schemas[collection.Name] = collection
 			if r.Method == "POST" {

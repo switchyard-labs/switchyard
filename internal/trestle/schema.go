@@ -164,7 +164,9 @@ func (c *Client) ApplyAdditiveMigration(before, after Collection) error {
 	if string(oldJSON) != string(currentJSON) {
 		return &SchemaMismatch{before.Name, "", "schema changed since migration planning"}
 	}
-	resp, body, err := c.do(http.MethodPatch, "/admin/v1/collections/"+url.PathEscape(before.Name), after)
+	// The update contract accepts name and fields only. Kind is read-only;
+	// Trestle rejects it rather than silently dropping unknown JSON fields.
+	resp, body, err := c.do(http.MethodPatch, "/admin/v1/collections/"+url.PathEscape(before.Name), map[string]any{"name": after.Name, "fields": after.Fields})
 	if err != nil {
 		return err
 	}
