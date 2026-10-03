@@ -201,3 +201,46 @@ func TestActionsRepeatedPollingDoesNotRewriteViews(t *testing.T) {
 		}
 	}
 }
+
+func TestActionsSourceInspectionTrustBoundary(t *testing.T) {
+	for _, scenario := range []string{"valid", "wrong repo", "wrong sha", "missing commit", "wrong inspector", "wrong path", "oversize", "bad digest"} {
+		t.Run(scenario, func(t *testing.T) {
+			a, store, s := actionFixture(t)
+			source := &actions.SourceInspection{Repo: s.Manifest.Run.Repo, SHA: s.Manifest.Run.SHA, CommitPresent: true, Inspection: "artifacts-worker-binding", Config: &actions.SourceConfig{Path: "switchyard.actions.js", Bytes: 877, SHA256: strings.Repeat("a", 64)}}
+			s.Manifest.Source = source
+			switch scenario {
+			case "wrong repo":
+				source.Repo = "other"
+			case "wrong sha":
+				source.SHA = strings.Repeat("b", 40)
+			case "missing commit":
+				source.CommitPresent = false
+			case "wrong inspector":
+				source.Inspection = "unverified"
+			case "wrong path":
+				source.Config.Path = "other.js"
+			case "oversize":
+				source.Config.Bytes = 65537
+			case "bad digest":
+				source.Config.SHA256 = strings.Repeat("z", 64)
+			}
+			err := a.syncActionSnapshot(s)
+			if scenario == "valid" {
+				if err != nil {
+					t.Fatal(err)
+				}
+				encoded, _ := json.Marshal(store.records["action_runs"][0].values)
+				if !strings.Contains(string(encoded), "artifacts-worker-binding") {
+					t.Fatal("source provenance lost")
+				}
+			} else {
+				if err == nil {
+					t.Fatal("untrusted source inspection accepted")
+				}
+				if len(store.records["action_checks"]) != 0 {
+					t.Fatal("untrusted source authorized a check")
+				}
+			}
+		})
+	}
+}

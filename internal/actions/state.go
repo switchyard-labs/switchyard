@@ -22,11 +22,24 @@ type JobState struct {
 	Steps      []StepState `json:"steps"`
 }
 type Manifest struct {
-	Run        Run        `json:"run"`
-	Status     string     `json:"status"`
-	StartedAt  string     `json:"started_at"`
-	FinishedAt string     `json:"finished_at"`
-	Jobs       []JobState `json:"jobs"`
+	Run        Run               `json:"run"`
+	Source     *SourceInspection `json:"source,omitempty"`
+	Status     string            `json:"status"`
+	StartedAt  string            `json:"started_at"`
+	FinishedAt string            `json:"finished_at"`
+	Jobs       []JobState        `json:"jobs"`
+}
+type SourceInspection struct {
+	Repo          string        `json:"repo"`
+	SHA           string        `json:"sha"`
+	CommitPresent bool          `json:"commit_present"`
+	Inspection    string        `json:"inspection"`
+	Config        *SourceConfig `json:"config"`
+}
+type SourceConfig struct {
+	Path   string `json:"path"`
+	Bytes  int    `json:"bytes"`
+	SHA256 string `json:"sha256"`
 }
 type Snapshot struct {
 	ID             string `json:"id"`

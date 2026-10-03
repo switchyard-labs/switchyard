@@ -64,6 +64,14 @@ func (a *App) syncActionSnapshot(snapshot actions.Snapshot) error {
 	if snapshot.ID != run.ID || !eventSHA.MatchString(run.SHA) || run.Owner != a.Artifacts.Namespace || run.ProviderData["namespace"] != a.Artifacts.Namespace {
 		return fmt.Errorf("Actions snapshot identity mismatch")
 	}
+	if source := manifest.Source; source != nil {
+		if source.Repo != run.Repo || source.SHA != run.SHA || !source.CommitPresent || source.Inspection != "artifacts-worker-binding" {
+			return fmt.Errorf("Actions source inspection identity mismatch")
+		}
+		if config := source.Config; config != nil && (config.Path != "switchyard.actions.js" || config.Bytes < 0 || config.Bytes > 64<<10 || len(config.SHA256) != 64 || strings.Trim(config.SHA256, "0123456789abcdef") != "") {
+			return fmt.Errorf("Actions source configuration fingerprint invalid")
+		}
+	}
 	_, _, definition, err := a.Trestle.FindRecord("action_definitions", filterEq("id", actionDefinitionID(run.Repo, run.DefinitionRevision)))
 	if err != nil {
 		return err
