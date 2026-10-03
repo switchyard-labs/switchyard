@@ -1,7 +1,11 @@
 package app
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"net/http"
+	"switchyard/internal/artifacts"
 	"time"
 )
 
@@ -11,6 +15,35 @@ import (
 // reconciliation. It is a testing/operator hook that preserves one normalized
 // ingest boundary.
 func (a *App) handleIngestEvent(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(io.LimitReader(r.Body, (1<<20)+1))
+	if err != nil || len(body) > 1<<20 {
+		writeJSON(w, 400, map[string]any{"error": "bad_request"})
+		return
+	}
+	var candidate struct {
+		Source struct {
+			Namespace string `json:"namespace"`
+		} `json:"source"`
+	}
+	if json.Unmarshal(body, &candidate) != nil {
+		writeJSON(w, 400, map[string]any{"error": "bad_request"})
+		return
+	}
+	if candidate.Source.Namespace != "" {
+		ev, err := artifacts.NormalizeEvent(body, a.Artifacts.Namespace)
+		if err != nil {
+			writeJSON(w, 400, map[string]any{"error": "invalid_artifacts_event"})
+			return
+		}
+		replayed, err := a.ingestArtifactEvent(ev, "http")
+		if err != nil {
+			writeJSON(w, 503, map[string]any{"error": "event_ingest_unavailable"})
+			return
+		}
+		writeJSON(w, 201, map[string]any{"id": ev.ID, "repo": ev.Repo, "type": ev.Type, "replayed": replayed, "occurred_at": ev.OccurredAt})
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewReader(body))
 	var ev struct {
 		Type   string `json:"type"`
 		Source struct {

@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"switchyard/internal/artifacts"
 	"time"
 )
 
@@ -145,17 +146,6 @@ func (a *App) consumeOnce() (resultErr error) {
 	retried := []string{}
 	ingested := 0
 	for _, m := range msgs {
-		var ev struct {
-			Type   string `json:"type"`
-			Source struct {
-				RepoName string `json:"repoName"`
-			} `json:"source"`
-			Payload struct {
-				Ref    string `json:"ref"`
-				Before string `json:"before"`
-				After  string `json:"after"`
-			} `json:"payload"`
-		}
 		// Cloudflare queue message bodies are JSON-encoded strings (the CP0
 		// peek shows "body":"{\"type\":...}"), so decode the string first,
 		// then the envelope.
@@ -163,23 +153,15 @@ func (a *App) consumeOnce() (resultErr error) {
 		if err := json.Unmarshal(m.Body, &bodyStr); err == nil {
 			m.Body = json.RawMessage(bodyStr)
 		}
-		if err := json.Unmarshal(m.Body, &ev); err != nil {
+		ev, err := artifacts.NormalizeEvent(m.Body, a.Artifacts.Namespace)
+		if err != nil {
 			// malformed message: ack (nothing useful to retry forever)
 			log.Printf("queue consumer: malformed message %s: %v", m.ID, err)
 			acked = append(acked, m.LeaseID)
 			continue
 		}
-		if ev.Type != "cf.artifacts.repo.pushed" || ev.Source.RepoName == "" {
-			acked = append(acked, m.LeaseID)
-			continue
-		}
-		branch := shortRef(ev.Payload.Ref)
-		if branch == "" || ev.Payload.After == "" {
-			acked = append(acked, m.LeaseID)
-			continue
-		}
-		if _, err := a.observeTransition(ev.Source.RepoName, branch, ev.Payload.Before, ev.Payload.After, "queue"); err != nil {
-			log.Printf("queue ingest %s/%s: %v", ev.Source.RepoName, branch, err)
+		if _, err := a.ingestArtifactEvent(ev, "queue"); err != nil {
+			log.Printf("queue ingest %s: %v", ev.Repo, err)
 			retried = append(retried, m.LeaseID)
 			continue
 		}
