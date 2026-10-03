@@ -37,3 +37,5 @@ push→Go event 0.83s, push→captured SSE frame 1.11s, push→CI success 32.26s
 The 75-repository reconciliation safety-net observation was 415.82s and is a
 known serial-scan scaling limitation. None of these results supports blaming
 Trestle for the remote repository browse delay or adopting a mirror prematurely.
+
+Twelve real disposable Attempt previews also passed: median 13160.72 ms, nearest-rank p95 18714.59 ms, range 11828.96–18714.59 ms. Each request performs textual merge preview and semantic validation of the merged tree; this measures their combined end-to-end cost, not independent semantic compute. No canonical publication occurred. Raw data: `preview-12-samples-20261004.json`.

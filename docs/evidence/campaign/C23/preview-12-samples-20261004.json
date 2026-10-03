@@ -1,0 +1,23 @@
+{
+  "scope": "real existing disposable Attempt preview; textual merge plus merged-tree semantic validation; no publication",
+  "samples": 12,
+  "median_ms": 13160.720000000001,
+  "p95_nearest_rank_ms": 18714.59,
+  "min_ms": 11828.96,
+  "max_ms": 18714.59,
+  "timings_ms": [
+    14963.7,
+    11930.56,
+    12014.23,
+    11828.96,
+    18714.59,
+    13179.43,
+    12368.01,
+    12833.99,
+    15316.3,
+    14213.09,
+    13142.01,
+    13910.81
+  ],
+  "all_status": "ok"
+}
