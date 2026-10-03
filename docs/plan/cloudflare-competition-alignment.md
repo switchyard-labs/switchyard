@@ -28,3 +28,30 @@ The [Artifacts documentation](https://developers.cloudflare.com/artifacts/) esta
 C25 must show multiple Agents acting concurrently on one real Work item, distinct Attempts/commits, actual Cloudflare checks and logs, review evidence, semantic/text conflict handling, a human decision and serialized exact-candidate integration into Artifacts. Show a crash/retry recovering without duplicate effects and an external Git edit causing a stale decision to be rejected. Show the editor preserving a newer human draft when an Agent proposal is stale. Use the actual application and public source/run instructions; identify deterministic fixtures and unconfigured deployment paths honestly.
 
 A recorded video, complete public source including dependency notices, deploy/restore instructions and any verified preview still remain deliverables. C16 passes architecture alignment; it does not certify submission readiness or eligibility.
+
+## C40 evidence update — October 4
+
+This supersedes the earlier implementation table, not the eligibility assessment.
+PASS below means the stated bounded capability was observed; it does not mean the
+complete competition demonstration is finished.
+
+| Capability | Status | Evidence and limits |
+| --- | --- | --- |
+| Artifacts as Git truth | PASS | C33 real scoped clone/fetch; C36 ordinary remote pushes, exact immutable SHAs |
+| Multiple concurrent real external coding Agents | PARTIAL | C8 typed non-root runner and deterministic fixtures; isolated provider credentials absent, C25/C41 external leg conditional |
+| Isolated Attempt branches and durable Work | PASS | C0–C8 durability/security fixtures; real isolated browser Work/Attempt in C22 |
+| Direct Worker Artifacts binding | PASS | C34 bounded exact-commit verification/config fingerprint; C36 signed real source inspection |
+| Repo-scoped Git capabilities | PASS | C33 read/write authorization/TTL tests and real read clone/fetch; sy real scoped clone in October 4 review |
+| Event subscriptions | PASS | C36 real disposable subscription/Queue; C35 supported nine-class bounded normalization |
+| Automatic ordinary push response | PASS | C36 push 91c8376: Go event 0.83s, automatic CI success 32.26s; later SSE frame 1.11s; individual Worker receive timestamp unavailable |
+| Duplicate delivery and reconciliation | PASS | C36 one durable transition/run on duplicate; delayed reconciliation converges, but 75-repo serial scan took 415.82s |
+| Workers used materially | PASS | C34 Worker owns immutable verification/allowlist and execution authorization, not a Go proxy |
+| Workflows / official CI Sandbox / R2 | PASS | C10/C36 real cloud execution, bounded commands and captured output; one sequential basic Container |
+| Worker previews/deployment URLs | PARTIAL | C37 no Builds trigger/connection/scoped deployment token; deployments remain disabled |
+| Human review/failure navigation | PASS | C21 approval/fault tests; C22 review surfaces; C38 real failure opens failed job and captured diagnostic |
+| Semantic and textual conflict handling | PASS (fixtures) | C5–C8 merged-tree/ref/semantic tests; final combined cloud demonstration still pending |
+| Exact-candidate deterministic integration | PASS (fault fixtures) | C5 immutable candidate CAS, C6 durable fenced claims, C11 exact-SHA Actions gates; final complete cloud story pending |
+| Provenance | PASS | C36 signed repo/SHA/config fingerprint; C38 visible source inspection. Commit author is not asserted to be authenticated push actor |
+| Complete recorded competition demo | PARTIAL | C41 must combine the capabilities and configure genuine external Agents; no submission/video claim |
+
+No terms acceptance, submission, project push or eligibility claim is made by this matrix.
