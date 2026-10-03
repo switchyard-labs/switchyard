@@ -193,6 +193,8 @@ func (a *App) Handler() http.Handler {
 
 	// attempts + PRs (deterministic vertical slice)
 	mux.HandleFunc("POST /api/work/{id}/attempts", a.authorizeHandler(a.handleCreateAttempt))
+	mux.HandleFunc("GET /api/attempts", a.authorizeHandler(a.handleListAttempts))
+	mux.HandleFunc("GET /api/attempts/{id}", a.authorizeHandler(a.handleGetAttempt))
 	mux.HandleFunc("POST /api/attempts/{id}/run", a.authorizeHandler(a.handleRunAttempt))
 	mux.HandleFunc("POST /api/attempts/{id}/pr", a.authorizeHandler(a.handleOpenPR))
 	mux.HandleFunc("POST /api/prs/{id}/check", a.authorizeHandler(a.handlePRCheck))

@@ -35,7 +35,7 @@ func TestGrantCapabilities(t *testing.T) {
 }
 func TestAnonymousAndDemoPrivateAPIs(t *testing.T) {
 	a := &App{}
-	for _, path := range []string{"/api/events", "/api/work", "/api/prs", "/api/credentials", "/api/workflow_runs", "/api/queue", "/api/attention", "/api/executions"} {
+	for _, path := range []string{"/api/attempts", "/api/events", "/api/work", "/api/prs", "/api/credentials", "/api/workflow_runs", "/api/queue", "/api/attention", "/api/executions"} {
 		for _, demo := range []bool{false, true} {
 			r := httptest.NewRequest(http.MethodGet, path, nil)
 			user := ""

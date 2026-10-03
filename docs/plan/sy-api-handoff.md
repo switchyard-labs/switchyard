@@ -7,7 +7,7 @@ Do not require a user to supply an Artifacts account token.
 ## Identity and scoped clone
 
 `GET /api/repositories` returns canonical registered repositories. Use their
-`owner_slug`, `name`, `full_name`, `artifact_name`, `visibility` and `id` fields;
+`owner_slug`, `slug`, `full_name`, `artifact_name`, `visibility` and `id` fields;
 never derive public visibility from the provider's `read_only` flag. Canonical
 browser route is `/{owner}/{repo}`. Physical Artifacts namespace/name need not
 match Switchyard owner/name. Escape each path component.
@@ -64,9 +64,14 @@ stdout and stderr are grouped; interleaved process ordering is not claimed.
 
 ## Attempts and errors
 
-No top-level GET `/api/attempts` or GET `/api/attempts/{id}` exists at this
-checkpoint. Work detail `/api/work/{id}` has authorized `attempts[]`. Existing
-bounded derived listing remains necessary and should expose scan limits.
+GET `/api/attempts` now returns `{items,next_cursor}` with limit1–200
+(default100), ascending ID cursor and optional work_id/repo/status filters.
+All items pass the existing repository/Work read authorization. Anonymous and
+demo guests cannot list Attempts. GET `/api/attempts/{id}` returns the authorized
+attempt record directly. Unauthorized detail is denied by the route guard.
+Pagination is a changing live list, not a frozen snapshot. Work detail retains
+its authorized `attempts[]` for browser compatibility. `sy` should use this
+API rather than scanning Work records.
 POST `/api/attempts/{id}/run` and `/pr` remain available. Deterministic execution
 is not a certified real external coding provider.
 
