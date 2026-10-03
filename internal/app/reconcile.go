@@ -55,17 +55,22 @@ func (a *App) reconcileRepo(repo string) error {
 	for ref, sha := range refsMap {
 		if ref != "HEAD" {
 			branch := shortRef(ref)
-			a.reconcileRef(repo, branch, sha)
+			if err := a.reconcileRef(repo, branch, sha); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
-func (a *App) reconcileRef(repo, branch, sha string) {
+func (a *App) reconcileRef(repo, branch, sha string) error {
 	// latest recorded observation for this branch
-	latest, _ := a.latestRefObs(repo, branch)
+	latest, err := a.latestRefObs(repo, branch)
+	if err != nil {
+		return err
+	}
 	if latest == sha {
-		return
+		return nil
 	}
 	// First observation of this branch: record a baseline observation only,
 	// with no domain event. Reconciliation cannot distinguish "branch just
@@ -76,18 +81,19 @@ func (a *App) reconcileRef(repo, branch, sha string) {
 	// well-defined.
 	if latest == "" {
 		now := time.Now().UTC().Format(time.RFC3339)
-		_, _, _ = a.Trestle.CreateRecord("ref_obs", map[string]any{
+		_, _, err := a.Trestle.CreateRecord("ref_obs", map[string]any{
 			"repo": repo, "branch": branch, "sha": sha, "seen_at": now,
 		}, "refobs-"+repo+"-"+branch+"-"+sha+"-baseline-"+now)
-		return
+		return err
 	}
 	// shared normalized ingest (also used by the queue fast path); domain
 	// event is deduplicated by ref-transition identity (repo, ref, before,
 	// after), so reconciliation never duplicates what the queue already
 	// recorded, and vice versa.
 	if _, err := a.observeTransition(repo, branch, latest, sha, "reconciliation"); err != nil {
-		log.Printf("reconcile %s/%s: %v", repo, branch, err)
+		return err
 	}
+	return nil
 }
 
 func (a *App) latestRefObs(repo, branch string) (string, error) {

@@ -74,6 +74,11 @@ func (a *App) handleUpdateRepositorySettings(w http.ResponseWriter, r *http.Requ
 		writeJSON(w, 404, map[string]any{"error": "repository_not_found"})
 		return
 	}
+	if in.IntegrationPolicy != "" && in.IntegrationPolicy != "queue" && in.IntegrationPolicy != "direct" && in.IntegrationPolicy != "pr" {
+		writeJSON(w, 400, map[string]any{"error": "integration_policy_invalid"})
+		return
+	}
+
 	patch := map[string]any{"updated_at": nowStr()}
 	if in.Description != "" || r.URL.Query().Get("allow_empty_description") == "1" {
 		patch["description"] = strings.TrimSpace(in.Description)
@@ -107,7 +112,11 @@ func (a *App) handleUpdateRepositorySettings(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	if in.Archived != nil || in.IntegrationPolicy != "" {
-		sid, sver, _, _ := a.Trestle.FindRecord("repository_settings", `repo_id = "`+strOr(meta["id"])+`"`)
+		sid, sver, _, err := a.Trestle.FindRecord("repository_settings", filterEq("repo_id", strOf(meta["id"])))
+		if err != nil {
+			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "settings_read_failed", "metadata_updated": true})
+			return
+		}
 		sp := map[string]any{"updated_at": nowStr()}
 		if in.Archived != nil {
 			if *in.Archived {
@@ -125,9 +134,13 @@ func (a *App) handleUpdateRepositorySettings(w http.ResponseWriter, r *http.Requ
 		}
 		if sid == "" {
 			sp["repo_id"] = meta["id"]
-			_, _, _ = a.Trestle.CreateRecord("repository_settings", sp, "repo-settings-"+strOr(meta["id"]))
+			_, _, err = a.Trestle.CreateRecord("repository_settings", sp, "repo-settings-"+strOf(meta["id"])+"-"+randHex(8))
 		} else {
-			_ = a.Trestle.PatchRecord("repository_settings", sid, sver, sp)
+			err = a.Trestle.PatchRecord("repository_settings", sid, sver, sp)
+		}
+		if err != nil {
+			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "settings_save_failed", "metadata_updated": true})
+			return
 		}
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "repository": patch})

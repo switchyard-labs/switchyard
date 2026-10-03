@@ -20,12 +20,13 @@ type ExecutionRecord struct {
 	Finished  time.Time
 }
 
-func (a *App) recordExecution(ex *ExecutionRecord) {
-	_, _, _ = a.Trestle.CreateRecord("executions", map[string]any{
+func (a *App) recordExecution(ex *ExecutionRecord) error {
+	_, _, err := a.Trestle.CreateRecord("executions", map[string]any{
 		"id": ex.ID, "role": ex.Role, "attempt_id": ex.AttemptID, "adapter": ex.Adapter,
 		"status": ex.Status, "output": ex.Output,
 		"started_at": ex.Started.Format(time.RFC3339), "finished_at": ex.Finished.Format(time.RFC3339),
 	}, "exec-"+ex.ID)
+	return err
 }
 
 func scratchDir(dataDir, name string) string {

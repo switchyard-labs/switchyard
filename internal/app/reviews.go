@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -33,11 +34,17 @@ func (a *App) handleReviewAttempt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, f := range findings {
-		a.addFinding(attemptID, f["severity"].(string), f["message"].(string), f["file"].(string))
+		if err := a.addFinding(attemptID, f["severity"].(string), f["message"].(string), f["file"].(string)); err != nil {
+			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+			return
+		}
 	}
 	// record the review execution through the substrate (reviewer role)
 	ex := &ExecutionRecord{ID: "exe_" + randHex(8), Role: "reviewer", AttemptID: attemptID, Adapter: "deterministic", Status: "succeeded", Output: "reviewed", Started: time.Now().UTC()}
-	a.recordExecution(ex)
+	if err := a.recordExecution(ex); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+		return
+	}
 	writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "findings": findings, "execution": ex.ID, "reviewed_by": user})
 }
 
@@ -103,9 +110,15 @@ func (a *App) handlePreview(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(conflicts) > 0 {
 		for _, f := range conflicts {
-			a.addFinding(attemptID, "error", "merge conflict with "+base+" in "+f, f)
+			if err := a.addFinding(attemptID, "error", "merge conflict with "+base+" in "+f, f); err != nil {
+				writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+				return
+			}
 		}
-		a.patchAttempt(attemptID, map[string]any{"status": "conflict", "updated_at": nowStr()})
+		if err := a.patchAttempt(attemptID, map[string]any{"status": "conflict", "updated_at": nowStr()}); err != nil {
+			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+			return
+		}
 		writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "conflict": true, "conflicts": conflicts, "status": "conflict", "resolved_by": user})
 		return
 	}
@@ -118,9 +131,15 @@ func (a *App) handlePreview(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(sem) > 0 {
 		for _, f := range sem {
-			a.addFinding(attemptID, f["severity"].(string), f["message"].(string), f["file"].(string))
+			if err := a.addFinding(attemptID, f["severity"].(string), f["message"].(string), f["file"].(string)); err != nil {
+				writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+				return
+			}
 		}
-		a.patchAttempt(attemptID, map[string]any{"status": "semantic_conflict", "updated_at": nowStr()})
+		if err := a.patchAttempt(attemptID, map[string]any{"status": "semantic_conflict", "updated_at": nowStr()}); err != nil {
+			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+			return
+		}
 		writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "conflict": false, "semantic_conflict": true, "findings": sem, "status": "semantic_conflict"})
 		return
 	}
@@ -162,11 +181,20 @@ func (a *App) handleResolveConflict(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, f := range resolved {
-		a.closeFinding(attemptID, f, "resolved by conflict-resolver three-way merge")
+		if err := a.closeFinding(attemptID, f, "resolved by conflict-resolver three-way merge"); err != nil {
+			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+			return
+		}
 	}
-	a.patchAttempt(attemptID, map[string]any{"status": "resolved", "message": "resolved by conflict-resolver", "updated_at": nowStr()})
+	if err := a.patchAttempt(attemptID, map[string]any{"status": "resolved", "message": "resolved by conflict-resolver", "updated_at": nowStr()}); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+		return
+	}
 	ex := &ExecutionRecord{ID: "exe_" + randHex(8), Role: "conflict-resolver", AttemptID: attemptID, Adapter: "deterministic", Status: "succeeded", Output: "resolved " + itoa(len(resolved)) + " file(s)", Started: time.Now().UTC()}
-	a.recordExecution(ex)
+	if err := a.recordExecution(ex); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+		return
+	}
 	writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "status": "resolved", "resolved_files": resolved, "new_sha": res.NewSHA, "resolved_by": user})
 }
 
@@ -185,32 +213,49 @@ func (a *App) handleListFindings(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"items": items})
 }
 
-func (a *App) addFinding(target, severity, message, file string) {
-	_, _, _ = a.Trestle.CreateRecord("findings", map[string]any{
+func (a *App) addFinding(target, severity, message, file string) error {
+	_, _, err := a.Trestle.CreateRecord("findings", map[string]any{
 		"id": "fnd_" + randHex(10), "target": target, "severity": severity,
 		"message": message, "file": file, "status": "open", "created_at": nowStr(), "resolved_at": "",
 	}, "finding-"+target+"-"+randHex(6))
+	return err
 }
 
-func (a *App) closeFinding(target, file, note string) {
-	items, err := a.Trestle.ListRecords("findings", `target = "`+target+`"`)
+func (a *App) closeFinding(target, file, note string) error {
+	items, err := a.Trestle.ListRecords("findings", filterEq("target", target))
 	if err != nil {
-		return
+		return err
 	}
 	for _, it := range items {
-		if it["file"] == file && it["status"] == "open" {
-			if id, ver, _, e := a.Trestle.FindRecord("findings", `target = "`+target+`"`); e == nil && id != "" {
-				_ = a.Trestle.PatchRecord("findings", id, ver, map[string]any{"status": "resolved", "message": it["message"], "resolved_at": nowStr()})
-			}
-			return
+		if it["file"] != file || it["status"] != "open" {
+			continue
+		}
+		id, ver, current, err := a.Trestle.FindRecord("findings", filterEq("id", strOr(it["id"])))
+		if err != nil {
+			return err
+		}
+		if id == "" {
+			return fmt.Errorf("finding disappeared")
+		}
+		if current["status"] != "open" {
+			continue
+		}
+		if err := a.Trestle.PatchRecord("findings", id, ver, map[string]any{"status": "resolved", "resolved_at": nowStr()}); err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
-func (a *App) patchAttempt(id string, values map[string]any) {
-	if rid, ver, _, err := a.Trestle.FindRecord("attempts", `id = "`+id+`"`); err == nil && rid != "" {
-		_ = a.Trestle.PatchRecord("attempts", rid, ver, values)
+func (a *App) patchAttempt(id string, values map[string]any) error {
+	rid, ver, _, err := a.Trestle.FindRecord("attempts", filterEq("id", id))
+	if err != nil {
+		return err
 	}
+	if rid == "" {
+		return fmt.Errorf("attempt not found")
+	}
+	return a.Trestle.PatchRecord("attempts", rid, ver, values)
 }
 
 // changedFiles lists files the attempt branch changed relative to base via a

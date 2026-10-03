@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"switchyard/internal/trestle"
 	"time"
 
 	"switchyard/internal/refs"
@@ -330,6 +331,12 @@ func (a *App) finishDraftCommit(id, version string, revision int, sha string) er
 	return a.Trestle.PatchRecord("drafts", id, version, map[string]any{"committed_at": nowStr(), "base_sha": sha, "revision": itoa(revision + 1)})
 }
 func draftPersistenceStatus(err error) int {
+	if status := trestle.Status(err); status == 409 || status == 412 {
+		return 409
+	} else if status == 422 {
+		return 422
+	}
+
 	if strings.Contains(err.Error(), ": 409 ") || strings.Contains(err.Error(), ": 412 ") {
 		return 409
 	}

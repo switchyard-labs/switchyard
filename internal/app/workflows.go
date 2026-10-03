@@ -180,7 +180,11 @@ func (a *App) handleGetRun(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 404, map[string]any{"error": "run_not_found"})
 		return
 	}
-	steps, _ := a.Trestle.ListRecords("wf_steps", `run_id = "`+r.PathValue("id")+`"`)
+	steps, err := a.Trestle.ListRecords("wf_steps", filterEq("run_id", r.PathValue("id")))
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "workflow_steps_unavailable"})
+		return
+	}
 	writeJSON(w, 200, map[string]any{"run": run, "steps": steps})
 }
 
@@ -201,7 +205,10 @@ func (a *App) handleCancelRun(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "run_terminal"})
 		return
 	}
-	a.patchRun(runID, map[string]any{"status": "cancelling", "updated_at": nowStr()})
+	if err := a.patchRun(runID, map[string]any{"status": "cancelling", "updated_at": nowStr()}); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "cancellation_save_failed"})
+		return
+	}
 	log.Printf("workflow run %s cancellation requested by %s", runID, user)
 	writeJSON(w, 200, map[string]any{"id": runID, "status": "cancelling"})
 }
@@ -270,7 +277,10 @@ func (a *App) handleRetryRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// completed durable steps replay; failed/incomplete steps re-execute
-	a.patchRun(runID, map[string]any{"status": "pending", "error": "", "updated_at": nowStr()})
+	if err := a.patchRun(runID, map[string]any{"status": "pending", "error": "", "updated_at": nowStr()}); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "retry_save_failed"})
+		return
+	}
 	log.Printf("workflow run %s retry requested by %s", runID, user)
 	writeJSON(w, 200, map[string]any{"id": runID, "status": "pending"})
 }

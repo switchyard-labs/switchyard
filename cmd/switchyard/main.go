@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -46,6 +47,8 @@ func main() {
 	queueInt := flag.String("queue-pull-interval", envOr("SWITCHYARD_QUEUE_PULL_INTERVAL", "5s"), "queue pull interval")
 	wfInt := flag.String("workflow-interval", envOr("SWITCHYARD_WORKFLOW_INTERVAL", "2s"), "workflow runner interval")
 	iqInt := flag.String("queue-integrate-interval", envOr("SWITCHYARD_QUEUE_INTEGRATE_INTERVAL", "3s"), "integration queue worker interval")
+	schemaPlan := flag.Bool("schema-plan", false, "print read-only Switchyard schema migration plan and exit")
+	schemaMigrate := flag.Bool("schema-migrate", false, "apply additive schemas during an exclusive maintenance window and exit")
 	flag.Parse()
 
 	if *trePass == "" {
@@ -58,6 +61,25 @@ func main() {
 	tre := trestle.New(*treBase, *treUser, *trePass)
 	art := artifacts.New(*acc, *ns, *tokCmd)
 	a := app.New(tre, art, *static, *data)
+	if *schemaPlan || *schemaMigrate {
+		if *schemaPlan && *schemaMigrate {
+			log.Fatal("choose schema-plan or schema-migrate")
+		}
+		plan, err := a.SchemaMigrationPlan()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if *schemaMigrate {
+			if err := a.ApplySchemaMigrations(plan); err != nil {
+				log.Fatal(err)
+			}
+		}
+		if err := json.NewEncoder(os.Stdout).Encode(plan); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+
 	// agent substrate: credential store keyed from env or a persisted data key
 	key, err := loadOrCreateKey(filepath.Join(*data, "secret.key"))
 	if err != nil {

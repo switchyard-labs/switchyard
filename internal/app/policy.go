@@ -137,14 +137,15 @@ func riskRank(r string) int {
 	return 1
 }
 
-func (a *App) audit(org, action, subject, decision, reason, actor string) {
+func (a *App) audit(org, action, subject, decision, reason, actor string) error {
 	if org == "" {
-		return
+		return nil
 	}
-	_, _, _ = a.Trestle.CreateRecord("audit", map[string]any{
+	_, _, err := a.Trestle.CreateRecord("audit", map[string]any{
 		"id": "aud_" + randHex(10), "org": org, "action": action, "subject": subject,
 		"decision": decision, "reason": reason, "actor": actor, "at": nowStr(),
 	}, "aud-"+randHex(8))
+	return err
 }
 
 // ---- API ----
@@ -267,7 +268,9 @@ func (a *App) handleAudit(w http.ResponseWriter, r *http.Request) {
 func (a *App) policyGateAgent(role, repo, filePath string) error {
 	org := a.orgForRepo(repo)
 	decision, reason := a.policyCheck(org, "agent", role, repo, filePath, "", 0)
-	a.audit(org, "agent", repo+":"+filePath, decision, reason, role)
+	if err := a.audit(org, "agent", repo+":"+filePath, decision, reason, role); err != nil {
+		return err
+	}
 	if decision == "deny" {
 		return &policyDenied{Reason: reason}
 	}
@@ -279,7 +282,9 @@ func (a *App) policyGateAgent(role, repo, filePath string) error {
 func (a *App) policyGateIntegrate(repo string, risk string) (string, string) {
 	org := a.orgForRepo(repo)
 	decision, reason := a.policyCheck(org, "integrate", "", repo, "", risk, 0)
-	a.audit(org, "integrate", repo, decision, reason, "integration-queue")
+	if err := a.audit(org, "integrate", repo, decision, reason, "integration-queue"); err != nil {
+		return "deny", "policy audit persistence failed"
+	}
 	return decision, reason
 }
 
@@ -287,7 +292,9 @@ func (a *App) policyGateIntegrate(repo string, risk string) (string, string) {
 func (a *App) policyGateWorkflow(repo string, budget int) (string, string) {
 	org := a.orgForRepo(repo)
 	decision, reason := a.policyCheck(org, "workflow", "", repo, "", "", budget)
-	a.audit(org, "workflow", repo, decision, reason, "workflow-runner")
+	if err := a.audit(org, "workflow", repo, decision, reason, "workflow-runner"); err != nil {
+		return "deny", "policy audit persistence failed"
+	}
 	return decision, reason
 }
 

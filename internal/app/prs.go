@@ -117,12 +117,6 @@ func (a *App) prByID(r *http.Request, id string) map[string]any {
 	return items[0]
 }
 
-func (a *App) setCheck(prID, status, detail string) {
-	_, _, _ = a.Trestle.CreateRecord("pr_checks", map[string]any{
-		"pr_id": prID, "status": status, "detail": detail, "created_at": time.Now().UTC().Format(time.RFC3339),
-	}, "prcheck-"+prID+"-"+time.Now().UTC().Format("20060102150405"))
-}
-
 func (a *App) setCommitCheck(prID, repo, sha, status, detail string) error {
 	_, _, err := a.Trestle.CreateRecord("commit_checks", map[string]any{
 		"pr_id": prID, "repo": repo, "source_sha": sha, "status": status, "detail": detail, "created_at": nowStr(),

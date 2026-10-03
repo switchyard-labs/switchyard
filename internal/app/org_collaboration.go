@@ -1,6 +1,8 @@
 package app
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -142,10 +144,28 @@ func (a *App) handleDecideOrgInvitation(w http.ResponseWriter, r *http.Request) 
 		writeJSON(w, 400, map[string]any{"error": "decision_invalid"})
 		return
 	}
-	_ = a.Trestle.PatchRecord("org_invitations", rid, ver, map[string]any{"status": in.Decision + "ed", "decided_at": nowStr()})
+	membershipCreated := false
 	if in.Decision == "accept" {
-		mid := "mem_" + randHex(10)
-		_, _, _ = a.Trestle.CreateRecord("org_memberships", map[string]any{"id": mid, "org_id": v["org_id"], "username": u, "role": v["role"], "created_at": nowStr()}, "org-membership-"+strOr(v["org_id"])+"-"+u)
+		org := strOr(v["org_id"])
+		existing, _, _, err := a.Trestle.FindRecord("org_memberships", filterEq("org_id", org)+" AND "+filterEq("username", u))
+		if err != nil {
+			writeJSON(w, 502, map[string]any{"error": "membership_lookup_failed"})
+			return
+		}
+		if existing == "" {
+			// Stable body permits retry after the grant succeeds but invitation update fails.
+			mid := fmt.Sprintf("mem_%x", sha256.Sum256([]byte(org+"\x00"+u)))
+			_, _, err := a.Trestle.CreateRecord("org_memberships", map[string]any{"id": mid, "org_id": org, "username": u, "role": v["role"], "created_at": v["created_at"]}, "org-membership-"+org+"-"+u)
+			if err != nil {
+				writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "membership_create_failed"})
+				return
+			}
+			membershipCreated = true
+		}
+	}
+	if err := a.Trestle.PatchRecord("org_invitations", rid, ver, map[string]any{"status": in.Decision + "ed", "decided_at": nowStr()}); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "invitation_update_failed", "membership_created": membershipCreated})
+		return
 	}
 	writeJSON(w, 200, map[string]any{"status": in.Decision + "ed"})
 }

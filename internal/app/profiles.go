@@ -77,9 +77,7 @@ func (a *App) handleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "profile_field_too_long"})
 		return
 	}
-	if rid, ver, _, e := a.Trestle.FindRecord("users", `username = "`+u+`"`); e == nil && rid != "" && strings.TrimSpace(in.DisplayName) != "" {
-		_ = a.Trestle.PatchRecord("users", rid, ver, map[string]any{"display_name": strings.TrimSpace(in.DisplayName)})
-	}
+
 	if !safeWebURL(strings.TrimSpace(in.Website)) {
 		writeJSON(w, 400, map[string]any{"error": "website_url_invalid"})
 		return
@@ -90,15 +88,23 @@ func (a *App) handleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	vals := map[string]any{"username": u, "bio": strings.TrimSpace(in.Bio), "location": strings.TrimSpace(in.Location), "website": strings.TrimSpace(in.Website), "social": in.Social, "pinned_repos": in.PinnedRepos, "updated_at": nowStr()}
-	if rid, ver, old, e := a.Trestle.FindRecord("user_profiles", `username = "`+u+`"`); e == nil && rid != "" {
-		if av, _ := old["avatar_file"].(string); av != "" {
-			vals["avatar_file"] = av
+	if strings.TrimSpace(in.DisplayName) != "" {
+		rid, ver, _, err := a.Trestle.FindRecord("users", filterEq("username", u))
+		if err != nil || rid == "" {
+			writeJSON(w, 502, map[string]any{"error": "profile_user_lookup_failed"})
+			return
 		}
-		_ = a.Trestle.PatchRecord("user_profiles", rid, ver, vals)
-	} else {
-		_, _, _ = a.Trestle.CreateRecord("user_profiles", vals, "profile-"+u)
+		if err := a.Trestle.PatchRecord("users", rid, ver, map[string]any{"display_name": strings.TrimSpace(in.DisplayName)}); err != nil {
+			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "display_name_save_failed"})
+			return
+		}
 	}
+	vals := map[string]any{"username": u, "bio": strings.TrimSpace(in.Bio), "location": strings.TrimSpace(in.Location), "website": strings.TrimSpace(in.Website), "social": in.Social, "pinned_repos": in.PinnedRepos, "updated_at": nowStr()}
+	if err := a.saveProfileRecord("user_profiles", filterEq("username", u), vals, "profile-"+u); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "profile_save_failed"})
+		return
+	}
+
 	writeJSON(w, 200, a.userProfile(u))
 }
 
@@ -132,7 +138,7 @@ func saveAvatarFile(dataDir, kind, id string, file multipart.File) (string, erro
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", err
 	}
-	name := id + ext
+	name := id + "-" + randHex(16) + ext
 	if err := os.WriteFile(filepath.Join(dir, name), b, 0600); err != nil {
 		return "", err
 	}
@@ -160,11 +166,11 @@ func (a *App) handleUploadUserAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vals := map[string]any{"username": u, "avatar_file": name, "updated_at": nowStr()}
-	if rid, ver, _, e := a.Trestle.FindRecord("user_profiles", `username = "`+u+`"`); e == nil && rid != "" {
-		_ = a.Trestle.PatchRecord("user_profiles", rid, ver, vals)
-	} else {
-		_, _, _ = a.Trestle.CreateRecord("user_profiles", vals, "profile-avatar-"+u)
+	if err := a.saveProfileRecord("user_profiles", filterEq("username", u), vals, "profile-avatar-"+u); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "profile_save_failed"})
+		return
 	}
+
 	writeJSON(w, 200, map[string]any{"avatar_url": "/api/avatars/user/" + u})
 }
 func (a *App) handleDeleteUserAvatar(w http.ResponseWriter, r *http.Request) {
@@ -173,13 +179,26 @@ func (a *App) handleDeleteUserAvatar(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
 		return
 	}
-	if rid, ver, v, e := a.Trestle.FindRecord("user_profiles", `username = "`+u+`"`); e == nil && rid != "" {
-		if n, _ := v["avatar_file"].(string); n != "" {
-			_ = os.Remove(filepath.Join(a.DataDir, "avatars", "user", n))
+	id, ver, profile, err := a.Trestle.FindRecord("user_profiles", filterEq("username", u))
+	if err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "avatar_metadata_unavailable"})
+		return
+	}
+	if id != "" {
+		if err := a.Trestle.PatchRecord("user_profiles", id, ver, map[string]any{"avatar_file": "", "updated_at": nowStr()}); err != nil {
+			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "avatar_delete_failed"})
+			return
 		}
-		_ = a.Trestle.PatchRecord("user_profiles", rid, ver, map[string]any{"avatar_file": "", "updated_at": nowStr()})
+		name := strOf(profile["avatar_file"])
+		if name != "" && filepath.Base(name) == name {
+			if err := os.Remove(filepath.Join(a.DataDir, "avatars", "user", name)); err != nil && !os.IsNotExist(err) {
+				writeJSON(w, 200, map[string]any{"ok": true, "cleanup_pending": true})
+				return
+			}
+		}
 	}
 	writeJSON(w, 200, map[string]any{"ok": true})
+
 }
 func fallbackAvatar(label string) string {
 	initial := "?"
@@ -447,14 +466,11 @@ func (a *App) handleUpdateOrgProfile(w http.ResponseWriter, r *http.Request) {
 	if vals["display_name"] == "" {
 		vals["display_name"] = o["name"]
 	}
-	if rid, ver, old, e := a.Trestle.FindRecord("org_profiles", `org_id = "`+id+`"`); e == nil && rid != "" {
-		if av := strOr(old["avatar_file"]); av != "" {
-			vals["avatar_file"] = av
-		}
-		_ = a.Trestle.PatchRecord("org_profiles", rid, ver, vals)
-	} else {
-		_, _, _ = a.Trestle.CreateRecord("org_profiles", vals, "org-profile-"+id)
+	if err := a.saveProfileRecord("org_profiles", filterEq("org_id", id), vals, "org-profile-"+id); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "profile_save_failed"})
+		return
 	}
+
 	writeJSON(w, 200, a.orgProfile(o))
 }
 func (a *App) handleUploadOrgAvatar(w http.ResponseWriter, r *http.Request) {
@@ -480,11 +496,11 @@ func (a *App) handleUploadOrgAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vals := map[string]any{"org_id": id, "avatar_file": name, "updated_at": nowStr()}
-	if rid, ver, _, e := a.Trestle.FindRecord("org_profiles", `org_id = "`+id+`"`); e == nil && rid != "" {
-		_ = a.Trestle.PatchRecord("org_profiles", rid, ver, vals)
-	} else {
-		_, _, _ = a.Trestle.CreateRecord("org_profiles", vals, "org-avatar-"+id)
+	if err := a.saveProfileRecord("org_profiles", filterEq("org_id", id), vals, "org-avatar-"+id); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "profile_save_failed"})
+		return
 	}
+
 	writeJSON(w, 200, map[string]any{"avatar_url": "/api/avatars/org/" + id})
 }
 func (a *App) handleOrgRepositories(w http.ResponseWriter, r *http.Request) {
@@ -527,4 +543,21 @@ func (a *App) handleListOrganizations(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, 200, map[string]any{"items": out})
+}
+
+func (a *App) saveProfileRecord(collection, filter string, values map[string]any, key string) error {
+	id, version, old, err := a.Trestle.FindRecord(collection, filter)
+	if err != nil {
+		return err
+	}
+	if id != "" {
+		if _, explicit := values["avatar_file"]; !explicit {
+			if avatar := strOf(old["avatar_file"]); avatar != "" {
+				values["avatar_file"] = avatar
+			}
+		}
+		return a.Trestle.PatchRecord(collection, id, version, values)
+	}
+	_, _, err = a.Trestle.CreateRecord(collection, values, key+"-"+randHex(10))
+	return err
 }

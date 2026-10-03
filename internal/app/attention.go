@@ -259,6 +259,9 @@ func (a *App) applyConflictDecision(packet map[string]any, decision, user string
 	}
 	// apply via the shared ref substrate
 	head, err := a.repoHead(repo, branch)
+	if err != nil {
+		return map[string]any{"attempt": targetID, "status": "resolve_failed", "error": err.Error()}
+	}
 	// skip files whose chosen content already matches the branch (a no-op,
 	// e.g. take_theirs on the source branch); if nothing changes, the decision
 	// is still recorded and the attempt marked resolved.
@@ -275,9 +278,13 @@ func (a *App) applyConflictDecision(packet map[string]any, decision, user string
 		}
 		if res, err := a.Refs.Update(repo, branch, head, refsChanges, "decision "+decision+" by "+user, "escalation:"+user+":"+targetID); err == nil {
 			_ = res
-			a.patchAttempt(targetID, map[string]any{"status": "resolved", "message": "resolved by decision " + decision, "updated_at": nowStr()})
+			if err := a.patchAttempt(targetID, map[string]any{"status": "resolved", "message": "resolved by decision " + decision, "updated_at": nowStr()}); err != nil {
+				return map[string]any{"attempt": targetID, "status": "coordination_failed", "error": err.Error()}
+			}
 			for _, c := range effective {
-				a.closeFinding(targetID, c["file"], "resolved by "+decision)
+				if err := a.closeFinding(targetID, c["file"], "resolved by "+decision); err != nil {
+					return map[string]any{"attempt": targetID, "status": "coordination_failed", "error": err.Error()}
+				}
 			}
 			return map[string]any{"attempt": targetID, "status": "resolved", "decision": decision, "files": len(effective)}
 		} else {
@@ -286,7 +293,9 @@ func (a *App) applyConflictDecision(packet map[string]any, decision, user string
 	}
 	// nothing changed (or no files): record the decision; the attempt is
 	// considered resolved per the human's choice.
-	a.patchAttempt(targetID, map[string]any{"status": "resolved", "message": "resolved by decision " + decision + " (no file changes)", "updated_at": nowStr()})
+	if err := a.patchAttempt(targetID, map[string]any{"status": "resolved", "message": "resolved by decision " + decision + " (no file changes)", "updated_at": nowStr()}); err != nil {
+		return map[string]any{"attempt": targetID, "status": "coordination_failed", "error": err.Error()}
+	}
 	return map[string]any{"attempt": targetID, "status": "resolved", "decision": decision, "files": 0, "note": "no file changes required"}
 }
 

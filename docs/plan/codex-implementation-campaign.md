@@ -1,9 +1,9 @@
 # Codex implementation campaign
 
 Baseline: `ff22794`, main clean and equal to refreshed origin/main, 2026-10-03.
-Only Switchyard is writable; all reference projects remain untouched. Local checkpoint commits only; no pushes.
+Switchyard and its brochure are authorized for campaign changes; `sy` and all reference projects remain untouched. Local checkpoint commits only; no pushes.
 
-The adopted outline requires C0–C4, then a handover before C5. Warden/Gantry Core editor adaptation without an interactive terminal is recorded for C20; collapsible directories and drag/drop moves are acceptance requirements.
+The latest adopted outline requires uninterrupted sequential C5–C25 work, with a local commit at each checkpoint and an early stop only for a genuine blocker. Warden/Gantry Core editor adaptation without an interactive terminal is recorded for C20; collapsible directories and drag/drop moves are acceptance requirements.
 
 ## Reconciliation
 
@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C4 locally implemented and verified. C5–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C9 locally implemented and verified. C10–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -117,3 +117,12 @@ Runner accepts a context and typed task; executions report status, stdout/stderr
 Validation: real sandbox scripts verify host file/environment isolation, JSON result/diagnostics, timeout, output cap, credential redaction/removal, rejection of credential-bearing results and background-descendant termination. Deterministic empty/text/Unicode parity and cancellation pass. Full Go race suite, vet and diff checks pass. The process limit moved inside the user namespace after tests exposed shared-host thread accounting; namespace creation and adapter execution now pass. `docs/architecture/runner.md` records bounds and limitations.
 
 Not a live provider certification: no coding-provider CLI/credential was enabled. Output events are attributed captured chunks after exit, not a streaming Cloudflare CI transport. Per-process address-space limits are not an aggregate cgroup memory budget. A dedicated non-root service user and bounded deployment concurrency are prerequisites for real CLI use. No upstream project, `sy`, push or deployment was changed.
+
+
+## C9 — schema compatibility, migration ledger and typed persistence errors
+
+Startup now reads each collection's complete schema and verifies field types, required/unique constraints and unexpected required fields. It creates missing collections but never silently alters existing schemas. A Switchyard-owned version/fingerprint ledger rejects a newer database or an unversioned manifest change. `-schema-plan` is read-only; `-schema-migrate` explicitly applies only reviewed additive fields/new collections and verifies the result. Existing field IDs/defaults are preserved. Constraint/type changes and new required/unique fields need a separate reviewed backfill, and are refused here. Trestle's upstream schema PATCH lacks CAS, so application and schema administrators must be quiesced in an exclusive maintenance window; the pre-write reread catches stale plans but is not claimed as distributed locking.
+
+The client exposes typed HTTP conflict/validation errors, checks response/marshal failures, bounds response memory and follows cursor pagination rather than silently stopping at 100 records. FindRecord rejects ambiguous matches. Review/finding/attempt, execution, policy audit, Work, profile/avatar, settings, invitation and workflow mutations now propagate persistence errors in the touched paths. Finding closure uses the finding ID rather than a nonunique target. Invitation acceptance creates a stable membership before marking acceptance so a failed final write is retryable; status-only Work edits preserve body/assignee. Ref reconciliation reports failed baseline writes. Broader event ingestion durability is C10 and operational write audits continue in C24.
+
+Validation: full Go race suite and vet pass; schema tests reject incompatible existing collections without writes, preserve additive IDs/defaults, reject stale plans, follow 237 records and detect cursor loops, and classify 409/412/422 errors without returning sensitive error details. No Trestle source, live schema or shared service changed. Operational migration procedure: `docs/architecture/schema-migrations.md`.

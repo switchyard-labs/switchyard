@@ -66,11 +66,17 @@ func (c *Client) ensureLogin() error {
 		return err
 	}
 	defer resp2.Body.Close()
+	if resp2.StatusCode != 200 {
+		return fmt.Errorf("Trestle CSRF session: %d", resp2.StatusCode)
+	}
 	var s struct {
 		CSRFToken string `json:"csrfToken"`
 	}
 	if err := json.NewDecoder(resp2.Body).Decode(&s); err != nil {
 		return err
+	}
+	if s.CSRFToken == "" {
+		return fmt.Errorf("Trestle session missing CSRF token")
 	}
 	c.csrf = s.CSRFToken
 	c.loginAt = time.Now()
@@ -84,7 +90,10 @@ func (c *Client) do(method, path string, payload any) (*http.Response, []byte, e
 	}
 	var body io.Reader
 	if payload != nil {
-		b, _ := json.Marshal(payload)
+		b, err := json.Marshal(payload)
+		if err != nil {
+			return nil, nil, err
+		}
 		body = bytes.NewReader(b)
 	}
 	req, err := http.NewRequest(method, c.BaseURL+path, body)
@@ -94,55 +103,26 @@ func (c *Client) do(method, path string, payload any) (*http.Response, []byte, e
 	if payload != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	if c.csrf != "" {
-		req.Header.Set("X-Trestle-CSRF", c.csrf)
+	if csrf := c.csrfToken(); csrf != "" {
+		req.Header.Set("X-Trestle-CSRF", csrf)
 	}
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
-	b, _ := io.ReadAll(resp.Body)
-	return resp, b, nil
+	b, err := readResponse(resp.Body)
+	return resp, b, err
 }
 
 // CollectionField describes a Trestle collection field for provisioning.
 type CollectionField struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Required bool   `json:"required,omitempty"`
-	Unique   bool   `json:"unique,omitempty"`
-}
-
-// EnsureCollection creates a collection if it does not exist.
-func (c *Client) EnsureCollection(name string, fields []CollectionField) error {
-	resp, b, err := c.do(http.MethodGet, "/admin/v1/collections", nil)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode == http.StatusOK {
-		var list struct {
-			Items []struct {
-				Name string `json:"name"`
-			} `json:"items"`
-		}
-		if json.Unmarshal(b, &list) == nil {
-			for _, it := range list.Items {
-				if it.Name == name {
-					return nil
-				}
-			}
-		}
-	}
-	req := map[string]any{"name": name, "fields": fields}
-	resp2, b2, err := c.do(http.MethodPost, "/admin/v1/collections", req)
-	if err != nil {
-		return err
-	}
-	if resp2.StatusCode != http.StatusOK && resp2.StatusCode != http.StatusCreated {
-		return fmt.Errorf("ensure collection %s: %d %s", name, resp2.StatusCode, strings.TrimSpace(string(b2)))
-	}
-	return nil
+	Name     string          `json:"name"`
+	Type     string          `json:"type"`
+	Required bool            `json:"required,omitempty"`
+	Unique   bool            `json:"unique,omitempty"`
+	ID       string          `json:"id,omitempty"`
+	Default  json.RawMessage `json:"default,omitempty"`
 }
 
 // CreateRecord inserts a record with an idempotency key (at-least-once ingest).
@@ -152,13 +132,16 @@ func (c *Client) CreateRecord(collection string, values map[string]any, idemKey 
 	if err := c.ensureLogin(); err != nil {
 		return "", false, err
 	}
-	b, _ := json.Marshal(req)
+	b, err := json.Marshal(req)
+	if err != nil {
+		return "", false, err
+	}
 	httpReq, err := http.NewRequest(http.MethodPost, c.BaseURL+"/api/v1/collections/"+collection+"/records", bytes.NewReader(b))
 	if err != nil {
 		return "", false, err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("X-Trestle-CSRF", c.csrf)
+	httpReq.Header.Set("X-Trestle-CSRF", c.csrfToken())
 	if idemKey != "" {
 		httpReq.Header.Set("Idempotency-Key", idemKey)
 	}
@@ -167,7 +150,10 @@ func (c *Client) CreateRecord(collection string, values map[string]any, idemKey 
 		return "", false, err
 	}
 	defer resp.Body.Close()
-	rb, _ := io.ReadAll(resp.Body)
+	rb, readErr := readResponse(resp.Body)
+	if readErr != nil {
+		return "", false, readErr
+	}
 	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated {
 		var rec struct {
 			ID      string         `json:"id"`
@@ -180,35 +166,35 @@ func (c *Client) CreateRecord(collection string, values map[string]any, idemKey 
 		replayed := resp.Header.Get("Idempotency-Replayed") == "true"
 		return rec.ID, replayed, nil
 	}
-	return "", false, fmt.Errorf("create record %s: %d %s", collection, resp.StatusCode, strings.TrimSpace(string(rb)))
+	return "", false, responseError("create", collection, resp.StatusCode, rb)
 }
 
-// ListRecords returns records, optionally filtered (Trestle filter syntax).
+// ListRecords consumes cursor pages and returns values for existing callers.
+// It fails on cursor loops or excessive results rather than silently truncating.
 func (c *Client) ListRecords(collection, filter string) ([]map[string]any, error) {
-	path := "/api/v1/collections/" + collection + "/records"
-	if filter != "" {
-		path += "?filter=" + urlQueryEscape(filter)
+	values := []map[string]any{}
+	cursor := ""
+	seen := map[string]bool{}
+	for {
+		page, err := c.ListRecordsPage(collection, filter, cursor, 100)
+		if err != nil {
+			return nil, err
+		}
+		for _, record := range page.Items {
+			values = append(values, record.Values)
+		}
+		if len(values) > 50000 {
+			return nil, fmt.Errorf("coordination result exceeds 50000 records; use paged query")
+		}
+		if page.NextCursor == "" {
+			return values, nil
+		}
+		if seen[page.NextCursor] {
+			return nil, fmt.Errorf("Trestle cursor loop")
+		}
+		seen[page.NextCursor] = true
+		cursor = page.NextCursor
 	}
-	resp, b, err := c.do(http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("list %s: %d %s", collection, resp.StatusCode, strings.TrimSpace(string(b)))
-	}
-	var out struct {
-		Items []struct {
-			Values map[string]any `json:"values"`
-		} `json:"items"`
-	}
-	if err := json.Unmarshal(b, &out); err != nil {
-		return nil, err
-	}
-	items := make([]map[string]any, 0, len(out.Items))
-	for _, it := range out.Items {
-		items = append(items, it.Values)
-	}
-	return items, nil
 }
 
 // FindRecord returns the first record matching the filter, including its id
@@ -218,12 +204,17 @@ func (c *Client) FindRecord(collection, filter string) (id, version string, valu
 	if filter != "" {
 		path += "?filter=" + urlQueryEscape(filter)
 	}
+	separator := "?"
+	if strings.Contains(path, "?") {
+		separator = "&"
+	}
+	path += separator + "limit=2"
 	resp, b, e := c.do(http.MethodGet, path, nil)
 	if e != nil {
 		return "", "", nil, e
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", "", nil, fmt.Errorf("find %s: %d", collection, resp.StatusCode)
+		return "", "", nil, responseError("find", collection, resp.StatusCode, b)
 	}
 	var out struct {
 		Items []struct {
@@ -238,6 +229,9 @@ func (c *Client) FindRecord(collection, filter string) (id, version string, valu
 	if len(out.Items) == 0 {
 		return "", "", nil, nil
 	}
+	if len(out.Items) > 1 {
+		return "", "", nil, &APIError{Status: 409, Operation: "find", Collection: collection, Code: "ambiguous_record", Message: "expected one matching record"}
+	}
 	it := out.Items[0]
 	return it.ID, fmt.Sprint(it.Version), it.Values, nil
 }
@@ -247,22 +241,28 @@ func (c *Client) PatchRecord(collection, id, version string, values map[string]a
 	if err := c.ensureLogin(); err != nil {
 		return err
 	}
-	b, _ := json.Marshal(map[string]any{"values": values})
+	b, err := json.Marshal(map[string]any{"values": values})
+	if err != nil {
+		return err
+	}
 	req, err := http.NewRequest(http.MethodPatch, c.BaseURL+"/api/v1/collections/"+collection+"/records/"+id, bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Trestle-CSRF", c.csrf)
+	req.Header.Set("X-Trestle-CSRF", c.csrfToken())
 	req.Header.Set("If-Match", version)
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	rb, _ := io.ReadAll(resp.Body)
+	rb, readErr := readResponse(resp.Body)
+	if readErr != nil {
+		return readErr
+	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("patch %s/%s: %d %s", collection, id, resp.StatusCode, strings.TrimSpace(string(rb)))
+		return responseError("patch", collection, resp.StatusCode, rb)
 	}
 	return nil
 }
@@ -276,7 +276,7 @@ func (c *Client) DeleteRecord(collection, id, version string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-Trestle-CSRF", c.csrf)
+	req.Header.Set("X-Trestle-CSRF", c.csrfToken())
 	req.Header.Set("If-Match", version)
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -284,7 +284,11 @@ func (c *Client) DeleteRecord(collection, id, version string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("delete %s/%s: %d", collection, id, resp.StatusCode)
+		body, err := readResponse(resp.Body)
+		if err != nil {
+			return err
+		}
+		return responseError("delete", collection, resp.StatusCode, body)
 	}
 	return nil
 }
@@ -292,3 +296,5 @@ func (c *Client) DeleteRecord(collection, id, version string) error {
 func urlQueryEscape(s string) string {
 	return url.QueryEscape(s)
 }
+
+func (c *Client) csrfToken() string { c.mu.Lock(); defer c.mu.Unlock(); return c.csrf }

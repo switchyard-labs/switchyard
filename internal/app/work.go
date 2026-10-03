@@ -67,7 +67,11 @@ func (a *App) handleCreateWork(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 500, map[string]any{"error": err.Error()})
 		return
 	}
-	_, _, _ = a.Trestle.CreateRecord("work_details", map[string]any{"work_id": id, "body": strings.TrimSpace(in.Body), "repo": strings.TrimSpace(in.Repo), "assignee": strings.TrimSpace(in.Assignee), "updated_at": now}, "work-details-"+id)
+	_, _, detailErr := a.Trestle.CreateRecord("work_details", map[string]any{"work_id": id, "body": strings.TrimSpace(in.Body), "repo": strings.TrimSpace(in.Repo), "assignee": strings.TrimSpace(in.Assignee), "updated_at": now}, "work-details-"+id)
+	if detailErr != nil {
+		writeJSON(w, 502, map[string]any{"error": "work_details_create_failed", "id": id, "metadata_created": true})
+		return
+	}
 	writeJSON(w, 201, map[string]any{"id": id, "title": in.Title, "kind": in.Kind, "status": "open", "owner": user, "body": in.Body, "repo": in.Repo, "assignee": in.Assignee})
 }
 
@@ -124,10 +128,10 @@ func (a *App) handleUpdateWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		Status   string `json:"status"`
-		Title    string `json:"title"`
-		Body     string `json:"body"`
-		Assignee string `json:"assignee"`
+		Status   string  `json:"status"`
+		Title    string  `json:"title"`
+		Body     *string `json:"body"`
+		Assignee *string `json:"assignee"`
 	}
 	if readJSON(r, &in) != nil {
 		writeJSON(w, 400, map[string]any{"error": "bad_request"})
@@ -140,9 +144,27 @@ func (a *App) handleUpdateWork(w http.ResponseWriter, r *http.Request) {
 	if in.Status == "open" || in.Status == "closed" {
 		patch["status"] = in.Status
 	}
-	_ = a.Trestle.PatchRecord("work", rid, ver, patch)
-	if drid, dver, _, de := a.Trestle.FindRecord("work_details", `work_id = "`+id+`"`); de == nil && drid != "" {
-		_ = a.Trestle.PatchRecord("work_details", drid, dver, map[string]any{"body": in.Body, "assignee": in.Assignee, "updated_at": time.Now().UTC().Format(time.RFC3339)})
+	if err := a.Trestle.PatchRecord("work", rid, ver, patch); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "work_update_failed"})
+		return
+	}
+	if in.Body != nil || in.Assignee != nil {
+		drid, dver, _, err := a.Trestle.FindRecord("work_details", filterEq("work_id", id))
+		if err != nil || drid == "" {
+			writeJSON(w, 502, map[string]any{"error": "work_details_lookup_failed", "metadata_updated": true})
+			return
+		}
+		details := map[string]any{"updated_at": nowStr()}
+		if in.Body != nil {
+			details["body"] = *in.Body
+		}
+		if in.Assignee != nil {
+			details["assignee"] = *in.Assignee
+		}
+		if err := a.Trestle.PatchRecord("work_details", drid, dver, details); err != nil {
+			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "work_details_update_failed", "metadata_updated": true})
+			return
+		}
 	}
 	writeJSON(w, 200, map[string]any{"ok": true})
 }

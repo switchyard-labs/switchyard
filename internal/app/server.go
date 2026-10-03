@@ -51,8 +51,8 @@ func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App
 }
 
 // Provision creates the Switchyard coordination collections if missing.
-func (a *App) Provision() error {
-	for _, c := range [][2]any{
+func switchyardCollections() [][2]any {
+	collections := [][2]any{
 		{"users", []trestle.CollectionField{{Name: "username", Type: "text", Unique: true}, {Name: "password_hash", Type: "text", Required: true}, {Name: "display_name", Type: "text"}}},
 		{"sessions", []trestle.CollectionField{{Name: "token", Type: "text", Unique: true}, {Name: "username", Type: "text"}, {Name: "expires_at", Type: "text"}}},
 		{"repos", []trestle.CollectionField{{Name: "name", Type: "text", Unique: true}, {Name: "default_branch", Type: "text"}, {Name: "remote", Type: "text"}, {Name: "registered_at", Type: "text"}}},
@@ -78,38 +78,14 @@ func (a *App) Provision() error {
 		{"iq", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "pr_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "base", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "status", Type: "text"}, {Name: "risk", Type: "text"}, {Name: "policy", Type: "text"}, {Name: "attempts", Type: "text"}, {Name: "error", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"drafts", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "path", Type: "text"}, {Name: "content", Type: "text"}, {Name: "user", Type: "text"}, {Name: "revision", Type: "text"}, {Name: "base_sha", Type: "text"}, {Name: "last_agent_execution", Type: "text"}, {Name: "last_agent_prompt", Type: "text"}, {Name: "updated_at", Type: "text"}, {Name: "committed_at", Type: "text"}}},
 		{"escalations", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "packet", Type: "json"}, {Name: "status", Type: "text"}, {Name: "created_by", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "decision", Type: "text"}, {Name: "decided_by", Type: "text"}, {Name: "decided_at", Type: "text"}}},
-	} {
-		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
-			return err
-		}
 	}
-	for _, c := range repositorySettingsCollections() {
-		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
-			return err
-		}
+	for _, additional := range [][][2]any{repositorySettingsCollections(), collaborationCollections(), profileCollections(), policyCollections(), workflowCollections()} {
+		collections = append(collections, additional...)
 	}
-	for _, c := range collaborationCollections() {
-		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
-			return err
-		}
-	}
-	for _, c := range profileCollections() {
-		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
-			return err
-		}
-	}
-	for _, c := range policyCollections() {
-		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
-			return err
-		}
-	}
-	for _, c := range workflowCollections() {
-		if err := a.Trestle.EnsureCollection(c[0].(string), c[1].([]trestle.CollectionField)); err != nil {
-			return err
-		}
-	}
-	return nil
+	return collections
 }
+
+func (a *App) Provision() error { return a.provisionSchema() }
 
 func (a *App) Handler() http.Handler {
 	mux := http.NewServeMux()

@@ -334,11 +334,15 @@ func (a *App) processQueueItem(it *queueItem) error {
 	}
 	if len(sem) > 0 {
 		for _, f := range sem {
-			a.addFinding(it.prID, f["severity"].(string), f["message"].(string), f["file"].(string))
+			if err := a.addFinding(it.prID, f["severity"].(string), f["message"].(string), f["file"].(string)); err != nil {
+				return err
+			}
 		}
 		if prs, _ := a.Trestle.ListRecords("prs", `id = "`+it.prID+`"`); len(prs) > 0 {
 			if aid, _ := prs[0]["attempt_id"].(string); aid != "" {
-				a.patchAttempt(aid, map[string]any{"status": "semantic_conflict", "updated_at": nowStr()})
+				if err := a.patchAttempt(aid, map[string]any{"status": "semantic_conflict", "updated_at": nowStr()}); err != nil {
+					return err
+				}
 			}
 		}
 		return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "semantic_conflict", "updated_at": nowStr()})
@@ -357,8 +361,12 @@ func (a *App) processQueueItem(it *queueItem) error {
 	}
 	policyDecision, policyReason := a.immutableIntegrationPolicy(it.repo, risk)
 	if policyDecision == "escalate" {
-		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": policyReason, "updated_at": nowStr()})
-		a.addFinding(it.prID, "error", policyReason, "")
+		if err := a.patchQueue(it.id, map[string]any{"status": "blocked", "error": policyReason, "updated_at": nowStr()}); err != nil {
+			return err
+		}
+		if err := a.addFinding(it.prID, "error", policyReason, ""); err != nil {
+			return err
+		}
 		return nil
 	}
 	if policyDecision == "deny" {
