@@ -69,3 +69,15 @@ C0–C4 local implementation complete; stop before C5 as instructed. No pushes o
 Deployment prerequisites: provision new `workflow_owners` and `credential_owners` collections; explicitly adopt legacy records after verifying ownership; re-login after session format upgrade; migrate any legacy array-only org memberships to normalized records. Unowned entities and unregistered repositories fail closed. User-driven account-wide repository import is disabled until ownership can be established. Set `SWITCHYARD_PUBLIC_URL` to the actual HTTPS origin behind a trusted proxy. DNS/TLS is still absent on the provided live IP.
 
 Next: C5–C9 Git/durability/runner/migration batch. GitHub-quality repository/dashboard/profile/layout work remains C17–C21. Warden uses `github.com/gantry-tools/gantry-core/editor` for matching, replacement, revision and atomic-write text operations; its separate browser workbench is in `public/assets/js/script.js` and `public/assets/css/style.css`. Adapt those interactions to Artifacts/draft boundaries without adding a terminal or local-host filesystem access. Collapsible directory explorer, drag/drop moves, proper editor integration, content search and language extensions remain explicit acceptance requirements.
+
+## Checkpoint commit ledger
+
+| Checkpoint | Commit | Status |
+| --- | --- | --- |
+| C0 | `94717ffd01ca82bb567c434dff40a47bc84857f8` | locally implemented / checks passed |
+| C1 | `a440691ebe68012c4191321cf7f6765427ac30bf` | locally implemented / checks passed |
+| C2 | `e9faf30b42f10f53e9e865ec02d9acb48495ad26` | locally implemented / checks passed |
+| C3 | `2768fa98570a286b75af9055a4072adf9d901c8f` | locally implemented / checks passed |
+| C4 | `0c3b1a9e5a76f205538b5657ab23d40fbf9e753e` | locally implemented / checks passed |
+
+These commits are local only. This documentation commit records their immutable identities without amending any checkpoint.
