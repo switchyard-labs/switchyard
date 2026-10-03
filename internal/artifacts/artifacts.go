@@ -36,6 +36,16 @@ func New(accountID, namespace, tokenCmd string) *Client {
 	}
 }
 
+// NewWithHTTP supplies an explicit HTTP transport for embedded deployments
+// and deterministic protocol fixtures; the API origin stays Cloudflare.
+func NewWithHTTP(accountID, namespace, tokenCmd string, client *http.Client) *Client {
+	c := New(accountID, namespace, tokenCmd)
+	if client != nil {
+		c.http = client
+	}
+	return c
+}
+
 func (c *Client) baseURL() string {
 	return "https://api.cloudflare.com/client/v4/accounts/" + c.AccountID + "/artifacts/namespaces/" + c.Namespace
 }

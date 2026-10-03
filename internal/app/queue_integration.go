@@ -71,13 +71,33 @@ func (a *App) enqueuePR(pr map[string]any) (string, error) {
 	} else if len(changed) > 2 {
 		risk = "medium"
 	}
-	qid := "iq_" + randHex(10)
+	_, sourceSHA, err := a.Refs.Snapshot(repo, base, branch)
+	if err != nil {
+		return "", err
+	}
+	if !a.checkPassedAt(prID, sourceSHA) {
+		return "", fmt.Errorf("exact source check required")
+	}
+	qid := "iq_" + sha256Hex([]byte(prID + "|" + sourceSHA))[:24]
+	existing, _, _, err := a.Trestle.FindRecord("iq", filterEq("id", qid))
+	if err != nil {
+		return "", err
+	}
+	if existing != "" {
+		return qid, nil
+	}
 	at := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 	_, _, err = a.Trestle.CreateRecord("iq", map[string]any{
 		"id": qid, "pr_id": prID, "repo": repo, "base": base, "branch": branch,
 		"status": "queued", "risk": risk, "policy": "exact_source_check + immutable_preview + semantic + policy",
 		"attempts": "0", "error": "", "created_at": at, "updated_at": at,
 	}, "iq-"+qid)
+	if err != nil {
+		existing, _, _, readErr := a.Trestle.FindRecord("iq", filterEq("id", qid))
+		if readErr == nil && existing != "" {
+			return qid, nil
+		}
+	}
 	return qid, err
 }
 
@@ -108,15 +128,27 @@ func (a *App) handleRequeueItem(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 404, map[string]any{"error": "item_not_found"})
 		return
 	}
-	a.patchQueue(qid, map[string]any{"status": "queued", "updated_at": nowStr()})
+	if items[0]["status"] == "done" || items[0]["status"] == "running" {
+		writeJSON(w, 409, map[string]any{"error": "item_not_requeueable"})
+		return
+	}
+	if err := a.patchQueue(qid, map[string]any{"status": "queued", "updated_at": nowStr()}); err != nil {
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
 	log.Printf("integration queue: %s re-queued by %s", qid, user)
 	writeJSON(w, 200, map[string]any{"id": qid, "status": "queued"})
 }
 
-func (a *App) patchQueue(id string, values map[string]any) {
-	if rid, ver, _, err := a.Trestle.FindRecord("iq", `id = "`+id+`"`); err == nil && rid != "" {
-		_ = a.Trestle.PatchRecord("iq", rid, ver, values)
+func (a *App) patchQueue(id string, values map[string]any) error {
+	rid, ver, _, err := a.Trestle.FindRecord("iq", filterEq("id", id))
+	if err != nil {
+		return err
 	}
+	if rid == "" {
+		return fmt.Errorf("queue item not found")
+	}
+	return a.Trestle.PatchRecord("iq", rid, ver, values)
 }
 
 // StartIntegrationQueue processes queued integrations. FIFO by created_at.
@@ -164,9 +196,24 @@ func (a *App) pumpQueue() {
 	var best *queueItem
 	for _, it := range items {
 		st, _ := it["status"].(string)
-		if st != "queued" {
+		if st != "queued" && st != "running" && st != "publishing" && st != "reconciling" && st != "done" {
 			continue
 		}
+		_, _, effectValues, e := a.Trestle.FindRecord("integration_effects", filterEq("queue_id", strOf(it["id"])))
+		if e != nil {
+			continue
+		}
+		if effectValues != nil {
+			effect, e := decodeQueueEffect(effectValues)
+			if e != nil {
+				continue
+			}
+			until, _ := time.Parse(time.RFC3339Nano, effect.LeaseUntil)
+			if effect.Phase == "done" || (effect.Owner != "" && until.After(time.Now())) {
+				continue
+			}
+		}
+
 		itm := &queueItem{
 			id: strOf(it["id"]), prID: strOf(it["pr_id"]), repo: strOf(it["repo"]),
 			base: strOf(it["base"]), branch: strOf(it["branch"]), risk: strOf(it["risk"]),
@@ -195,24 +242,88 @@ func (a *App) pumpQueue() {
 }
 
 func (a *App) processQueueItem(it *queueItem) error {
-	// mark running
-	a.patchQueue(it.id, map[string]any{"status": "running", "updated_at": nowStr()})
+	lane, err := a.claimQueue(queueLane(it.repo, it.base))
+	if err != nil || lane == nil {
+		return err
+	}
+	defer func() {
+		if err := lane.release(); err != nil {
+			log.Printf("release queue lane: %v", err)
+		}
+	}()
 
+	claim, err := a.claimQueue(it.id)
+	if err != nil || claim == nil {
+		return err
+	}
+	a.queueCheckpoint("after_claim")
+	defer func() {
+		if err := claim.release(); err != nil {
+			log.Printf("release queue claim %s: %v", it.id, err)
+		}
+	}()
+	if claim.effect.Candidate != nil {
+		candidate := claim.effect.Candidate
+		defer func() {
+			if claim.effect.Phase == "done" {
+				candidate.Close()
+			}
+		}()
+		if err := a.Refs.RestorePrepared(candidate, claim.effect.CandidateDir); err != nil {
+			return err
+		}
+		published, err := a.Refs.CandidatePublished(candidate)
+		if err != nil {
+			return err
+		}
+		if published {
+			return a.finishQueuePublication(it, claim, candidate.CommitSHA)
+		}
+		if claim.effect.Phase == "publishing" {
+			if err := claim.save("publishing"); err != nil {
+				return err
+			}
+			result, err := a.Refs.PublishPrepared(candidate)
+			if err != nil {
+				return err
+			}
+			if result.Status != "ok" {
+				claim.effect.Candidate = nil
+				claim.effect.CandidateDir = ""
+				if err := claim.save("queued"); err != nil {
+					return err
+				}
+				candidate.Close()
+				return a.patchQueue(it.id, map[string]any{"status": "queued", "error": "source or base moved; revalidation required", "updated_at": nowStr()})
+			}
+			return a.finishQueuePublication(it, claim, result.NewSHA)
+		}
+	}
+	if err := claim.save("validating"); err != nil {
+		return err
+	}
+	if err := a.patchQueue(it.id, map[string]any{"status": "running", "updated_at": nowStr()}); err != nil {
+		return err
+	}
 	// policy gate 1: PR check must pass
 	if !a.checkPassed(it.prID) {
-		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "check_not_passed", "updated_at": nowStr()})
-		return nil
+		return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "check_not_passed", "updated_at": nowStr()})
 	}
+	a.queueCheckpoint("after_checks")
 	// policy gate 2: preview integration must be clean (structural/semantic)
 	candidate, err := a.Refs.PrepareMerge(it.repo, it.base, it.branch, "integration queue "+it.prID)
 	if err != nil {
 		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "preview_failed: " + err.Error(), "updated_at": nowStr()})
 		return err
 	}
-	defer candidate.Close()
+	a.queueCheckpoint("after_preview")
+	defer func() {
+		if claim.effect.Phase == "done" || claim.effect.Phase == "blocked" || claim.effect.Candidate != candidate {
+			candidate.Close()
+		}
+	}()
 	if !a.checkPassedAt(it.prID, candidate.SourceSHA) {
-		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "exact_source_check_required", "updated_at": nowStr()})
-		return nil
+		return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "exact_source_check_required", "updated_at": nowStr()})
 	}
 
 	// git merge is textually clean: validate repo contracts on the merged tree.
@@ -230,9 +341,9 @@ func (a *App) processQueueItem(it *queueItem) error {
 				a.patchAttempt(aid, map[string]any{"status": "semantic_conflict", "updated_at": nowStr()})
 			}
 		}
-		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "semantic_conflict", "updated_at": nowStr()})
-		return nil
+		return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "semantic_conflict", "updated_at": nowStr()})
 	}
+	a.queueCheckpoint("after_semantic")
 	// policy gate: risk-based escalation (CP12)
 	changed, err := candidate.ChangedFiles()
 	if err != nil {
@@ -251,10 +362,15 @@ func (a *App) processQueueItem(it *queueItem) error {
 		return nil
 	}
 	if policyDecision == "deny" {
-		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": policyReason, "updated_at": nowStr()})
-		return nil
+		return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": policyReason, "updated_at": nowStr()})
 	}
 	// integrate (CAS-guarded canonical-head freshness)
+	claim.effect.Candidate = candidate
+	claim.effect.CandidateDir = candidate.Dir
+	if err := claim.save("publishing"); err != nil {
+		return err
+	}
+	a.queueCheckpoint("before_publication")
 	res, err := a.Refs.PublishPrepared(candidate)
 	if err != nil {
 		if strings.Contains(err.Error(), "CONFLICT") {
@@ -266,21 +382,42 @@ func (a *App) processQueueItem(it *queueItem) error {
 		return err
 	}
 	if res.Status == "stale" {
+		claim.effect.Candidate = nil
+		claim.effect.CandidateDir = ""
+		if err := claim.save("queued"); err != nil {
+			return err
+		}
 		attempts := a.queueAttempts(it.id)
 		if attempts+1 >= maxQueueAttempts {
 			a.patchQueue(it.id, map[string]any{"status": "failed", "error": "stale after " + itoa(attempts+1) + " attempts", "updated_at": nowStr()})
 			return nil
 		}
-		a.patchQueue(it.id, map[string]any{"status": "queued", "attempts": itoa(attempts + 1), "error": "stale; requeued", "updated_at": nowStr()})
-		return nil
+		return a.patchQueue(it.id, map[string]any{"status": "queued", "attempts": itoa(attempts + 1), "error": "stale; requeued", "updated_at": nowStr()})
 	}
-	// mark PR integrated
-	if id, ver, _, e := a.Trestle.FindRecord("prs", `id = "`+it.prID+`"`); e == nil && id != "" {
-		_ = a.Trestle.PatchRecord("prs", id, ver, map[string]any{"status": "integrated", "check_status": "pass", "integrated_at": nowStr()})
+	a.queueCheckpoint("after_publication")
+	return a.finishQueuePublication(it, claim, res.NewSHA)
+}
+
+func (a *App) finishQueuePublication(it *queueItem, claim *queueClaim, sha string) error {
+	claim.effect.PublishedSHA = sha
+	if err := claim.save("reconciling"); err != nil {
+		return err
 	}
-	a.patchQueue(it.id, map[string]any{"status": "done", "error": "", "updated_at": nowStr()})
-	log.Printf("integration queue: %s integrated %s -> %s", it.id, it.branch, res.NewSHA[:12])
-	return nil
+	a.queueCheckpoint("before_pr_completion")
+	rid, ver, pr, err := a.Trestle.FindRecord("prs", filterEq("id", it.prID))
+	if err != nil || rid == "" {
+		return fmt.Errorf("read PR completion: %v", err)
+	}
+	if pr["status"] != "integrated" {
+		if err := a.Trestle.PatchRecord("prs", rid, ver, map[string]any{"status": "integrated", "check_status": "pass", "integrated_at": nowStr()}); err != nil {
+			return err
+		}
+	}
+	a.queueCheckpoint("before_queue_completion")
+	if err := a.patchQueue(it.id, map[string]any{"status": "done", "error": "", "updated_at": nowStr()}); err != nil {
+		return err
+	}
+	return claim.save("done")
 }
 
 func (a *App) queueAttempts(id string) int {
@@ -297,3 +434,11 @@ func strOf(v any) string {
 	s, _ := v.(string)
 	return s
 }
+
+func (a *App) queueCheckpoint(phase string) {
+	if a.queueCrashHook != nil {
+		a.queueCrashHook(phase)
+	}
+}
+
+func queueLane(repo, base string) string { return "lane_" + sha256Hex([]byte(repo + "|" + base))[:32] }

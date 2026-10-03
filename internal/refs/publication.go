@@ -221,3 +221,55 @@ func (p *PreparedMerge) ChangedFiles() ([]string, error) {
 	}
 	return strings.Split(strings.TrimSuffix(out, "\x00"), "\x00"), nil
 }
+
+// RestorePrepared accepts only private candidates beneath this service's
+// scratch root. The remote is resolved again, never accepted from persisted input.
+func (s *Service) RestorePrepared(p *PreparedMerge, dir string) error {
+	rel, err := filepath.Rel(s.ScratchDir, dir)
+	if err != nil || rel == "." || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
+		return fmt.Errorf("candidate outside scratch root")
+	}
+	info, err := os.Lstat(dir)
+	if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("candidate directory unavailable")
+	}
+	p.Dir = dir
+	p.remote, err = s.remote(p.Repo)
+	return err
+}
+
+// CandidatePublished also recognizes a later canonical descendant. Recovery
+// must not publish again after the first push succeeded but its response was lost.
+func (s *Service) CandidatePublished(p *PreparedMerge) (bool, error) {
+	remote, err := s.remote(p.Repo)
+	if err != nil {
+		return false, err
+	}
+	current, err := s.currentSHA(p.Repo, remote, p.Base)
+	if err != nil {
+		return false, err
+	}
+	if current == p.CommitSHA {
+		return true, nil
+	}
+	if current == p.BaseSHA {
+		return false, nil
+	}
+	auth, err := s.authArgs(p.Repo)
+	if err != nil {
+		return false, err
+	}
+	args := append(auth, "fetch", "--quiet", remote, current)
+	if err = git(p.Dir, "", args...); err != nil {
+		return false, err
+	}
+	cmd := exec.Command("git", "merge-base", "--is-ancestor", p.CommitSHA, current)
+	cmd.Dir = p.Dir
+	if err = cmd.Run(); err != nil {
+		if e, ok := err.(*exec.ExitError); ok && e.ExitCode() == 1 {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}

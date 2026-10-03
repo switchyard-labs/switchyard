@@ -1,10 +1,14 @@
 package refs
 
 import (
+	"encoding/json"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"switchyard/internal/artifacts"
 	"testing"
 )
 
@@ -77,4 +81,85 @@ func TestPublicationRequiresExactRemoteSHA(t *testing.T) {
 			}
 		})
 	}
+}
+
+type artifactFixtureTransport struct{ remote string }
+
+func (f artifactFixtureTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	body := `{"result":{"plaintext":"fixture"}}`
+	if r.Method == "GET" {
+		encoded, _ := json.Marshal(map[string]any{"result": map[string]any{"name": "repo", "remote": f.remote, "default_branch": "main"}})
+		body = string(encoded)
+	}
+	return &http.Response{StatusCode: 200, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(body)), Request: r}, nil
+}
+
+func TestPreparedCandidateRejectsMovementAndMutation(t *testing.T) {
+	for _, movement := range []string{"none", "base", "source", "worktree", "commit"} {
+		t.Run(movement, func(t *testing.T) {
+			root := t.TempDir()
+			remote := filepath.Join(root, "remote.git")
+			local := filepath.Join(root, "local")
+			fixtureGit(t, root, "init", "--bare", remote)
+			fixtureGit(t, root, "init", "-b", "main", local)
+			os.WriteFile(filepath.Join(local, "base"), []byte("base"), 0600)
+			fixtureGit(t, local, "add", ".")
+			fixtureGit(t, local, "commit", "-m", "base")
+			base := fixtureGit(t, local, "rev-parse", "HEAD")
+			fixtureGit(t, local, "push", remote, "main")
+			fixtureGit(t, local, "checkout", "-b", "source")
+			os.WriteFile(filepath.Join(local, "source"), []byte("source"), 0600)
+			fixtureGit(t, local, "add", ".")
+			fixtureGit(t, local, "commit", "-m", "source")
+			fixtureGit(t, local, "push", remote, "source")
+			helper := filepath.Join(root, "token.sh")
+			os.WriteFile(helper, []byte("#!/bin/sh\nprintf fixture\n"), 0700)
+			client := artifacts.NewWithHTTP("fixture", "fixture", helper, &http.Client{Transport: artifactFixtureTransport{remote}})
+			scratch := filepath.Join(root, "scratch")
+			os.Mkdir(scratch, 0700)
+			service := NewService(client, nil, scratch)
+			candidate, err := service.PrepareMerge("repo", "main", "source", "candidate")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer candidate.Close()
+			switch movement {
+			case "base", "source":
+				fixtureGit(t, local, "checkout", movementBranch(movement))
+				os.WriteFile(filepath.Join(local, "external"), []byte("external"), 0600)
+				fixtureGit(t, local, "add", ".")
+				fixtureGit(t, local, "commit", "-m", "external")
+				fixtureGit(t, local, "push", remote, "HEAD:refs/heads/"+movementBranch(movement))
+			case "worktree":
+				os.WriteFile(filepath.Join(candidate.Dir, "source"), []byte("changed"), 0600)
+			case "commit":
+				fixtureGit(t, candidate.Dir, "reset", "--hard", base)
+			}
+			before := fixtureGit(t, root, "--git-dir="+remote, "rev-parse", "refs/heads/main")
+			result, err := service.PublishPrepared(candidate)
+			after := fixtureGit(t, root, "--git-dir="+remote, "rev-parse", "refs/heads/main")
+			if movement == "none" {
+				if err != nil || result.Status != "ok" || after != candidate.CommitSHA {
+					t.Fatalf("publication result=%v err=%v", result, err)
+				}
+				published, err := service.CandidatePublished(candidate)
+				if err != nil || !published {
+					t.Fatalf("publication recovery: %v %v", published, err)
+				}
+			} else {
+				if err == nil && result.Status != "stale" {
+					t.Fatalf("accepted %s: %v", movement, result)
+				}
+				if after != before {
+					t.Fatal("invalid candidate changed canonical ref")
+				}
+			}
+		})
+	}
+}
+func movementBranch(movement string) string {
+	if movement == "base" {
+		return "main"
+	}
+	return "source"
 }
