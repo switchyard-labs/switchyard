@@ -26,6 +26,34 @@
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  // Hand-written product pages (profile/settings/etc.) pre-date the Nift shell.
+  // Give them the exact same full-screen navigation instead of leaving a dead
+  // hamburger button on those routes.
+  function ensureGlobalMenu() {
+    const btn = document.getElementById("hamburger");
+    if (!btn || document.getElementById("mobile-menu")) return;
+    const nav = document.createElement("nav");
+    nav.className = "mobile-menu";
+    nav.id = "mobile-menu";
+    nav.setAttribute("aria-label", "Switchyard");
+    nav.hidden = true;
+    nav.innerHTML = `
+      <div class="mobile-menu-head">
+        <a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
+        <button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button>
+      </div>
+      <div class="menu-groups">
+        <details class="menu-group" open><summary>Git</summary><div class="menu-links"><a href="/">Home</a><a href="/repositories.html">Repositories</a><a href="/work.html">Work</a><a href="/pulls.html">Pull Requests</a></div></details>
+        <details class="menu-group" open><summary>Agent-native</summary><div class="menu-links"><a href="/operations#attention">Needs Attention</a><a href="/operations#queue">Integration Queue</a><a href="/operations#workflows">Workflows</a><a href="/operations#agents">Agents</a></div></details>
+        <details class="menu-group" open><summary>Account</summary><div class="menu-links"><div class="mobile-auth" id="mobile-auth"></div><a href="/organizations">Organizations</a><a href="/settings">Settings</a></div></details>
+      </div>
+      <div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>`;
+    document.body.insertBefore(nav, document.querySelector("main") || document.body.firstChild);
+    btn.setAttribute("aria-controls", "mobile-menu");
+    btn.setAttribute("aria-expanded", "false");
+  }
+  ensureGlobalMenu();
+
   /* mobile menu: full-screen, Escape dismisses, focus trapped */
   const hamburger = document.getElementById("hamburger");
   const mobileMenu = document.getElementById("mobile-menu");
@@ -72,7 +100,7 @@
     const state = document.getElementById("auth-state");
     const mAuth = document.getElementById("mobile-auth");
     if (state) {
-      state.innerHTML = user ? '<a class="account-chip" href="/'+encodeURIComponent(user)+'"><img src="/api/avatars/user/'+encodeURIComponent(user)+'" alt=""><span>'+esc(user)+'</span></a>' : '<a href="/signin.html">Sign in</a>';
+      state.innerHTML = user ? '<a class="account-chip" href="/'+encodeURIComponent(user)+'"><img src="/api/avatars/user/'+encodeURIComponent(user)+'" alt=""><span>'+esc(user)+'</span></a>' : '<a class="btn header-signin" href="/signin.html">Sign in</a>';
     }
     if (mAuth) mAuth.innerHTML = user
       ? '<a href="/'+encodeURIComponent(user)+'">Profile</a><a href="/settings">Settings</a><a href="#" id="logout-mobile">Sign out ('+esc(user)+')</a>'
@@ -88,21 +116,19 @@
     const workEl = document.getElementById("work");
     if (!reposEl && !workEl) return;
     const user = await refreshAuth();
-    if (!user) { reposEl.innerHTML = '<p class="muted">Sign in to browse repositories.</p>'; workEl.innerHTML = ""; return; }
+    if (!user) { reposEl.innerHTML = '<div class="dashboard-empty"><strong>Sign in to see your repositories</strong><span>Private repositories are never exposed anonymously.</span><a class="btn primary mini" href="/signin.html">Sign in</a></div>'; workEl.innerHTML = "<div class='dashboard-empty'><strong>Work appears here after sign in</strong><span>Work is Switchyard's human-first issue/task model.</span></div>"; return; }
     try {
       const repos = await api("/api/repositories");
       reposEl.innerHTML = repos.items.length
-        ? repos.items.map((r) => "<div class='list-item'><a href='/"+encodeURIComponent(r.owner_slug)+"/"+encodeURIComponent(r.slug)+"'>" + esc(r.full_name) + "</a><span class='muted'>" + esc(r.default_branch) + " · "+esc(r.visibility)+"</span></div>").join("")
+        ? repos.items.map((r) => "<a class='dashboard-repo-row' href='/"+encodeURIComponent(r.owner_slug)+"/"+encodeURIComponent(r.slug)+"'><div><strong>" + esc(r.full_name) + "</strong><span>"+esc(r.description||'No description')+"</span></div><div class='repo-row-meta'><span class='visibility-pill "+esc(r.visibility||'private')+"'>"+esc(r.visibility||'private')+"</span><span>"+esc(r.default_branch||'main')+"</span></div></a>").join("")
         : "<p class='muted'>No repositories.</p>";
     } catch (e) { reposEl.innerHTML = "<p class='error'>" + esc(e.message) + "</p>"; }
     try {
       const work = await api("/api/work");
       workEl.innerHTML = work.items.length
         ? work.items.slice(0, 10).map((w) =>
-            "<div class='list-item'><a href='#' class='work-link' data-id='" + esc(w.id) + "'>" + esc(w.title) + "</a>" +
-            "<span class='muted'>" + esc(w.kind) + " · " + esc(w.status) + "</span></div>").join("")
+            "<a class='dashboard-work-row' href='/work/"+encodeURIComponent(w.id)+"'><div><strong>"+esc(w.title)+"</strong><span>"+esc(w.kind)+" · "+esc(w.status)+"</span></div><span class='status-badge "+esc(w.status)+"'>"+esc(w.status)+"</span></a>").join("")
         : "<p class='muted'>No work yet — create some from the Work page.</p>";
-      document.querySelectorAll(".work-link").forEach((a) => a.onclick = (e) => e.preventDefault());
     } catch (e) { workEl.innerHTML = "<p class='error'>" + esc(e.message) + "</p>"; }
   }
 
@@ -113,11 +139,15 @@
     const err = document.getElementById("auth-error");
     const toggle = document.getElementById("toggle-mode");
     let mode = "login";
-    toggle.addEventListener("click", (e) => {
-      e.preventDefault();
+    toggle.addEventListener("click", () => {
       mode = mode === "login" ? "register" : "login";
-      form.querySelector("button").textContent = mode === "login" ? "Sign in" : "Register";
-      toggle.textContent = mode === "login" ? "Register" : "Sign in";
+      const submit = form.querySelector("button[type=submit]");
+      const title = document.getElementById("auth-title");
+      const copy = document.querySelector(".auth-copy");
+      submit.textContent = mode === "login" ? "Sign in" : "Create account";
+      toggle.textContent = mode === "login" ? "Create an account" : "Back to sign in";
+      if (title) title.textContent = mode === "login" ? "Sign in to Switchyard" : "Create your Switchyard account";
+      if (copy) copy.textContent = mode === "login" ? "Access repositories, Work, Pull Requests, organizations and the editor." : "Create an account with a username and password. You can add your profile and avatar afterwards.";
     });
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -166,11 +196,29 @@
   function canonicalRepoURL(ctx,kind,ref,path){const base="/"+encodeURIComponent(ctx.owner)+"/"+encodeURIComponent(ctx.repo); if(!kind)return base; const tail=path?"/"+path.split("/").map(encodeURIComponent).join("/"):""; return base+"/"+kind+"/"+encodeURIComponent(ref||"main")+tail;}
   function repoRoot(ctx){return ctx.legacy?"/api/repos/"+encodeURIComponent(ctx.artifact):"/api/repositories/"+encodeURIComponent(ctx.owner)+"/"+encodeURIComponent(ctx.repo);}
   function rawURL(ctx,path){return repoRoot(ctx)+"/content?ref="+encodeURIComponent(ctx.ref)+"&path="+encodeURIComponent(path);}
+  function setupCloneDialog(remote){
+    const dlg=document.getElementById("clone-dialog"), input=document.getElementById("clone-url"), toggle=document.getElementById("clone-toggle");
+    if(!dlg||!input||!toggle)return;
+    input.value=remote||"";
+    const cloneCmd=document.getElementById("clone-command"); if(cloneCmd)cloneCmd.textContent="git clone "+input.value;
+    const fetchCmd=document.getElementById("fetch-command"); if(fetchCmd)fetchCmd.textContent="git fetch origin";
+    const pushCmd=document.getElementById("push-command"); if(pushCmd)pushCmd.textContent="git push origin HEAD";
+    toggle.onclick=()=>dlg.showModal();
+    const cp=document.getElementById("clone-copy"); if(cp)cp.onclick=async()=>{await navigator.clipboard.writeText(input.value);cp.textContent="Copied";setTimeout(()=>cp.textContent="Copy",1200);};
+    dlg.querySelectorAll("[data-copy-target]").forEach(btn=>btn.onclick=async()=>{const target=document.getElementById(btn.dataset.copyTarget);if(!target)return;await navigator.clipboard.writeText(target.textContent);const prev=btn.textContent;btn.textContent="Copied";setTimeout(()=>btn.textContent=prev,1200);});
+  }
   function renderBreadcrumbs(ctx){const el=document.getElementById("repo-breadcrumbs"); if(!el)return; const ps=(ctx.path||"").split("/").filter(Boolean); let cur=""; el.innerHTML='<a href="'+(ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact):canonicalRepoURL(ctx))+ '">'+esc(ctx.repo||ctx.artifact)+'</a>'+ps.map((p,i)=>{cur+=(cur?"/":"")+p; return '<span>/</span><a href="'+(i===ps.length-1?'#':(ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(ctx.ref)+'&path='+encodeURIComponent(cur):canonicalRepoURL(ctx,'tree',ctx.ref,cur)))+'">'+esc(p)+'</a>';}).join('');}
   async function renderRepo(){
     const nameEl=document.getElementById("repo-name"),treeEl=document.getElementById("file-tree"),viewEl=document.getElementById("file-view"); if(!nameEl)return;
     const ctx=canonicalRepoContext();
-    if(!ctx.legacy){const meta=await api(repoRoot(ctx));ctx.artifact=meta.artifact_name;nameEl.textContent=meta.slug||meta.display_name; document.getElementById("repo-owner").textContent=meta.owner_slug||ctx.owner; document.getElementById("repo-description").textContent=meta.description||""; const vis=document.getElementById("repo-visibility"); if(vis)vis.textContent=meta.visibility||"private"; if(!ctx.ref||ctx.ref==="main")ctx.ref=meta.default_branch||ctx.ref;} else nameEl.textContent=ctx.artifact;
+    if(!ctx.legacy){
+      const meta=await api(repoRoot(ctx));ctx.artifact=meta.artifact_name;nameEl.textContent=meta.slug||meta.display_name;document.getElementById("repo-owner").textContent=meta.owner_slug||ctx.owner;document.getElementById("repo-description").textContent=meta.description||"";const vis=document.getElementById("repo-visibility");if(vis)vis.textContent=meta.visibility||"private";if(!ctx.ref||ctx.ref==="main")ctx.ref=meta.default_branch||ctx.ref;
+    } else {
+      nameEl.textContent=ctx.artifact||"Repository";
+      document.getElementById("repo-owner").textContent=ctx.artifact?"Cloudflare Artifacts":"";
+      const vis=document.getElementById("repo-visibility");if(vis)vis.textContent="demo";
+      if(ctx.artifact){try{const meta=await api("/api/repos/"+encodeURIComponent(ctx.artifact));ctx.ref=ctx.ref||meta.default_branch||"main";document.getElementById("repo-description").textContent="Curated demo repository backed by Cloudflare Artifacts.";setupCloneDialog(meta.remote||"");}catch(e){document.getElementById("repo-description").textContent=e.message;}}
+    }
     const sel=document.getElementById("repo-ref-select"); if(sel){try{const rr=await api(repoRoot(ctx)+"/refs"); const branches=Object.keys(rr.refs||{}).filter(x=>x.startsWith('refs/heads/')).map(x=>x.slice(11)); sel.innerHTML=branches.map(x=>'<option '+(x===ctx.ref?'selected':'')+'>'+esc(x)+'</option>').join('')||'<option>'+esc(ctx.ref)+'</option>'; sel.onchange=()=>{location.href=ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(sel.value):(canonicalRepoURL(ctx,'tree',sel.value,''));};}catch(e){}}
     if(!ctx.legacy){
       try{
@@ -184,14 +232,7 @@
         document.getElementById("repo-branches").textContent=ov.branch_count||0;
         document.getElementById("repo-tags").textContent=ov.tag_count||0;
         document.getElementById("repo-commits").textContent=ov.commit_count_sample||0;
-        const dlg=document.getElementById("clone-dialog"), input=document.getElementById("clone-url");
-        input.value=ov.clone_https||"";
-        const cloneCmd=document.getElementById("clone-command"); if(cloneCmd) cloneCmd.textContent="git clone "+input.value;
-        const fetchCmd=document.getElementById("fetch-command"); if(fetchCmd) fetchCmd.textContent="git fetch origin";
-        const pushCmd=document.getElementById("push-command"); if(pushCmd) pushCmd.textContent="git push origin HEAD";
-        document.getElementById("clone-toggle").onclick=()=>dlg.showModal();
-        document.getElementById("clone-copy").onclick=async()=>{await navigator.clipboard.writeText(input.value); document.getElementById("clone-copy").textContent="Copied"; setTimeout(()=>document.getElementById("clone-copy").textContent="Copy",1200);};
-        dlg.querySelectorAll("[data-copy-target]").forEach(btn=>btn.onclick=async()=>{const target=document.getElementById(btn.dataset.copyTarget); if(!target)return; await navigator.clipboard.writeText(target.textContent); const prev=btn.textContent; btn.textContent="Copied"; setTimeout(()=>btn.textContent=prev,1200);});
+        setupCloneDialog(ov.clone_https||"");
         document.getElementById("tab-code").href=canonicalRepoURL(ctx);
         document.getElementById("tab-commits").href=canonicalRepoURL(ctx)+"/commits/"+encodeURIComponent(ctx.ref);
         document.getElementById("tab-prs").href=canonicalRepoURL(ctx)+"/pulls";

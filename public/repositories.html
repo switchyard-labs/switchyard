@@ -2,11 +2,11 @@
 <html lang="en" data-theme="dark">
 	<head>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Switchyard</title>
-		<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
-		<link rel="stylesheet" href="assets/css/theme.css">
-		<link rel="stylesheet" href="assets/css/app.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Switchyard</title>
+<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
+<link rel="stylesheet" href="assets/css/theme.css">
+<link rel="stylesheet" href="assets/css/app.css">
 	</head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
@@ -24,7 +24,7 @@
 			<div class="menu-groups">
 				<details class="menu-group" open><summary>Git</summary><div class="menu-links">
 					<a href="./">Dashboard</a>
-					<a href="./repo.html">Repositories</a>
+					<a href="repositories.html">Repositories</a>
 					<a href="./work.html">Work</a>
 				</div></details>
 				<details class="menu-group" open><summary>Agent-native</summary><div class="menu-links">
@@ -41,7 +41,31 @@
 			<div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>
 		</nav>
 		<main class="site-main" id="main-content">
-			<main><section class="panel"><div class="repo-head"><div><p class="eyebrow">Human-first task tracking</p><h1>Work</h1><p class="muted">Use Work like an issue/task tracker. Attempts and Agents are optional execution details.</p></div></div><form id="work-form" class="work-create"><input name="title" placeholder="Title" required><textarea name="body" placeholder="Describe the problem or desired outcome"></textarea><div class="inline-form"><select name="kind"><option value="feature">feature</option><option value="bug">bug</option><option value="investigation">investigation</option><option value="benchmark">benchmark</option><option value="maintenance">maintenance</option><option value="release">release</option></select><input name="repo" placeholder="owner/repository (optional)"><input name="assignee" placeholder="assignee (optional)"><button type="submit">Create work</button></div></form><div class="segmented work-filter"><button class="active" data-work-filter="open">Open</button><button data-work-filter="closed">Closed</button><button data-work-filter="all">All</button></div><div id="work-list" class="work-list"><p class="muted">Loading…</p></div></section></main>
+			<div class="repositories-page">
+  <div class="page-head repositories-head">
+    <div><p class="eyebrow">Git truth</p><h1>Repositories</h1><p class="muted">Browse repositories you can access. Repositories may be public, private or internal; visibility is enforced server-side.</p></div>
+    <a class="btn" href="/organizations">Organizations</a>
+  </div>
+  <div class="repo-directory-layout">
+    <section class="panel repo-directory-main">
+      <div class="repo-directory-toolbar"><input id="repo-search" type="search" placeholder="Search repositories" aria-label="Search repositories"><span class="muted" id="repo-count">Loading…</span></div>
+      <div class="repo-directory-list" id="repo-directory"><p class="muted">Loading repositories…</p></div>
+    </section>
+    <aside class="panel repo-directory-demos">
+      <p class="eyebrow">Examples</p><h2>Curated demo repositories</h2>
+      <p class="muted">These are deliberately seeded to exercise different Switchyard features.</p>
+      <div class="demo-repo-links">
+        <a href="/repo.html?name=demo-basic"><strong>demo-basic</strong><span>files, README, history</span></a>
+        <a href="/repo.html?name=demo-agents"><strong>demo-agents</strong><span>concurrent agent Attempts</span></a>
+        <a href="/repo.html?name=demo-conflict"><strong>demo-conflict</strong><span>Git conflict + repair</span></a>
+        <a href="/repo.html?name=demo-semantic"><strong>demo-semantic</strong><span>clean merge, semantic block</span></a>
+        <a href="/repo.html?name=demo-workflow"><strong>demo-workflow</strong><span>durable JS workflow</span></a>
+      </div>
+    </aside>
+  </div>
+</div>
+<script src="assets/js/app-repositories.js"></script>
+
 		</main>
 		<script src="assets/js/code-surface.js"></script>
 		<script src="assets/js/markdown.js"></script>

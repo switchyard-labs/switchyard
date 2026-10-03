@@ -19,6 +19,11 @@
       "name": "repo",
       "title": "Repository",
       "template": "templates/template.html"
+    },
+    {
+      "name": "repositories",
+      "title": "Repositories",
+      "template": "templates/template.html"
     }
   ]
 }
