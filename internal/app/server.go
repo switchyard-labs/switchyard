@@ -270,6 +270,10 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	parts0 := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if (len(parts0) == 3 || len(parts0) == 4) && parts0[2] == "actions" {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "actions.html"))
+		return
+	}
 	if len(parts0) == 3 && parts0[2] == "settings" {
 		http.ServeFile(w, r, filepath.Join(a.StaticDir, "repo-settings.html"))
 		return

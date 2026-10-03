@@ -24,6 +24,11 @@
       "name": "repositories",
       "title": "Repositories",
       "template": "templates/template.html"
+    },
+    {
+      "name": "actions",
+      "title": "Actions",
+      "template": "templates/template.html"
     }
   ]
 }

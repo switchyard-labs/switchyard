@@ -149,3 +149,9 @@ Verification: full Go race suite and vet passed before the final marker-gate cha
 ### C11 follow-up from actual preview
 
 Real local Trestle polling exposed redundant writes: typed Go snapshots and decoded JSON maps did not compare equal, so unchanged terminal views were patched every poll. Compare their normalized JSON values before persistence. A regression verifies replay leaves all five view record versions unchanged. App race tests passed. This correctness fix is committed separately before the C12 UI checkpoint.
+
+## C12 — canonical Actions list and run details
+
+C11 commit: `802a4c9`; polling follow-up: `bac3d6d`. Added a Nift-built Actions route/tab with a repository sidebar, run search/status/branch filters, status icons, exact commit links, actor/event/timing summary, selectable jobs, expandable steps and secondary provenance. Empty/error states are readable; provider JSON is not presented as product copy. Root-relative Nift asset/navigation paths fix canonical-route loading and are protected by an actual HTTP asset regression.
+
+Verification used the real Go application, an isolated local SQLite Trestle instance and signed Cloudflare provider; the actual native run was imported by the reconciler. Seven permanent staged browser assertions passed (populated list, status/reset, search/reset, run navigation, step disclosure, overflow and genuine empty state). Desktop and 390 px screenshots are under `docs/evidence/campaign/C12`; measured mobile document width 375 <= 390. App race tests, Nift build and JavaScript syntax checks passed. This is not the C22 six-width/full-product certification. Logs and operational buttons follow in C13/C14; no fabricated preview/deployment or build artifact is claimed.

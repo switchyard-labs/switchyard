@@ -1,0 +1,27 @@
+[
+  {
+    "stage": "list",
+    "passed": 4,
+    "checks": [
+      "populated run list",
+      "status filter and reset",
+      "search and clear",
+      "run navigation"
+    ]
+  },
+  {
+    "stage": "detail",
+    "passed": 2,
+    "checks": [
+      "step disclosure",
+      "no horizontal overflow"
+    ]
+  },
+  {
+    "stage": "empty",
+    "passed": 1,
+    "checks": [
+      "true empty state"
+    ]
+  }
+]

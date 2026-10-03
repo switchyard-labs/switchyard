@@ -27,6 +27,7 @@
     "public/assets/js/code-surface.js",
     "public/assets/js/markdown.js",
     "public/index.html",
+    "public/repositories.html",
     "public/work.html"
   ]
 }

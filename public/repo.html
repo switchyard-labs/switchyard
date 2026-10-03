@@ -4,15 +4,15 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Switchyard</title>
-		<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
-		<link rel="stylesheet" href="assets/css/theme.css">
-		<link rel="stylesheet" href="assets/css/app.css">
+		<link rel="icon" type="image/webp" href="/assets/images/favicon.webp">
+		<link rel="stylesheet" href="/assets/css/theme.css">
+		<link rel="stylesheet" href="/assets/css/app.css">
 	</head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
 		<header class="site-header">
 			<div class="header-inner">
-				<a class="brand" href="./"><img class="brand-mark-img" src="assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
+				<a class="brand" href="/./"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
 				<div class="header-right">
 					<span class="auth-state" id="auth-state"></span>
 					<button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button>
@@ -20,12 +20,12 @@
 			</div>
 		</header>
 		<nav class="mobile-menu" id="mobile-menu" aria-label="Switchyard" hidden>
-			<div class="mobile-menu-head"><a class="brand" href="./"><img class="brand-mark-img" src="assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
+			<div class="mobile-menu-head"><a class="brand" href="/./"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
 			<div class="menu-groups">
 				<details class="menu-group" open><summary>Git</summary><div class="menu-links">
-					<a href="./">Dashboard</a>
-					<a href="repositories.html">Repositories</a>
-					<a href="./work.html">Work</a>
+					<a href="/./">Dashboard</a>
+					<a href="/./repositories.html">Repositories</a>
+					<a href="/./work.html">Work</a>
 				</div></details>
 				<details class="menu-group" open><summary>Agent-native</summary><div class="menu-links">
 					<a href="/operations#attention">Needs Attention</a>
@@ -47,7 +47,7 @@
 			    <div><div class="repo-owner muted" id="repo-owner"></div><h1 id="repo-name">Repository</h1><p class="muted" id="repo-description"></p></div>
 			    <div class="repo-actions"><span class="language-badge" id="repo-visibility">private</span><button class="btn code-button" id="clone-toggle" type="button" aria-haspopup="dialog" aria-controls="clone-dialog"><span aria-hidden="true">&lt;/&gt;</span> Code <span class="code-caret" aria-hidden="true">▾</span></button></div>
 			  </div>
-			  <nav class="repo-tabs" aria-label="Repository"><a class="active" id="tab-code" href="#">Code</a><a id="tab-commits" href="#">Commits</a><a id="tab-work" href="/work.html">Work</a><a id="tab-prs" href="/pulls.html">Pull Requests</a><a id="tab-workflows" href="/operations.html#workflows">Workflows</a><a id="tab-settings" href="#">Settings</a></nav>
+			  <nav class="repo-tabs" aria-label="Repository"><a class="active" id="tab-code" href="#">Code</a><a id="tab-commits" href="#">Commits</a><a id="tab-work" href="/work.html">Work</a><a id="tab-prs" href="/pulls.html">Pull Requests</a><a id="tab-actions" href="#">Actions</a><a id="tab-workflows" href="/operations.html#workflows">Workflows</a><a id="tab-settings" href="#">Settings</a></nav>
 			  <section class="repo-overview-strip" id="repo-overview-strip"><div><strong id="repo-latest">Loading latest commit…</strong><span class="muted" id="repo-latest-meta"></span></div><div class="repo-stats"><span><strong id="repo-branches">—</strong> branches</span><span><strong id="repo-tags">—</strong> tags</span><span><strong id="repo-commits">—</strong> recent commits</span></div></section>
 			  <dialog class="clone-dialog code-dialog" id="clone-dialog">
 			    <form method="dialog"><button class="dialog-close" aria-label="Close Code menu">×</button></form>
@@ -78,9 +78,9 @@
 			</section>
 			</main>
 		</main>
-		<script src="assets/js/code-surface.js"></script>
-		<script src="assets/js/markdown.js"></script>
-		<script src="assets/js/code-blocks.js"></script>
-		<script src="assets/js/app.js"></script>
+		<script src="/assets/js/code-surface.js"></script>
+		<script src="/assets/js/markdown.js"></script>
+		<script src="/assets/js/code-blocks.js"></script>
+		<script src="/assets/js/app.js"></script>
 	</body>
 </html>

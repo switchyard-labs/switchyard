@@ -237,6 +237,7 @@
         document.getElementById("tab-commits").href=canonicalRepoURL(ctx)+"/commits/"+encodeURIComponent(ctx.ref);
         document.getElementById("tab-prs").href=canonicalRepoURL(ctx)+"/pulls";
         document.getElementById("tab-settings").href=canonicalRepoURL(ctx)+"/settings";
+        document.getElementById("tab-actions").href=canonicalRepoURL(ctx)+"/actions";
       }catch(e){ const strip=document.getElementById("repo-overview-strip"); if(strip)strip.innerHTML='<p class="error">'+esc(e.message)+'</p>'; }
     } else { const strip=document.getElementById("repo-overview-strip"); if(strip)strip.hidden=true; }
     renderBreadcrumbs(ctx); loadTree(ctx,treeEl,viewEl);

@@ -1,9 +1,9 @@
 {
-  "name": "signin",
-  "title": "Sign in",
+  "name": "actions",
+  "title": "Actions",
   "template": "templates/template.html",
-  "content": "content/signin.html",
-  "output": "public/signin.html",
+  "content": "content/actions.html",
+  "output": "public/actions.html",
   "minify": false,
   "minify-version": 0,
   "pagination": false,
@@ -14,14 +14,16 @@
   "project-fingerprint": "",
   "hierarchy-fingerprint": "",
   "dependencies": [
-    "content/signin.html",
+    "content/actions.html",
     "templates/head.html",
     "templates/template.html"
   ],
   "reqs": [
+    "public/assets/css/actions.css",
     "public/assets/css/app.css",
     "public/assets/css/theme.css",
     "public/assets/images/favicon.webp",
+    "public/assets/js/app-actions.js",
     "public/assets/js/app.js",
     "public/assets/js/code-blocks.js",
     "public/assets/js/code-surface.js",
