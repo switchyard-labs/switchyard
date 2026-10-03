@@ -1,0 +1,9 @@
+{
+  "http_status": 200,
+  "result": {
+    "affected_files": 2,
+    "drafts_preserved": true,
+    "new_sha": "25a9718fc57f1ce47b92a0fd26fbe7475536fcd7",
+    "status": "ok"
+  }
+}

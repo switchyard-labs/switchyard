@@ -24,6 +24,7 @@ type Change struct {
 	Path    string `json:"path"`
 	Content string `json:"content,omitempty"`
 	Delete  bool   `json:"delete,omitempty"`
+	Mode    string `json:"mode,omitempty"`
 }
 
 type Result struct {
@@ -134,6 +135,9 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 	}
 
 	for _, c := range changes {
+		if c.Mode != "" && c.Mode != "100644" && c.Mode != "100755" {
+			return nil, fmt.Errorf("invalid file mode")
+		}
 		if err := ValidatePath(c.Path); err != nil {
 			return nil, err
 		}
@@ -250,6 +254,15 @@ func (s *Service) buildCommit(repo, remote, branch, expected string, changes []C
 		}
 		if err := os.WriteFile(p, []byte(c.Content), 0644); err != nil {
 			return "", err
+		}
+		if c.Mode != "" {
+			mode := os.FileMode(0644)
+			if c.Mode == "100755" {
+				mode = 0755
+			}
+			if err := os.Chmod(p, mode); err != nil {
+				return "", err
+			}
 		}
 	}
 	if err := git(dir, "", "add", "-A"); err != nil {

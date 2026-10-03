@@ -1,0 +1,7 @@
+{
+  "http_status": 409,
+  "result": {
+    "current_sha": "25a9718fc57f1ce47b92a0fd26fbe7475536fcd7",
+    "error": "branch_moved"
+  }
+}

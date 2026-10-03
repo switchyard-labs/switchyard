@@ -279,6 +279,17 @@ func (a *App) authorizeHandler(next http.HandlerFunc) http.HandlerFunc {
 				}
 				denied = denied || !a.repoAccess(repo, user, AdminRepo)
 			}
+			if !denied && path == "/api/refs/update" {
+				if !a.allowDirectWorkspaceWrite(w, a.repositoryMetaByArtifact(strOr(in["repo"])), strOr(in["branch"])) {
+					return
+				}
+			}
+			if !denied && strings.HasPrefix(path, "/api/drafts/") && strings.HasSuffix(path, "/commit") {
+				draft := a.scopedRecord("drafts", r.PathValue("id"))
+				if !a.allowDirectWorkspaceWrite(w, a.repositoryMetaByArtifact(strOr(draft["repo"])), strOr(draft["branch"])) {
+					return
+				}
+			}
 			if params, ok := in["params"].(map[string]any); ok {
 				denied = denied || !a.repoAccess(strOr(params["repo"]), user, RunAgent)
 			}

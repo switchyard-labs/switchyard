@@ -146,6 +146,11 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/collaborators", a.authorizeHandler(a.handleAddRepositoryCollaborator))
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/protected-refs", a.authorizeHandler(a.handleAddProtectedRef))
 
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/workspace/tree", a.authorizeHandler(a.handleWorkspaceTree))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/workspace/content", a.authorizeHandler(a.handleWorkspaceContent))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/workspace/search", a.authorizeHandler(a.handleWorkspaceSearch))
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/workspace/mutate", a.authorizeHandler(a.handleWorkspaceMutation))
+
 	// repos (legacy compatibility)
 	mux.HandleFunc("GET /api/repos", a.authorizeHandler(a.handleListRepos))
 	mux.HandleFunc("GET /api/repos/{name}", a.authorizeHandler(a.handleGetRepo))

@@ -4,32 +4,32 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Switchyard</title>
   <link rel="icon" type="image/webp" href="/assets/images/favicon.webp">
   <link rel="stylesheet" href="/assets/css/theme.css?v=c18"><link rel="stylesheet" href="/assets/css/components.css?v=c17b">
-<link rel="stylesheet" href="/assets/css/app.css?v=c19"><link rel="stylesheet" href="/assets/css/editor.css">
-<link rel="stylesheet" href="/assets/css/identity.css?v=c19"></head>
+<link rel="stylesheet" href="/assets/css/app.css?v=c19"><link rel="stylesheet" href="/assets/css/editor.css?v=c20">
+<link rel="stylesheet" href="/assets/css/identity.css?v=c19"><link rel="stylesheet" href="/assets/css/diff.css?v=c20"></head>
 <body class="workbench-page"><a class="skip-link" href="#main-content">Skip to content</a>
-<header class="site-header"><div class="header-inner"><a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span>Switchyard</span></a><div class="header-right"><span class="auth-state" id="auth-state"></span><a class="btn mini" id="back-to-repo" href="/">Repository</a><button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button></div></div></header>
+<header class="site-header"><div class="header-inner"><a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span>Switchyard</span></a><div class="header-right"><span class="auth-state" id="auth-state"></span><button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button></div></div></header>
 <nav class="mobile-menu" id="mobile-menu" aria-label="Switchyard" hidden><div class="mobile-menu-head"><a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span>Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div><div class="menu-groups"><details class="menu-group" open><summary>Explore</summary><div class="menu-links"><a href="/">Dashboard</a><a href="/repo.html">Repositories</a><a href="/work.html">Work</a></div></details></div></nav>
 <main class="editor-main" id="main-content">
 <section class="editor-shell">
   <div class="editor-topbar">
     <div><strong id="editor-title">Loading…</strong><div class="muted editor-context" id="editor-context"></div></div>
-    <span class="spacer"></span><span id="draft-state" class="draft-state"></span><button class="btn" id="btn-save">Save draft</button><button class="btn primary" id="btn-commit">Commit</button>
+    <span class="spacer"></span><a class="btn mini" id="back-to-repo" href="/">Repository</a><button class="btn mini" id="toggle-agent" aria-expanded="false">Agent</button><span id="draft-state" class="draft-state"></span><button class="btn" id="btn-save">Save draft</button><button class="btn primary" id="btn-commit">Commit</button>
   </div>
-  <div class="mobile-workbench-switcher" role="tablist"><button data-pane="files" class="active">Files</button><button data-pane="editor">Editor</button><button data-pane="agent">Agent</button></div>
-  <div class="workbench">
+  <div class="mobile-workbench-switcher" role="tablist"><button data-pane="files">Files</button><button data-pane="search">Search</button><button data-pane="editor" class="active">Editor</button><button data-pane="agent">Agent</button></div>
+  <div class="workbench" id="workbench">
     <aside class="workbench-sidebar" data-pane="files">
-      <div class="workbench-modes"><button class="active" data-mode="files">Files</button><button data-mode="search">Search</button><button data-mode="source">Source</button></div>
-      <div class="sidebar-tools"><input id="file-filter" placeholder="Filter files…" aria-label="Filter files"><button class="btn mini" id="new-file">＋</button></div>
+      <div class="workbench-modes"><button class="active" data-mode="files">Files</button><button data-mode="search">Search</button><button data-mode="source">Changes</button></div>
+      <div class="sidebar-tools" id="sidebar-tools"><input id="file-filter" placeholder="Filter files…" aria-label="Filter files"><button class="btn mini" id="new-file" aria-label="Create file">＋</button><button class="btn mini" id="new-folder" aria-label="Create directory">▧</button></div>
       <div class="workspace-tree" id="workspace-tree"><p class="muted">Loading repository…</p></div>
-      <div class="workspace-search" id="workspace-search" hidden><input id="repo-search" placeholder="Search filenames…"><div id="search-results"></div></div>
-      <div class="workspace-source" id="workspace-source" hidden><button class="btn mini" id="rename-file">Rename</button><button class="btn mini danger" id="delete-file">Delete</button><p class="muted">File actions use the same CAS ref substrate as the rest of Switchyard.</p></div>
+      <div class="workspace-search" id="workspace-search" hidden><input type="search" id="repo-search" placeholder="Search filenames and content" aria-label="Search repository"><div class="search-options"><label><input type="checkbox" id="search-case"> Case</label><label><input type="checkbox" id="search-regex"> Regex</label></div><button class="btn mini" id="search-run">Search</button><p id="search-summary" class="muted">Search the current commit.</p><div id="search-results"></div></div>
+      <div class="workspace-source" id="workspace-source" hidden><button class="btn mini" id="rename-file">Rename</button><button class="btn mini" id="move-file">Move</button><button class="btn mini danger" id="delete-file">Delete</button><p class="muted">Moves and deletes require an explicit commit. Saved drafts must be committed first.</p></div>
     </aside>
-    <section class="editor-center" data-pane="editor">
+    <section class="editor-center mobile-pane-active" data-pane="editor">
       <div class="editor-tabs" id="editor-tabs"></div>
       <div class="editor-col"><div id="editor"></div></div>
       <div class="editor-status"><span id="status-branch">main</span><span id="status-language">Plain text</span><span id="status-position">Ln 1, Col 1</span><span class="spacer"></span><span id="status-message"></span></div>
     </section>
-    <aside class="side-col" data-pane="agent">
+    <aside class="side-col" data-pane="agent" hidden>
       <details open><summary class="side-head"><strong>Diff</strong><span id="diff-state" class="muted"></span></summary><pre class="diff-view code-surface" id="diff-view">Save a draft to see the diff.</pre></details>
       <details open><summary class="side-head"><strong>Findings</strong></summary><div class="findings" id="findings"><p class="muted">No findings loaded.</p></div></details>
       <details open><summary class="side-head"><strong>Agent</strong></summary><div class="agent-controls"><textarea id="agent-prompt" rows="3" placeholder="Ask the Agent to help with this draft…"></textarea><div><button class="btn mini" id="btn-agent-draft">Propose draft edit</button><button class="btn mini" id="btn-agent">Formal Attempt run</button></div></div><div class="agent-panel" id="agent-panel"><p class="muted">Interactive assistance proposes draft changes; formal Attempt mode may commit autonomously.</p></div></details>
@@ -37,6 +37,6 @@
   </div>
 </section>
 </main>
-<div class="modal" id="commit-modal" hidden><form class="modal-card" id="commit-form"><h2>Commit changes</h2><label>Commit message<input id="commit-message" required></label><div class="modal-actions"><button type="button" class="btn" id="commit-cancel">Cancel</button><button class="btn primary">Commit</button></div></form></div>
-<script src="/assets/js/cm6.bundle.js"></script><script src="/assets/js/code-surface.js?v=c18"></script><script src="/assets/js/app.js?v=c19"></script><script src="/assets/js/app-editor.js"></script>
-<script src="/assets/js/code-blocks.js"></script></body></html>
+<dialog id="commit-modal"><form id="commit-form" class="form-stack"><h2>Commit changes</h2><label>Commit message<input id="commit-message" required></label><div class="modal-actions"><button type="button" class="btn" id="commit-cancel">Cancel</button><button class="btn primary">Commit</button></div></form></dialog>
+<script src="/assets/js/cm6.bundle.js?v=c20"></script><script src="/assets/js/code-surface.js?v=c18"></script><script src="/assets/js/app.js?v=c19"></script><script src="/assets/js/repository-tree.js?v=c20"></script><script src="/assets/js/app-editor.js?v=c20"></script>
+<script src="/assets/js/code-blocks.js"></script><script src="/assets/js/diff-surface.js?v=c20"></script></body></html>

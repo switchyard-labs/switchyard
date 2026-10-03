@@ -1,0 +1,49 @@
+{
+  "sha": "ebb73e5f3f271de543eeb75b6ae02fc9e20449e2",
+  "tree_http": 200,
+  "tree": {
+    "sha": "ebb73e5f3f271de543eeb75b6ae02fc9e20449e2",
+    "tree": [
+      {
+        "path": "README.md",
+        "mode": "100644",
+        "type": "blob"
+      },
+      {
+        "path": "ci.test.mjs",
+        "mode": "100644",
+        "type": "blob"
+      },
+      {
+        "path": "docs/guides/contributing.md",
+        "mode": "100644",
+        "type": "blob"
+      },
+      {
+        "path": "src/network.json",
+        "mode": "100644",
+        "type": "blob"
+      },
+      {
+        "path": "src/routes.mjs",
+        "mode": "100644",
+        "type": "blob"
+      },
+      {
+        "path": "validation/editor/architecture.md",
+        "mode": "100644",
+        "type": "blob"
+      },
+      {
+        "path": "validation/editor/browser-created.mjs",
+        "mode": "100644",
+        "type": "blob"
+      },
+      {
+        "path": "validation/editor/notes.md",
+        "mode": "100644",
+        "type": "blob"
+      }
+    ]
+  }
+}

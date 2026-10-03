@@ -163,3 +163,32 @@ func movementBranch(movement string) string {
 	}
 	return "source"
 }
+
+func TestFileMovePreservesExecutableMode(t *testing.T) {
+	root := t.TempDir()
+	remote := filepath.Join(root, "remote.git")
+	local := filepath.Join(root, "local")
+	fixtureGit(t, root, "init", "--bare", remote)
+	fixtureGit(t, root, "init", "-b", "main", local)
+	if err := os.WriteFile(filepath.Join(local, "run.sh"), []byte("#!/bin/sh\nexit 0\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	fixtureGit(t, local, "add", ".")
+	fixtureGit(t, local, "commit", "-m", "executable")
+	base := fixtureGit(t, local, "rev-parse", "HEAD")
+	fixtureGit(t, local, "push", remote, "main")
+	helper := filepath.Join(root, "token.sh")
+	os.WriteFile(helper, []byte("#!/bin/sh\nprintf fixture\n"), 0700)
+	client := artifacts.NewWithHTTP("fixture", "fixture", helper, &http.Client{Transport: artifactFixtureTransport{remote}})
+	scratch := filepath.Join(root, "scratch")
+	os.Mkdir(scratch, 0700)
+	service := NewService(client, nil, scratch)
+	result, err := service.Update("repo", "main", base, []Change{{Path: "run.sh", Delete: true}, {Path: "scripts/run.sh", Content: "#!/bin/sh\nexit 0\n", Mode: "100755"}}, "move executable", "C20-test")
+	if err != nil || result.Status != "ok" {
+		t.Fatalf("move: %+v %v", result, err)
+	}
+	actual := fixtureGit(t, root, "--git-dir="+remote, "ls-tree", "main", "scripts/run.sh")
+	if !strings.HasPrefix(actual, "100755 blob") {
+		t.Fatalf("lost executable mode: %s", actual)
+	}
+}

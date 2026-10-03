@@ -56,7 +56,7 @@ func (a *App) handleSaveDraft(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		base := strOr(existing["base_sha"])
-		if base == "" {
+		if base == "" || strOr(existing["committed_at"]) != "" {
 			base = in.BaseSHA
 		}
 		newRev := currentRev + 1
@@ -131,7 +131,7 @@ func (a *App) handleGetDraft(w http.ResponseWriter, r *http.Request) {
 		if it["branch"] == branch && it["path"] == path && it["user"] == user {
 			writeJSON(w, 200, map[string]any{
 				"id": it["id"], "repo": repo, "branch": branch, "path": path, "content": it["content"],
-				"revision": it["revision"], "base_sha": it["base_sha"], "last_agent_execution": it["last_agent_execution"], "updated_at": it["updated_at"],
+				"revision": it["revision"], "committed": strOr(it["committed_at"]) != "", "base_sha": it["base_sha"], "last_agent_execution": it["last_agent_execution"], "updated_at": it["updated_at"],
 			})
 			return
 		}
@@ -242,8 +242,14 @@ func (a *App) handleDiff(w http.ResponseWriter, r *http.Request) {
 	defer removeAll(dir)
 	oldF := filepath.Join(dir, "old")
 	newF := filepath.Join(dir, "new")
-	_ = os.WriteFile(oldF, []byte(in.Old), 0644)
-	_ = os.WriteFile(newF, []byte(in.New), 0644)
+	if err := os.WriteFile(oldF, []byte(in.Old), 0600); err != nil {
+		writeJSON(w, 502, map[string]any{"error": "diff_write_failed"})
+		return
+	}
+	if err := os.WriteFile(newF, []byte(in.New), 0600); err != nil {
+		writeJSON(w, 502, map[string]any{"error": "diff_write_failed"})
+		return
+	}
 	out, err := runGitOut(dir, "diff", "--no-index", "--no-color", "old", "new")
 	_ = out
 	if err != nil {

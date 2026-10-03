@@ -1,0 +1,31 @@
+{
+  "name": "switchyard-editor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild index.js --bundle --minify --format=iife --outfile=../../public/assets/js/cm6.bundle.js --legal-comments=none && node normalize-bundle.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/lang-markdown": "6.5.2",
+    "@codemirror/language": "6.12.4",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.13",
+    "esbuild": "0.28.2",
+    "@codemirror/search": "6.7.1",
+    "@codemirror/autocomplete": "6.20.0",
+    "@codemirror/lang-javascript": "6.2.5",
+    "@codemirror/lang-html": "6.4.12",
+    "@codemirror/lang-css": "6.3.1",
+    "@codemirror/lang-json": "6.0.2",
+    "@codemirror/lang-python": "6.2.1",
+    "@codemirror/lang-cpp": "6.0.3",
+    "@codemirror/legacy-modes": "6.5.1"
+  },
+  "private": true,
+  "type": "module"
+}

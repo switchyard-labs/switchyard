@@ -1,15 +1,18 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"switchyard/internal/agent"
 	"switchyard/internal/trestle"
 	"sync"
 	"testing"
+	"time"
 )
 
 type draftFixture struct {
@@ -59,6 +62,8 @@ func newDraftFixture(t *testing.T) (*App, *draftFixture) {
 			}
 			f.version++
 			fmt.Fprint(w, `{}`)
+		case "POST":
+			fmt.Fprint(w, `{"id":"execution-record","version":1}`)
 		default:
 			w.WriteHeader(500)
 		}
@@ -158,5 +163,68 @@ func TestCommitRejectsAnotherOwnerBeforeGit(t *testing.T) {
 	a.handleCommitDraft(w, r)
 	if w.Code != 403 {
 		t.Fatal(w.Code, w.Body.String())
+	}
+}
+
+type delayedDraftRunner struct{ started, release chan struct{} }
+
+func (d delayedDraftRunner) Run(ctx context.Context, ex *agent.Execution, task agent.Task) error {
+	close(d.started)
+	select {
+	case <-d.release:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	ex.Status = "succeeded"
+	ex.Result = map[string]string{task.File: task.Current + "agent change"}
+	return nil
+}
+func TestInteractiveProposalCannotOverwriteNewerHumanSave(t *testing.T) {
+	a, f := newDraftFixture(t)
+	runner := delayedDraftRunner{make(chan struct{}), make(chan struct{})}
+	a.Runner = runner
+	request := httptest.NewRequest("POST", "/api/drafts/draft/agent-propose", strings.NewReader(`{"prompt":"propose a change","expected_revision":"1"}`))
+	request.SetPathValue("id", "draft")
+	request = request.WithContext(contextWithUser(request.Context(), "alice"))
+	result := httptest.NewRecorder()
+	done := make(chan struct{})
+	go func() { a.handleAgentProposeDraft(result, request); close(done) }()
+	select {
+	case <-runner.started:
+	case <-time.After(3 * time.Second):
+		t.Fatal("proposal runner did not start")
+	}
+	if saved := saveTestDraft(a, "alice", "1", "new human draft"); saved.Code != 200 {
+		t.Fatalf("human save failed: %d", saved.Code)
+	}
+	close(runner.release)
+	<-done
+	if result.Code != 409 || f.values["content"] != "new human draft" || f.values["revision"] != "2" {
+		t.Fatalf("proposal overwrote newer draft: %d %+v", result.Code, f.values)
+	}
+}
+
+func TestCommittedDraftReloadRetainsRevisionForNextSave(t *testing.T) {
+	a, f := newDraftFixture(t)
+	f.values["committed_at"] = "2026-10-03T00:00:00Z"
+	f.values["revision"] = "2"
+	f.values["base_sha"] = "committed-head"
+	r := httptest.NewRequest("GET", "/api/drafts/repo/main/file.go", nil)
+	r.SetPathValue("repo", "repo")
+	r.SetPathValue("branch", "main")
+	r = r.WithContext(contextWithUser(r.Context(), "alice"))
+	w := httptest.NewRecorder()
+	a.handleGetDraft(w, r)
+	var result map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil || w.Code != 200 || result["committed"] != true || result["revision"] != "2" {
+		t.Fatalf("reload: %d %s", w.Code, w.Body.String())
+	}
+	body := `{"repo":"repo","branch":"main","path":"file.go","content":"next edit","expected_revision":"2","base_sha":"new-head"}`
+	r = httptest.NewRequest("POST", "/api/drafts", strings.NewReader(body))
+	r = r.WithContext(contextWithUser(r.Context(), "alice"))
+	w = httptest.NewRecorder()
+	a.handleSaveDraft(w, r)
+	if w.Code != 200 || f.values["content"] != "next edit" || f.values["base_sha"] != "new-head" || f.values["committed_at"] != "" {
+		t.Fatalf("next save: %d %s", w.Code, w.Body.String())
 	}
 }

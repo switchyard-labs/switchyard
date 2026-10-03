@@ -1,0 +1,6 @@
+{
+  "http_status": 409,
+  "result": {
+    "error": "affected_draft_present"
+  }
+}
