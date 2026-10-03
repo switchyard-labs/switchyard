@@ -61,11 +61,11 @@ func (c *Client) token() (string, error) {
 	cmd := exec.Command(c.TokenCmd)
 	out, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("artifacts token: %v", err)
+		return "", &Error{Code: "artifacts_auth_failed", Status: 502}
 	}
 	t := strings.TrimSpace(string(out))
 	if t == "" {
-		return "", fmt.Errorf("artifacts token: empty")
+		return "", &Error{Code: "artifacts_auth_failed", Status: 502}
 	}
 	c.tokenCache = t
 	c.tokenAt = time.Now()
@@ -81,12 +81,12 @@ func (c *Client) get(path string, out any) error {
 	req.Header.Set("Authorization", "Bearer "+tok)
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return err
+		return transportError(err)
 	}
 	defer resp.Body.Close()
 	b, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("artifacts %s: %d %s", path, resp.StatusCode, strings.TrimSpace(string(b)))
+		return responseError(resp)
 	}
 	var env struct {
 		Result json.RawMessage `json:"result"`
@@ -98,7 +98,7 @@ func (c *Client) get(path string, out any) error {
 		return err
 	}
 	if len(env.Errors) > 0 {
-		return fmt.Errorf("artifacts %s: %s", path, env.Errors[0].Message)
+		return &Error{Code: "artifacts_unavailable", Status: 502}
 	}
 	if out != nil {
 		return json.Unmarshal(env.Result, out)
@@ -181,12 +181,12 @@ func (c *Client) RawFile(name, ref, path string) ([]byte, error) {
 	req.Header.Set("Authorization", "Bearer "+tok)
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, transportError(err)
 	}
 	defer resp.Body.Close()
 	b, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("raw %s@%s:%s: %d %s", name, ref, path, resp.StatusCode, strings.TrimSpace(string(b)))
+		return nil, responseError(resp)
 	}
 	return b, nil
 }
@@ -215,12 +215,12 @@ func (c *Client) MintToken(repo, scope string, ttlSeconds int) (string, error) {
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return "", err
+		return "", transportError(err)
 	}
 	defer resp.Body.Close()
 	b, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("mint token %s: %d %s", repo, resp.StatusCode, strings.TrimSpace(string(b)))
+		return "", responseError(resp)
 	}
 	var env struct {
 		Result struct {

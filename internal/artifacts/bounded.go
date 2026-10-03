@@ -31,11 +31,11 @@ func (c *Client) readBounded(ctx context.Context, path string, limit int64) ([]b
 	req.Header.Set("Authorization", "Bearer "+token)
 	response, err := c.http.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, transportError(err)
 	}
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		return nil, fmt.Errorf("Artifacts read failed: HTTP %d", response.StatusCode)
+		return nil, responseError(response)
 	}
 	data, err := io.ReadAll(io.LimitReader(response.Body, limit+1))
 	if err != nil {

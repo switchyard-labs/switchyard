@@ -16,17 +16,17 @@ func (a *App) handleRepositoryOverview(w http.ResponseWriter, r *http.Request) {
 	}
 	backend, err := a.Artifacts.GetRepo(artifact)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	tok, err := a.Refs.GitToken(artifact)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	refsMap, err := a.Artifacts.LsRemoteWithToken(backend.Remote, tok)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	branches, tags := []string{}, []string{}
@@ -84,7 +84,7 @@ func (a *App) handleRepositoryCommits(w http.ResponseWriter, r *http.Request) {
 	}
 	commits, err := a.Artifacts.Log(artifact, ref, 100)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ref": ref, "items": commits})
@@ -117,7 +117,7 @@ func (a *App) handleRepositoryCompare(w http.ResponseWriter, r *http.Request) {
 	}
 	diff, files, err := a.Refs.DiffRefs(artifact, base, head)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"base": base, "head": head, "files": files, "diff": diff})

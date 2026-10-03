@@ -2,7 +2,6 @@ package app
 
 import (
 	"net/http"
-	"strings"
 )
 
 func (a *App) handleListRepos(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +15,7 @@ func (a *App) handleListRepos(w http.ResponseWriter, r *http.Request) {
 	}
 	repos, err := a.Artifacts.ListRepos()
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	// merge registration metadata from the coordination registry
@@ -54,7 +53,7 @@ func (a *App) handleGetRepo(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	repo, err := a.Artifacts.GetRepo(name)
 	if err != nil {
-		writeJSON(w, 404, map[string]any{"error": "repo_not_found"})
+		writeArtifactsError(w, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{
@@ -82,7 +81,7 @@ func (a *App) handleRepoTree(w http.ResponseWriter, r *http.Request) {
 	}
 	tree, err := a.gitTree(name, ref)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ref": ref, "tree": tree})
@@ -142,7 +141,7 @@ func (a *App) handleRepoContent(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := a.Artifacts.RawFile(name, ref, path)
 	if err != nil {
-		writeJSON(w, 404, map[string]any{"error": strings.TrimPrefix(err.Error(), "raw ")})
+		writeArtifactsError(w, err)
 		return
 	}
 	serveRepositoryContent(w, data)

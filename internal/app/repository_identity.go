@@ -80,7 +80,7 @@ func (a *App) handleListRepositoryMeta(w http.ResponseWriter, r *http.Request) {
 		items = filtered
 	}
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"items": items})
@@ -192,7 +192,7 @@ func (a *App) handleRegisterRepositoryMeta(w http.ResponseWriter, r *http.Reques
 		"created_at": now, "updated_at": now,
 	}
 	if _, _, err := a.Trestle.CreateRecord("repository_meta", values, "repository-meta-"+id); err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	writeJSON(w, 201, values)
@@ -224,7 +224,7 @@ func (a *App) handleGetRepositoryMeta(w http.ResponseWriter, r *http.Request) {
 	}
 	backend, err := a.Artifacts.GetRepo(artifact)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	out := map[string]any{}
@@ -249,7 +249,7 @@ func (a *App) handleCanonicalRepoTree(w http.ResponseWriter, r *http.Request) {
 	}
 	tree, err := a.gitTree(artifact, ref)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ref": ref, "tree": tree})
@@ -267,7 +267,7 @@ func (a *App) handleCanonicalRepoContent(w http.ResponseWriter, r *http.Request)
 	path := r.URL.Query().Get("path")
 	data, err := a.Artifacts.RawFile(artifact, ref, path)
 	if err != nil {
-		writeJSON(w, 404, map[string]any{"error": strings.TrimPrefix(err.Error(), "raw ")})
+		writeArtifactsError(w, err)
 		return
 	}
 	serveRepositoryContent(w, data)
@@ -303,17 +303,17 @@ func (a *App) handleCanonicalRepoRefs(w http.ResponseWriter, r *http.Request) {
 	}
 	repo, err := a.Artifacts.GetRepo(artifact)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	tok, err := a.Refs.GitToken(artifact)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	refsMap, err := artifacts.LsRemote(repo.Remote, tok)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeArtifactsError(w, err)
 		return
 	}
 	writeJSON(w, 200, map[string]any{"refs": refsMap})
