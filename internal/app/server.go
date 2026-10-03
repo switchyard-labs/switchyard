@@ -274,6 +274,11 @@ func (a *App) Handler() http.Handler {
 // serveStatic serves the Nift-built public/ directory. Unknown paths that look
 // like API calls return 404 JSON; everything else falls back to index.html.
 func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/profile.html" && validOwnerSlug(r.URL.Query().Get("user")) {
+		target := "/" + r.URL.Query().Get("user")
+		http.Redirect(w, r, target, http.StatusFound)
+		return
+	}
 	if a.redirectLegacyRepository(w, r) {
 		return
 	}
@@ -306,6 +311,16 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	parts0 := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts0) >= 3 && validOwnerSlug(parts0[0]) && validRepoSlug(parts0[1]) {
+		if len(parts0) == 3 && parts0[2] == "work" {
+			a.serveAsset(w, r, "work.html")
+			return
+		}
+		if len(parts0) == 4 && parts0[2] == "commit" {
+			a.serveAsset(w, r, "history.html")
+			return
+		}
+	}
 	if (len(parts0) == 3 || len(parts0) == 4) && parts0[2] == "actions" {
 		a.serveAsset(w, r, "actions.html")
 		return

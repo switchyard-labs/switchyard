@@ -5,6 +5,8 @@ import "testing"
 func TestRepositoryRouteParsing(t *testing.T) {
 	cases := []struct{ path, owner, repo, kind, ref, file string }{
 		{"/nick/demo", "nick", "demo", "", "", ""},
+		{"/nick/demo/branches", "nick", "demo", "branches", "", ""},
+		{"/nick/demo/tags", "nick", "demo", "tags", "", ""},
 		{"/switchyard-labs/switchyard/blob/main/internal/app/server.go", "switchyard-labs", "switchyard", "blob", "main", "internal/app/server.go"},
 		{"/acme/widget/tree/feature-x/docs", "acme", "widget", "tree", "feature-x", "docs"},
 	}

@@ -286,6 +286,10 @@ func parseRepositoryRoute(p string) (repositoryRoute, bool) {
 	if len(parts) == 2 {
 		return r, true
 	}
+	if len(parts) == 3 && (parts[2] == "branches" || parts[2] == "tags") {
+		r.Kind = parts[2]
+		return r, true
+	}
 	if len(parts) >= 4 && (parts[2] == "blob" || parts[2] == "tree") {
 		r.Kind, r.Ref = parts[2], parts[3]
 		if len(parts) > 4 {

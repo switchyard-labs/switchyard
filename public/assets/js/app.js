@@ -213,7 +213,7 @@
 
   /* Work list and creation dialog. */
   function renderWork() {
-    const form=document.getElementById('work-form'),list=document.getElementById('work-list'),dialog=document.getElementById('work-dialog'),query=new URLSearchParams(location.search);
+    const form=document.getElementById('work-form'),list=document.getElementById('work-list'),dialog=document.getElementById('work-dialog'),query=new URLSearchParams(location.search);const workRoute=location.pathname.split('/').filter(Boolean).map(decodeURIComponent);if(workRoute.length===3&&workRoute[2]==='work')query.set('repo',workRoute[0]+'/'+workRoute[1]);
     if(!form||!list)return;
     let filter='open',items=[];
     function draw(){const search=document.getElementById('work-search').value.toLowerCase(),repo=query.get('repo');const xs=items.filter(w=>(filter==='all'||w.status===filter)&&(!repo||w.repo===repo)&&(!search||(w.title+' '+w.kind+' '+w.owner).toLowerCase().includes(search)));document.getElementById('work-count').textContent=xs.length+' item'+(xs.length===1?'':'s');list.innerHTML=xs.map(w=>'<a class="work-row" href="/work/'+encodeURIComponent(w.id)+'"><span class="home-work-icon '+esc(w.status)+'" aria-hidden="true">'+icon('issue')+'</span><div><strong>'+esc(w.title)+'</strong><span>'+esc(w.kind)+' · opened by '+esc(w.owner)+(w.repo?' · '+esc(w.repo):'')+'</span></div><span class="badge">'+esc(w.status)+'</span></a>').join('')||'<div class="empty-state"><strong>No '+esc(filter==='all'?'matching':filter)+' work</strong><span>Try another filter or create a new item.</span></div>';}

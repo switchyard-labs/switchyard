@@ -1,0 +1,34 @@
+[
+  {
+    "surface": "branches",
+    "url": "http://127.0.0.1:18127/alice/railway/branches",
+    "links": [
+      "browser-c22-review",
+      "editor-c20",
+      "main"
+    ]
+  },
+  {
+    "surface": "commit-refresh",
+    "url": "http://127.0.0.1:18127/alice/railway/commit/e2a22198d24faa843975adef7fe7ffde1b997aa5",
+    "detail": "COMMIT\n\ne2a22198d24f\n\nDocument railway routes and repository layout\n\nAn ordinary Git commit."
+  },
+  {
+    "surface": "history-back-forward",
+    "passed": true
+  },
+  {
+    "surface": "tags",
+    "url": "http://127.0.0.1:18127/alice/railway/tags",
+    "text": "Tags\nBack to code\n\nNo tags in this repository."
+  },
+  {
+    "surface": "repository-work",
+    "url": "http://127.0.0.1:18127/alice/railway/work",
+    "text": "Handle disconnected stations\nbug · opened by alice · alice/railway\nopen\nImprove route validation\nfeature · opened by alice · alice/railway\nopen\nDocument the first contribution\ntask · opened by alice · alice/railway\nopen"
+  },
+  {
+    "surface": "console",
+    "entries": []
+  }
+]
