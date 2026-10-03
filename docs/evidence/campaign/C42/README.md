@@ -34,3 +34,6 @@ Avatar/menu both remain 38×38 with no account text. Single-select chevrons have
 Loading/error paragraphs in commit/PR/Work lists now share a 16px inset.
 `readme-card-scroll.png` records the actual updated repository. The local brochure
 DOM confirmed distinct dashboard.jpg and repo.jpg homepage images after Nift build.
+
+File-page breadcrumb now precedes both columns. Real Chromium file route measured
+Files and viewer card tops both at 380.96875px; `aligned-file-cards.png` records it.
