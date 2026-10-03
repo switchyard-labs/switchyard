@@ -36,6 +36,7 @@
     return b;
   }
   let committedText = "",
+    savedText = "",
     view = null,
     currentRevision = "",
     baseSHA = "",
@@ -177,6 +178,7 @@
       buffers.set(path, {
         state: view.state,
         committedText,
+        savedText,
         currentRevision,
         baseSHA,
         dirty,
@@ -186,6 +188,7 @@
   }
   function restore(b) {
     committedText = b.committedText;
+    savedText = b.savedText ?? b.committedText;
     currentRevision = b.currentRevision;
     baseSHA = b.baseSHA;
     dirty = b.dirty;
@@ -325,7 +328,7 @@
                 CM6.keymap.of([...CM6.defaultKeymap, CM6.indentWithTab]),
                 CM6.EditorView.updateListener.of((u) => {
                   if (u.docChanged) {
-                    dirty = true;
+                    dirty = u.state.doc.toString() !== savedText;
                     renderTabs();
                   }
                   if (u.selectionSet || u.docChanged) {
@@ -384,7 +387,8 @@
         committedText = committed;
         currentRevision = d && d.revision ? String(d.revision) : "";
         baseSHA = d && !d.committed && d.base_sha ? d.base_sha : repositorySHA;
-        makeEditor(d && !d.committed ? d.content : committed);
+        savedText = d && !d.committed ? d.content : committed;
+        makeEditor(savedText);
         dirty = false;
         stash();
         buffers.get(p).pendingDraft = !!d && !d.committed;
@@ -737,12 +741,14 @@
     });
     const buffer = buffers.get(savePath);
     if (buffer) {
+      buffer.savedText = content;
       buffer.currentRevision = String(r.revision);
       buffer.pendingDraft = true;
       buffer.dirty = buffer.state.doc.toString() !== content;
     }
     if (path === savePath) {
       currentRevision = String(r.revision);
+      savedText = content;
       dirty = view.state.doc.toString() !== content;
       stash();
       renderTabs();
@@ -754,6 +760,26 @@
       await showDiff();
     }
     return { ...r, path: savePath, content };
+  }
+  let savingAll = false;
+  async function saveAllDrafts() {
+    if (savingAll || !canWrite) return;
+    savingAll = true;
+    stash();
+    let savedCount = 0;
+    try {
+      for (const [savePath, buffer] of buffers) {
+        if (!buffer.dirty) continue;
+        const content = buffer.state.doc.toString();
+        const result = await api("/api/drafts", { method: "POST", body: JSON.stringify({repo:name, branch:ref, path:savePath, content, expected_revision:buffer.currentRevision, base_sha:buffer.baseSHA}) });
+        const latest = buffers.get(savePath);
+        if (latest) { latest.savedText = content; latest.currentRevision = String(result.revision); latest.pendingDraft = true; latest.dirty = latest.state.doc.toString() !== content; }
+        if (path === savePath) { currentRevision = String(result.revision); savedText = content; dirty = view.state.doc.toString() !== content; stash(); }
+        savedCount++;
+      }
+      renderTabs(); status(savedCount + " drafts saved", "success");
+    } catch (error) { status(savedCount + " drafts saved; remaining drafts need attention: " + error.message, "error"); }
+    finally { savingAll = false; }
   }
   async function showDiff() {
     if (!view) return;
@@ -1008,7 +1034,7 @@
   window.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
       e.preventDefault();
-      $("btn-save").click();
+      if (e.shiftKey) saveAllDrafts(); else $("btn-save").click();
     }
   });
   (async () => {
@@ -1044,6 +1070,9 @@
       $("back-to-repo").href = canonicalBase;
       remember();
     } catch (e) {
+      $("editor-title").textContent = "Repository editor";
+      if (canonicalBase) $("back-to-repo").href = canonicalBase;
+      $("editor-context").textContent = "A committed branch is required to open files.";
       status(e.message, "warning");
       $("workspace-tree").textContent = "Repository could not be opened.";
       [

@@ -16,6 +16,7 @@ import {
   indentWithTab,
 } from "@codemirror/commands";
 import {
+  indentUnit,
   bracketMatching,
   indentOnInput,
   foldGutter,
@@ -28,6 +29,7 @@ import {
   searchKeymap,
   highlightSelectionMatches,
   openSearchPanel,
+  selectNextOccurrence,
 } from "@codemirror/search";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { tags } from "@lezer/highlight";
@@ -76,8 +78,9 @@ const theme = EditorView.theme(
       backgroundColor: "var(--panel-soft)",
     },
     "&.cm-focused .cm-selectionBackground,.cm-selectionBackground": {
-      backgroundColor: "var(--signal-amber-soft)",
+      backgroundColor: "rgba(111,153,189,.38)",
     },
+    ".cm-selectionMatch": { backgroundColor: "rgba(111,153,189,.18)", outline: "1px solid rgba(111,153,189,.45)" },
     ".cm-cursor": { borderLeftColor: "var(--focus)" },
     ".cm-panels,.cm-tooltip": {
       backgroundColor: "var(--panel)",
@@ -96,6 +99,9 @@ const theme = EditorView.theme(
   { dark: true },
 );
 const basicSetup = [
+  EditorState.allowMultipleSelections.of(true),
+  EditorState.tabSize.of(2),
+  indentUnit.of("  "),
   lineNumbers(),
   highlightActiveLineGutter(),
   highlightActiveLine(),
@@ -111,6 +117,7 @@ const basicSetup = [
   syntaxHighlighting(highlight),
   theme,
   keymap.of([
+    { key: "Mod-d", run: selectNextOccurrence, preventDefault: true },
     ...closeBracketsKeymap,
     ...defaultKeymap,
     ...historyKeymap,

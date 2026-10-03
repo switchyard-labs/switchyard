@@ -113,6 +113,11 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/users/{username}", a.authorizeHandler(a.handleGetUserProfile))
 	mux.HandleFunc("GET /api/users/{username}/repositories", a.authorizeHandler(a.handleUserRepositories))
 	mux.HandleFunc("GET /api/users/{username}/activity", a.authorizeHandler(a.handleUserActivity))
+	mux.HandleFunc("GET /api/users/{username}/contributions", a.authorizeHandler(a.handleUserContributions))
+	mux.HandleFunc("GET /api/users/{username}/connections", a.authorizeHandler(a.handleUserConnections))
+	mux.HandleFunc("PUT /api/users/{username}/follow", a.authorizeHandler(a.handleFollowUser))
+	mux.HandleFunc("DELETE /api/users/{username}/follow", a.authorizeHandler(a.handleFollowUser))
+	mux.HandleFunc("GET /api/users/{username}/organizations", a.authorizeHandler(a.handleUserOrganizations))
 	mux.HandleFunc("PATCH /api/settings/profile", a.authorizeHandler(a.handleUpdateUserProfile))
 	mux.HandleFunc("POST /api/settings/avatar", a.authorizeHandler(a.handleUploadUserAvatar))
 	mux.HandleFunc("DELETE /api/settings/avatar", a.authorizeHandler(a.handleDeleteUserAvatar))
@@ -124,6 +129,10 @@ func (a *App) Handler() http.Handler {
 	// repositories: legacy flat API plus canonical owner/repository metadata (PX2)
 	mux.HandleFunc("GET /api/repositories", a.authorizeHandler(a.handleListRepositoryMeta))
 	mux.HandleFunc("POST /api/repositories/register", a.authorizeHandler(a.handleRegisterRepositoryMeta))
+	mux.HandleFunc("GET /api/users/{username}/stars", a.authorizeHandler(a.handleUserStars))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/stars", a.authorizeHandler(a.handleRepositoryStars))
+	mux.HandleFunc("PUT /api/repositories/{owner}/{repo}/stars", a.authorizeHandler(a.handleRepositoryStars))
+	mux.HandleFunc("DELETE /api/repositories/{owner}/{repo}/stars", a.authorizeHandler(a.handleRepositoryStars))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}", a.authorizeHandler(a.handleGetRepositoryMeta))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions", a.authorizeHandler(a.handleActions))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions/{id}", a.authorizeHandler(a.handleActionRun))
@@ -257,6 +266,9 @@ func (a *App) Handler() http.Handler {
 // serveStatic serves the Nift-built public/ directory. Unknown paths that look
 // like API calls return 404 JSON; everything else falls back to index.html.
 func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
+	if a.redirectLegacyRepository(w, r) {
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/api/") {
 		writeJSON(w, 404, map[string]any{"error": "not_found"})
 		return

@@ -147,7 +147,7 @@ func (a *App) handleDecideOrgInvitation(w http.ResponseWriter, r *http.Request) 
 	membershipCreated := false
 	if in.Decision == "accept" {
 		org := strOr(v["org_id"])
-		existing, _, _, err := a.Trestle.FindRecord("org_memberships", filterEq("org_id", org)+" AND "+filterEq("username", u))
+		existing, _, _, err := a.Trestle.FindRecord("org_memberships", filterEq("org_id", org)+" && "+filterEq("username", u))
 		if err != nil {
 			writeJSON(w, 502, map[string]any{"error": "membership_lookup_failed"})
 			return

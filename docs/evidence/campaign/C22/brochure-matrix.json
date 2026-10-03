@@ -1,0 +1,420 @@
+[
+  {
+    "surface": "brochure/index",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/index",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/product/overview",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/product/overview",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/product/demo",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/product/demo",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/product/how-it-works",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/product/how-it-works",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/product/human-ai",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/product/human-ai",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/architecture",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/architecture",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/repositories",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/repositories",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/work-attempts",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/work-attempts",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/reviews-conflicts",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/reviews-conflicts",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/integration-queue",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/integration-queue",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/provenance-needs-attention",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/provenance-needs-attention",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/workflows",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/concepts/workflows",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/getting-started",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/getting-started",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/configuration",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/configuration",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/api",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/api",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/internals",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/internals",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/operations",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/operations",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/performance",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/performance",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/status",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/docs/status",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  }
+]

@@ -6,10 +6,11 @@ export function ansiSegments(text) {
   const append=value=>{if(value)parts.push({text:value,classes:[foreground===null?'':`ansi-fg-${foreground}`,bold?'term-bold':''].filter(Boolean).join(' ')})};
   for(const match of text.matchAll(controls)) {
     append(text.slice(offset,match.index));offset=match.index+match[0].length;
-    if(/^\x1b\[[\d;]*m$/.test(match[0]))for(const code of (match[0].slice(2,-1)||'0').split(';').map(Number)) {
+    if(/^\x1b\[[\d;]*m$/.test(match[0])) { const codes=(match[0].slice(2,-1)||'0').split(';').map(Number); for(let i=0;i<codes.length;i++) { const code=codes[i];
+      if(code===38||code===48){ if(codes[i+1]===5)i+=2;else if(codes[i+1]===2)i+=4;continue; }
       if(code===0){foreground=null;bold=false;}else if(code===1)bold=true;else if(code===22)bold=false;
       else if(code===39)foreground=null;else if(code>=30&&code<=37)foreground=code-30;else if(code>=90&&code<=97)foreground=code-90+8;
-    }
+    }}
   }
   append(text.slice(offset));return parts;
 }

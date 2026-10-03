@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18 repository redesign verified; C19 workspace and identity redesign verified; C20 workbench verified; C21 decision surfaces verified; C22–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18 repository redesign verified; C19 workspace and identity redesign verified; C20 workbench verified; C21 decision surfaces verified; C22 Chromium matrix verified; C23–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -202,4 +202,8 @@ Full Go race suite and vet, three Node hierarchy/diff checks, 17-page static gat
 
 ## C21 — human decision surfaces
 
-C20 checkpoint identity: `8528adc`. Replaced fake Inspect links and operational record rows with repository context, stop reasons, recorded evidence, inspection destinations and consequences. Workflow step history loads on demand; approval/retry/cancellation and queue revalidation use explicit consequence dialogs and existing backend authorization. Attention includes failed Actions and failed workflows; partial source reads remain visibly incomplete. The benign local workflow reached waiting approval, was inspected and approved through the browser, then completed with durable step replay. A real malformed-call failure remained inspectable. App race/static checks and permanent browser assertions passed; evidence is under `docs/evidence/campaign/C21`. C22–C25 pending.
+C20 checkpoint identity: `8528adc`. Replaced fake Inspect links and operational record rows with repository context, stop reasons, recorded evidence, inspection destinations and consequences. Workflow step history loads on demand; approval/retry/cancellation and queue revalidation use explicit consequence dialogs and existing backend authorization. Attention includes failed Actions and failed workflows; partial source reads remain visibly incomplete. The benign local workflow reached waiting approval, was inspected and approved through the browser, then completed with durable step replay. A real malformed-call failure remained inspectable. App race/static checks and permanent browser assertions passed; evidence is under `docs/evidence/campaign/C21`. C22 Chromium matrix verified; C23–C25 pending.
+
+## C22 — browser certification and demo polish
+
+Actual six-width Chromium product/menu matrix, genuine populated/empty fixtures and brochure verification completed; details and limits are in `docs/evidence/campaign/C22/README.md`. Fixed public canonical demo authorization/import, pagination and scrolling ownership, editor selection/shortcuts, persisted stars/follows and contribution profiles. Profile avatars are 250px with rounded square borders; neutral active navigation and primary action colors remain distinct. Linode assets and additive schema updates are synced under existing authorization. C23 performance remains next; architecture exploration is design-only in its separate commit.

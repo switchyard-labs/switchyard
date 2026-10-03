@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -18,6 +20,8 @@ const avatarMaxBytes = 2 << 20
 
 func profileCollections() [][2]any {
 	return [][2]any{
+		{"repository_stars", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo_id", Type: "text"}, {Name: "username", Type: "text"}, {Name: "created_at", Type: "text"}}},
+		{"user_follows", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "follower", Type: "text"}, {Name: "following", Type: "text"}, {Name: "created_at", Type: "text"}}},
 		{"user_profiles", []trestle.CollectionField{
 			{Name: "username", Type: "text", Unique: true}, {Name: "bio", Type: "text"}, {Name: "location", Type: "text"}, {Name: "website", Type: "text"}, {Name: "social", Type: "json"}, {Name: "pinned_repos", Type: "json"}, {Name: "avatar_file", Type: "text"}, {Name: "updated_at", Type: "text"},
 		}},
@@ -205,7 +209,7 @@ func fallbackAvatar(label string) string {
 	if s := strings.TrimSpace(label); s != "" {
 		initial = strings.ToUpper(string([]rune(s)[0]))
 	}
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect width="256" height="256" rx="32" fill="#202226"/><circle cx="128" cy="128" r="104" fill="#292c31" stroke="#454a51" stroke-width="2"/><text x="128" y="153" text-anchor="middle" font-family="system-ui,sans-serif" font-size="88" font-weight="700" fill="#d9a45b">` + html.EscapeString(initial) + `</text></svg>`
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect width="256" height="256" rx="10" fill="#202226"/><rect x="16" y="16" width="224" height="224" rx="10" fill="#292c31" stroke="#454a51" stroke-width="2"/><text x="128" y="153" text-anchor="middle" font-family="system-ui,sans-serif" font-size="88" font-weight="700" fill="#d9a45b">` + html.EscapeString(initial) + `</text></svg>`
 }
 func (a *App) handleAvatar(w http.ResponseWriter, r *http.Request) {
 	kind, id := r.PathValue("kind"), r.PathValue("id")
@@ -268,15 +272,27 @@ func (a *App) handleUserActivity(w http.ResponseWriter, r *http.Request) {
 	if refs, e := a.Trestle.ListRecords("ref_updates", ""); e == nil {
 		refs = a.visibleRecords("ref_updates", refs, a.currentUser(r))
 		for _, x := range refs {
-			if strings.Contains(strOr(x["provenance"]), u) {
+			if attributedRef(strOr(x["provenance"]), u) {
 				out = append(out, map[string]any{"type": "git", "repo": x["repo"], "branch": x["branch"], "at": x["occurred_at"], "sha": x["new_sha"]})
 			}
 		}
 	}
-	if len(out) > 40 {
-		out = out[len(out)-40:]
+	sort.SliceStable(out, func(i, j int) bool {
+		if strOf(out[i]["at"]) != strOf(out[j]["at"]) {
+			return strOf(out[i]["at"]) > strOf(out[j]["at"])
+		}
+		return strOf(out[i]["id"])+strOf(out[i]["sha"]) > strOf(out[j]["id"])+strOf(out[j]["sha"])
+	})
+	limit, offset := activityPageBounds(r.URL.Query().Get("limit"), r.URL.Query().Get("offset"))
+	total := len(out)
+	if offset > total {
+		offset = total
 	}
-	writeJSON(w, 200, map[string]any{"items": out})
+	end := offset + limit
+	if end > total {
+		end = total
+	}
+	writeJSON(w, 200, map[string]any{"items": out[offset:end], "total": total, "offset": offset, "limit": limit, "has_more": end < total})
 }
 
 func (a *App) handleChangePassword(w http.ResponseWriter, r *http.Request) {
@@ -560,4 +576,19 @@ func (a *App) saveProfileRecord(collection, filter string, values map[string]any
 	}
 	_, _, err = a.Trestle.CreateRecord(collection, values, key+"-"+randHex(10))
 	return err
+}
+
+func activityPageBounds(rawLimit, rawOffset string) (int, int) {
+	limit, _ := strconv.Atoi(rawLimit)
+	offset, _ := strconv.Atoi(rawOffset)
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return limit, offset
 }

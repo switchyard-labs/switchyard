@@ -2,6 +2,17 @@
 (function () {
   "use strict";
 
+  const iconPaths = {
+ menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+ close: '<path d="m6 6 12 12M6 18 18 6"/>',
+    repository: '<path d="M4 3h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V3Z"/><path d="M4 15h14M8 7h6M8 10h4"/>',
+    pullRequest: '<circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v10M18 17V9a4 4 0 0 0-4-4h-3m3-3-3 3 3 3"/>',
+    issue: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 3v1"/>',
+    star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/>'
+  };
+  function icon(name) { return '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">'+(iconPaths[name]||'')+'</svg>'; }
+  window.SwitchyardIcons = { icon };
+ document.querySelectorAll(".hamburger").forEach(button=>button.innerHTML=icon("menu"));
   async function api(path, opts) {
     const res = await fetch(path, {
       headers: { "Content-Type": "application/json" },
@@ -62,7 +73,7 @@
         <details class="menu-group" open><summary>Coordination</summary><div class="menu-links"><a href="/operations#attention">Needs Attention</a><a href="/operations#queue">Integration Queue</a><a href="/operations#workflows">Workflows</a><a href="/operations#agents">Agents</a></div></details>
         <details class="menu-group" open><summary>Account</summary><div class="menu-links"><div class="mobile-auth" id="mobile-auth"></div><a href="/organizations">Organizations</a><a href="/settings">Settings</a></div></details>
       </div>
-      <div class="menu-footer">Switchyard · Code, work and review in one place.</div>`;
+      <div class="menu-footer"><span>Switchyard · Code, work and review in one place.</span><div id="menu-session-actions" class="menu-session-actions"></div><p id="menu-session-error" class="error" role="alert" hidden></p></div>`;
     document.body.insertBefore(nav, document.querySelector("main") || document.body.firstChild);
     btn.setAttribute("aria-controls", "mobile-menu");
     btn.setAttribute("aria-expanded", "false");
@@ -126,11 +137,18 @@
     if (state) {
       state.innerHTML = user ? '<a class="account-chip" href="/'+encodeURIComponent(user)+'"><img src="/api/avatars/user/'+encodeURIComponent(user)+'" alt=""><span>'+esc(user)+'</span></a>' : '<a class="btn header-signin" href="/signin.html">Sign in</a>';
     }
-    if (mAuth) mAuth.innerHTML = user
-      ? '<a href="/'+encodeURIComponent(user)+'">Profile</a><a href="#" id="logout-mobile">Sign out ('+esc(user)+')</a>'
-      : '<a href="/signin.html">Sign in</a>';
+    if (mAuth) mAuth.innerHTML = user ? '<a href="/'+encodeURIComponent(user)+'">Profile</a>' : '';
+    const session = document.getElementById("menu-session-actions");
+    if (session) session.innerHTML = user
+      ? '<span>Signed in as <strong>'+esc(user)+'</strong></span><button class="btn" id="logout-mobile" type="button">Sign out</button>'
+      : '<a class="btn" href="/signin">Sign in</a>';
     const lo = document.getElementById("logout-mobile");
-    if (lo) lo.onclick = async (e) => { e.preventDefault(); await api("/api/auth/logout", { method: "POST" }); location.reload(); };
+    if (lo) lo.onclick = async () => {
+      const error = document.getElementById("menu-session-error");
+      lo.disabled = true; error.hidden = true;
+      try { await api("/api/auth/logout", { method: "POST" }); location.reload(); }
+      catch { error.textContent = "Sign out could not be completed. Please try again."; error.hidden = false; lo.disabled = false; }
+    };
     return user;
   }
 
@@ -139,17 +157,17 @@
     const reposEl=document.getElementById("repos"),workEl=document.getElementById("work"),pulls=document.getElementById("home-pulls");
     if(!reposEl||!workEl)return;
     const user=await refreshAuth();
-    if(!user){reposEl.innerHTML='<p class="muted">Your repositories appear after sign in.</p>';workEl.innerHTML='<div class="empty-state"><strong>Keep your work together</strong><span>Track issues and review changes in your workspace.</span><a class="btn primary" href="/signin">Sign in</a></div>';pulls.innerHTML='<div class="empty-state"><strong>Review changes in one place</strong><span>Sign in to see pull requests that you can access.</span></div>';return;}
+    if(!user){try { const repositories=(await api('/api/repositories')).items||[]; reposEl.innerHTML=repositories.slice(0,12).map(r=>'<a href="/'+encodeURIComponent(r.owner_slug)+'/'+encodeURIComponent(r.slug)+'"><span class="home-repo-icon" aria-hidden="true">'+icon('repository')+'</span><span>'+esc(r.full_name)+'</span></a>').join('')||'<p class="muted">No public repositories yet.</p>'; } catch { reposEl.innerHTML='<p class="error">Public repositories could not be loaded.</p>'; }workEl.innerHTML='<div class="empty-state"><strong>Keep your work together</strong><span>Track issues and review changes in your workspace.</span><a class="btn primary" href="/signin">Sign in</a></div>';pulls.innerHTML='<div class="empty-state"><strong>Review changes in one place</strong><span>Sign in to see pull requests that you can access.</span></div>';return;}
     document.getElementById('home-username').textContent=user;
     document.getElementById('home-account-description').textContent='Your personal workspace';
     document.getElementById('home-account').href='/'+encodeURIComponent(user);
     document.getElementById('home-avatar').src='/api/avatars/user/'+encodeURIComponent(user);
     document.getElementById('home-greeting').textContent='Welcome back, '+user;
     let repositories=[];
-    try{repositories=(await api('/api/repositories')).items||[];reposEl.innerHTML=repositories.slice(0,12).map(r=>'<a href="/'+encodeURIComponent(r.owner_slug)+'/'+encodeURIComponent(r.slug)+'"><span class="home-repo-icon" aria-hidden="true">▣</span><span>'+esc(r.full_name)+'</span></a>').join('')||'<p class="muted">No repositories yet.</p>';}catch{reposEl.innerHTML='<p class="error">Repositories could not be loaded.</p>';}
+    try{repositories=(await api('/api/repositories')).items||[];reposEl.innerHTML=repositories.slice(0,12).map(r=>'<a href="/'+encodeURIComponent(r.owner_slug)+'/'+encodeURIComponent(r.slug)+'"><span class="home-repo-icon" aria-hidden="true">'+icon('repository')+'</span><span>'+esc(r.full_name)+'</span></a>').join('')||'<p class="muted">No repositories yet.</p>';}catch{reposEl.innerHTML='<p class="error">Repositories could not be loaded.</p>';}
     await Promise.all([
-      (async()=>{try{const items=((await api('/api/work')).items||[]).sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||''))).slice(0,6);workEl.innerHTML=items.map(w=>'<a class="home-feed-row" href="/work/'+encodeURIComponent(w.id)+'"><span class="home-work-icon '+esc(w.status)+'" aria-hidden="true">○</span><div><strong>'+esc(w.title)+'</strong><small>'+esc(w.kind)+' · '+esc(w.owner)+' · '+esc(w.status)+'</small></div></a>').join('')||'<div class="empty-state"><strong>No work yet</strong><span>Start with a problem, idea or task.</span><a href="/work">Create work</a></div>';}catch{workEl.innerHTML='<div class="error-state">Work could not be loaded.</div>';}})(),
-      (async()=>{try{const items=((await api('/api/prs')).items||[]).filter(p=>p.status==='open').slice(0,5);pulls.innerHTML=items.map(p=>{const repo=repositories.find(r=>r.artifact_name===p.repo||r.full_name===p.repo);const href=repo?'/'+encodeURIComponent(repo.owner_slug)+'/'+encodeURIComponent(repo.slug)+'/pull/'+encodeURIComponent(p.id):'/pulls';return '<a class="home-feed-row" href="'+href+'"><span class="home-pr-icon" aria-hidden="true">⑂</span><div><strong>'+esc(p.title)+'</strong><small>'+esc(repo?.full_name||p.repo)+' · '+esc(p.branch)+' → '+esc(p.base)+'</small></div></a>';}).join('')||'<div class="empty-state"><strong>No open pull requests</strong><span>Changes ready for review will appear here.</span></div>';}catch{pulls.innerHTML='<div class="error-state">Pull requests could not be loaded.</div>';}})()
+      (async()=>{try{const items=((await api('/api/work')).items||[]).sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||''))).slice(0,6);workEl.innerHTML=items.map(w=>'<a class="home-feed-row" href="/work/'+encodeURIComponent(w.id)+'"><span class="home-work-icon '+esc(w.status)+'" aria-hidden="true">'+icon('issue')+'</span><div><strong>'+esc(w.title)+'</strong><small>'+esc(w.kind)+' · '+esc(w.owner)+' · '+esc(w.status)+'</small></div></a>').join('')||'<div class="empty-state"><strong>No work yet</strong><span>Start with a problem, idea or task.</span><a href="/work">Create work</a></div>';}catch{workEl.innerHTML='<div class="error-state">Work could not be loaded.</div>';}})(),
+      (async()=>{try{const items=((await api('/api/prs')).items||[]).filter(p=>p.status==='open').slice(0,5);pulls.innerHTML=items.map(p=>{const repo=repositories.find(r=>r.artifact_name===p.repo||r.full_name===p.repo);const href=repo?'/'+encodeURIComponent(repo.owner_slug)+'/'+encodeURIComponent(repo.slug)+'/pull/'+encodeURIComponent(p.id):'/pulls';return '<a class="home-feed-row" href="'+href+'"><span class="home-pr-icon" aria-hidden="true">'+icon('pullRequest')+'</span><div><strong>'+esc(p.title)+'</strong><small>'+esc(repo?.full_name||p.repo)+' · '+esc(p.branch)+' → '+esc(p.base)+'</small></div></a>';}).join('')||'<div class="empty-state"><strong>No open pull requests</strong><span>Changes ready for review will appear here.</span></div>';}catch{pulls.innerHTML='<div class="error-state">Pull requests could not be loaded.</div>';}})()
     ]);
   }
 
@@ -198,7 +216,7 @@
     const form=document.getElementById('work-form'),list=document.getElementById('work-list'),dialog=document.getElementById('work-dialog'),query=new URLSearchParams(location.search);
     if(!form||!list)return;
     let filter='open',items=[];
-    function draw(){const search=document.getElementById('work-search').value.toLowerCase(),repo=query.get('repo');const xs=items.filter(w=>(filter==='all'||w.status===filter)&&(!repo||w.repo===repo)&&(!search||(w.title+' '+w.kind+' '+w.owner).toLowerCase().includes(search)));document.getElementById('work-count').textContent=xs.length+' item'+(xs.length===1?'':'s');list.innerHTML=xs.map(w=>'<a class="work-row" href="/work/'+encodeURIComponent(w.id)+'"><span class="home-work-icon '+esc(w.status)+'" aria-hidden="true">○</span><div><strong>'+esc(w.title)+'</strong><span>'+esc(w.kind)+' · opened by '+esc(w.owner)+(w.repo?' · '+esc(w.repo):'')+'</span></div><span class="badge">'+esc(w.status)+'</span></a>').join('')||'<div class="empty-state"><strong>No '+esc(filter==='all'?'matching':filter)+' work</strong><span>Try another filter or create a new item.</span></div>';}
+    function draw(){const search=document.getElementById('work-search').value.toLowerCase(),repo=query.get('repo');const xs=items.filter(w=>(filter==='all'||w.status===filter)&&(!repo||w.repo===repo)&&(!search||(w.title+' '+w.kind+' '+w.owner).toLowerCase().includes(search)));document.getElementById('work-count').textContent=xs.length+' item'+(xs.length===1?'':'s');list.innerHTML=xs.map(w=>'<a class="work-row" href="/work/'+encodeURIComponent(w.id)+'"><span class="home-work-icon '+esc(w.status)+'" aria-hidden="true">'+icon('issue')+'</span><div><strong>'+esc(w.title)+'</strong><span>'+esc(w.kind)+' · opened by '+esc(w.owner)+(w.repo?' · '+esc(w.repo):'')+'</span></div><span class="badge">'+esc(w.status)+'</span></a>').join('')||'<div class="empty-state"><strong>No '+esc(filter==='all'?'matching':filter)+' work</strong><span>Try another filter or create a new item.</span></div>';}
     async function load(){try{items=((await api('/api/work')).items||[]).sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||'')));draw();}catch{list.innerHTML='<div class="error-state">Sign in to see your work. <a href="/signin">Sign in</a></div>';}}
     document.getElementById('new-work').onclick=()=>{form.repo.value=query.get('repo')||'';document.getElementById('work-create-error').hidden=true;dialog.showModal();form.elements.namedItem('title').focus();};document.getElementById('work-dialog-close').onclick=()=>dialog.close();document.getElementById('work-search').oninput=draw;
     document.querySelectorAll('[data-work-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.workFilter;document.querySelectorAll('[data-work-filter]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});draw();});

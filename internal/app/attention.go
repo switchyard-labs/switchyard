@@ -83,7 +83,7 @@ func attentionProjection(collection string, x map[string]any) map[string]any {
 		evidence = strOr(x["message"]) + " · " + strOr(x["file"])
 	case "action_runs":
 		state, _ := x["state"].(map[string]any)
-		if state["status"] != "failed" {
+		if state["status"] != "failed" && state["status"] != "failure" {
 			return nil
 		}
 		kind, title, reason = "actions_failed", "Cloudflare Actions failed", "A CI run failed at its recorded commit. Inspect job output; a rerun uses the same source and approved definition."

@@ -233,6 +233,9 @@ func (a *App) authorizeHandler(next http.HandlerFunc) http.HandlerFunc {
 		}
 		if strings.HasPrefix(path, "/api/repositories/") && r.PathValue("owner") != "" {
 			meta := a.repositoryMetaByOwner(r.PathValue("owner"), r.PathValue("repo"))
+			if strings.HasSuffix(path, "/stars") {
+				cap = ReadRepo
+			}
 			if strings.Contains(path, "/settings") || strings.Contains(path, "/collaborators") || strings.Contains(path, "/protected-refs") {
 				cap = AdminRepo
 			}

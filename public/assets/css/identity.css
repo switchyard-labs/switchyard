@@ -2,12 +2,12 @@
 .home-layout { display: grid; grid-template-columns: 220px minmax(0,1fr) 260px; gap: 28px; min-height: calc(100dvh - 180px); align-items: start; }
 .home-sidebar { min-width: 0; font-size: 13px; }
 .home-account { display: flex; gap: 10px; align-items: center; color: var(--text); text-decoration: none; margin: 4px 0 24px; }
-.home-account img { width: 36px; height: 36px; border-radius: 50%; }
+.home-account img { width: 36px; height: 36px; border-radius: 6px; }
 .home-account span { display: grid; gap: 2px; }
 .home-account small { font-size: 11px; color: var(--text-faint); }
 .home-navigation { display: grid; gap: 3px; padding-bottom: 22px; border-bottom: 1px solid var(--border-subtle); }
 .home-navigation a { padding: 8px 10px; border-radius: var(--radius-sm); color: var(--text-dim); text-decoration: none; }
-.home-navigation a[aria-current="page"] { color: var(--text); background: var(--panel-hover); box-shadow: inset 2px 0 var(--accent); }
+.home-navigation a[aria-current="page"] { color: var(--text); background: var(--panel-hover); box-shadow: none; }
 .home-navigation a:hover { background: var(--panel-soft); }
 .home-repo-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 24px 0 12px; }
 .home-repo-heading h2 { margin: 0; font-size: 12px; color: var(--text-dim); font-weight: 600; }
@@ -41,7 +41,7 @@
 .home-activity .list-item { flex-direction: column; gap: 2px; font-size: 12px; }
 .profile-layout { display: grid; grid-template-columns: 260px minmax(0,1fr); gap: 40px; align-items: start; max-width: 1200px; }
 .profile-sidebar { min-width: 0; }
-.profile-avatar { display: block; width: 240px; height: 240px; border: 1px solid var(--border-strong); border-radius: 50%; object-fit: cover; background: var(--panel-soft); }
+.profile-avatar { display: block; width: 240px; height: 240px; border: 1px solid var(--border-strong); border-radius: 6px; object-fit: cover; background: var(--panel-soft); }
 .profile-sidebar h1 { font-size: 26px; line-height: 1.2; letter-spacing: -.025em; margin: 18px 0 3px; overflow-wrap: anywhere; }
 .profile-handle { font-size: 19px; color: var(--text-faint); margin-bottom: 14px; }
 .profile-sidebar p { margin: 14px 0; font-size: 14px; line-height: 1.6; }
@@ -84,7 +84,7 @@
 .activity-dot { width: 7px; height: 7px; margin-top: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
 .member-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(210px,1fr)); gap: 12px; }
 .member-chip { display: inline-flex; align-items: center; gap: 12px; color: var(--text); text-decoration: none; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); }
-.member-chip img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.member-chip img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
 .member-chip span { display: grid; gap: 3px; font-size: 13px; }
 .member-chip small { color: var(--text-faint); font-size: 11px; }
 .organization-profile .profile-avatar { width: 160px; height: 160px; border-radius: var(--radius-lg); }
@@ -104,7 +104,7 @@
 .settings-nav h2 { font-size: 13px; margin: 0 0 10px; color: var(--text-dim); font-weight: 600; }
 .settings-nav a { display: block; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; color: var(--text-dim); text-decoration: none; }
 .settings-nav a:hover { background: var(--panel-soft); }
-.settings-nav a.active { color: var(--text); background: var(--panel-hover); box-shadow: inset 2px 0 var(--accent); }
+.settings-nav a.active { color: var(--text); background: var(--panel-hover); box-shadow: none; }
 .settings-content { min-width: 0; }
 .settings-section { padding: 0 0 24px; }
 .settings-section h1, .settings-section h2 { margin: 0 0 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border); font-size: 23px; font-weight: 550; letter-spacing: -.025em; }
@@ -117,7 +117,7 @@
 .form-stack button[type=submit], .form-stack>button, .settings-form>button { justify-self: start; }
 .form-stack textarea { min-height: 100px; }
 .avatar-setting { display: flex; align-items: center; gap: 24px; margin: 20px 0 28px; }
-.settings-avatar { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
+.settings-avatar { width: 96px; height: 96px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); }
 .avatar-setting input[type=file] { display: block; max-width: 100%; margin-bottom: 12px; font-size: 12px; }
 .avatar-setting .btn { margin-right: 6px; }
 .danger-zone { padding: 20px; border: 1px solid var(--danger-border); border-radius: var(--radius); background: var(--danger-soft); }
@@ -155,3 +155,105 @@
 @media(max-width:430px) { .home-heading { align-items: flex-start; } .home-heading h1 { font-size: 22px; } .home-context { grid-template-columns: 1fr; } .repo-card-grid { grid-template-columns: 1fr; } .profile-tabs { gap: 16px; } .profile-repository-toolbar { flex-wrap: wrap; } .profile-repository-toolbar input { flex-basis: 100%; } .avatar-setting { flex-direction: column; gap: 16px; } .auth-card { padding: 24px; } .work-form-meta { grid-template-columns: 1fr; } .org-grid { grid-template-columns: minmax(0,1fr); } }
 .page-context { display:flex; justify-content:flex-end; margin-bottom:var(--space-4); grid-column:1/-1; }
 .settings-content > .danger-zone { padding:20px; }
+
+.home-layout { min-height: 0; height: 100%; gap: 22px; overflow: hidden; align-items: stretch; }
+.home-layout>section, .home-sidebar, .home-context { min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.home-heading { margin-bottom: 18px; }
+.home-section { margin-bottom: 18px; }
+.home-feed-list { max-height: 32dvh; overflow: auto; }
+.home-feed-row { padding: 11px 14px; }
+.home-feed-row>div { gap: 3px; }
+.home-context>section { padding: 14px; margin-bottom: 14px; }
+.profile-layout { height: 100%; min-height: 0; overflow: hidden; gap: 28px; align-items: stretch; }
+.profile-sidebar { overflow: auto; }
+.profile-avatar { width: 180px; height: 180px; }
+.profile-main { min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.profile-tabs { flex-shrink: 0; margin-bottom: 16px; }
+.profile-pane { min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.profile-readme { padding: 16px; max-height: 24dvh; overflow: auto; margin-bottom: 16px; }
+.repo-card-grid { gap: 10px; }
+.repo-card { padding: 12px 14px; }
+.repo-card p { margin: 6px 0 10px; min-height: 0; }
+.profile-overview-activity { margin-top: 18px; }
+.profile-overview-activity h2 { font-size: 14px; margin: 0; padding: 12px; border-bottom: 1px solid var(--border); }
+#profile-recent-activity { max-height: 22dvh; overflow: auto; }
+.activity-row { padding: 10px 12px; }
+.activity-row>div { gap: 2px; min-width: 0; }
+.profile-repository-row { padding: 12px 0; }
+.profile-repository-row a { font-size: 15px; }
+.profile-repository-row p { margin: 5px 0 8px; }
+@media(max-width:768px) {
+ .home-layout { display: flex; flex-direction: column; overflow: auto; }
+ .home-layout>section, .home-sidebar, .home-context { overflow: visible; flex-shrink: 0; }
+ .home-feed-list { max-height: 36dvh; }
+ .profile-layout { display: flex; flex-direction: column; gap: 16px; }
+ .profile-sidebar { flex-shrink: 0; max-height: 28dvh; }
+ .profile-avatar { width: 72px; height: 72px; float: left; margin-right: 16px; }
+ .profile-sidebar h1 { margin-top: 3px; font-size: 22px; }
+ .profile-main { flex: 1; }
+}
+.repo-card .commit-activity { display: block; width: 96px; height: 24px; margin: 8px 0 0 auto; }
+.profile-repository-row { position: relative; padding-right: 130px; }
+.profile-repository-row>.commit-activity { position: absolute; right: 0; top: 24px; }
+#profile-activity { max-height: calc(100dvh - 280px); }
+@media(max-width:560px) { .profile-repository-row { padding-right: 100px; } .profile-repository-row>.commit-activity { width: 86px; } }
+.profile-pane { flex: 1; }
+#overview { display: flex; flex-direction: column; overflow: hidden; }
+#overview>.section-head, #overview>.profile-readme { flex-shrink: 0; }
+#pinned-repos { flex-shrink: 0; max-height: 38dvh; overflow: auto; }
+.profile-overview-activity { min-height: 0; display: flex; flex-direction: column; flex: 1; max-height: 36dvh; }
+.profile-overview-activity h2, .profile-overview-activity .pagination { flex-shrink: 0; }
+#profile-recent-activity { flex: 1; max-height: none; }
+#activity, #repositories { display: flex; flex-direction: column; overflow: hidden; }
+#activity>h2, .profile-repository-toolbar { flex-shrink: 0; }
+#activity>.scroll-card { display: flex; flex-direction: column; flex: 1; }
+#profile-activity { flex: 1; max-height: none; }
+#profile-activity-pagination { flex-shrink: 0; }
+#profile-repos { flex: 1; min-height: 0; overflow: auto; }
+
+.profile-avatar { width: min(100%, 250px); height: auto; aspect-ratio: 1; border-radius: 6px; }
+.profile-connections { margin: 16px 0; font-size: 13px; }
+.profile-sidebar section h2 { font-size: 14px; margin: 20px 0 10px; }
+.profile-org-grid { display: grid; grid-template-columns: repeat(8, 28px); gap: 4px; }
+.profile-org-grid .member-chip { padding: 0; border: 0; }
+.profile-org-grid img { width: 28px; height: 28px; border-radius: 4px; }
+.contribution-card { flex-shrink: 0; margin-top: 16px; padding: 12px; border: 1px solid var(--border); border-radius: 6px; }
+.contribution-card h2 { font-size: 14px; margin: 0 0 12px; }
+.contribution-card p { font-size: 11px; margin-bottom: 0; }
+.contribution-graph { overflow-x: auto; padding: 2px; }
+.contribution-grid { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 10px); grid-auto-columns: 10px; gap: 3px; width: max-content; }
+.contribution-cell { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--panel-soft); }
+.contribution-cell.blank { visibility: hidden; }
+.contribution-cell.level-1 { background: #214d3a; }
+.contribution-cell.level-2 { background: #2b8055; }
+.contribution-cell.level-3 { background: #39ae6d; }
+.contribution-cell.level-4 { background: #5edc89; }
+.contribution-legend { display: flex; gap: 4px; align-items: center; justify-content: flex-end; margin-top: 8px; font-size: 10px; }
+#overview { overflow-y: auto; }
+#overview .profile-overview-activity { flex: 0 0 260px; max-height: 260px; }
+@media(max-width:768px) { .profile-avatar { width: 100px; height: 100px; } .profile-org-grid { grid-template-columns: repeat(8,24px); } .profile-org-grid img { width:24px; height:24px; } }
+.contribution-months { display: grid; grid-template-columns: repeat(54, 10px); gap: 3px; width: max-content; font-size: 10px; margin-bottom: 6px; }
+.contribution-months span { overflow: visible; white-space: nowrap; }
+.profile-tabs { overflow-x: auto; }
+.profile-tabs a { white-space: nowrap; flex-shrink: 0; }
+#followers, #following, #stars { overflow: hidden; display: flex; flex-direction: column; }
+#followers-list, #following-list, #profile-stars { min-height: 0; overflow: auto; flex: 1; }
+/* Each profile panel owns its scrolling; overview itself never nests a scrollbar. */
+#overview { overflow: hidden; }
+#pinned-repos { max-height: 28dvh; align-content: start; }
+#overview .contribution-card { margin-top: 14px; }
+#overview .profile-overview-activity { flex: 1; min-height: 100px; max-height: none; }
+#profile-stars { align-content: start; }
+@media(min-width:1101px) { .profile-layout { grid-template-columns: 250px minmax(0,1fr); } }
+@media(max-width:768px) { #pinned-repos { max-height: 22dvh; } .contribution-card { padding: 10px; } }
+
+/* Calendar weeks share one responsive column geometry. */
+.contribution-grid { grid-auto-columns: auto; grid-template-columns: repeat(var(--contribution-weeks,53),minmax(10px,1fr)); width: 100%; min-width: calc(var(--contribution-weeks,53)*13px - 3px); }
+.contribution-grid .contribution-cell { width: 100%; }
+.contribution-grid .contribution-cell.blank { background: transparent; }
+.contribution-months { grid-template-columns: repeat(var(--contribution-weeks,53),minmax(10px,1fr)); width: 100%; min-width: calc(var(--contribution-weeks,53)*13px - 3px); }
+.contribution-title { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.contribution-title h2 { margin:0; }
+.contribution-info { display:inline-flex; align-items:center; justify-content:center; padding:0; width:20px; height:20px; border:0; background:transparent; color:var(--muted); cursor:help; font-size:15px; }
+
+.contribution-months span:last-child { justify-self: end; width: max-content; text-align: right; }

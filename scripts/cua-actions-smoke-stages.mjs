@@ -7,7 +7,7 @@ export async function actionsSmokeStage(tab,stage,{populated,empty}) {
  if(stage==='open'){await tab.goto(populated);await tab.getAXState();return {stage,checks};}
  if(stage==='list'){
   const count=await tab.playwright.locator('.actions-run-row').count();assert.ok(count>0,'populated fixture has no real run');checks.push('populated run list');
-  await tab.playwright.locator('#actions-status').selectOption('failure');assert.equal(await tab.playwright.locator('.actions-run-row').count(),0);await tab.playwright.locator('#actions-clear').click();assert.equal(await tab.playwright.locator('.actions-run-row').count(),count);checks.push('status filter and reset');
+  await tab.playwright.locator('#actions-status').selectOption('failure');const failedCount=await tab.playwright.locator('.actions-run-row').count();assert.ok(failedCount<=count);assert.ok((await tab.playwright.locator('.actions-run-row').allTextContents({})).every(text=>/failed|failure/i.test(text)));await tab.playwright.locator('#actions-clear').click();assert.equal(await tab.playwright.locator('.actions-run-row').count(),count);checks.push('status filter and reset');
   await tab.playwright.locator('#actions-search').fill('no-such-commit');assert.equal(await tab.playwright.locator('.actions-run-row').count(),0);await tab.playwright.locator('#actions-search').fill('');checks.push('search and clear');
   await tab.playwright.locator('.actions-run-row').first().click();await tab.getAXState();checks.push('run navigation');
  }else if(stage==='detail'){

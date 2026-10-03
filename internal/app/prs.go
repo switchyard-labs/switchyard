@@ -143,7 +143,7 @@ func (a *App) checkPassedAt(prID, sha string) bool {
 			return a.requiredActionsPassed(repo, sha)
 		}
 	}
-	items, err := a.Trestle.ListRecords("commit_checks", filterEq("pr_id", prID)+" AND "+filterEq("source_sha", sha))
+	items, err := a.Trestle.ListRecords("commit_checks", filterEq("pr_id", prID)+" && "+filterEq("source_sha", sha))
 	if err != nil {
 		return false
 	}
@@ -211,7 +211,7 @@ func (a *App) handleGetPR(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, 502, map[string]any{"error": "pr_source_unavailable"})
 			return
 		}
-		actionChecks, err = a.Trestle.ListRecords("action_checks", filterEq("repo", strOf(pr["repo"]))+" AND "+filterEq("source_sha", sourceSHA))
+		actionChecks, err = a.Trestle.ListRecords("action_checks", filterEq("repo", strOf(pr["repo"]))+" && "+filterEq("source_sha", sourceSHA))
 		if err != nil {
 			writeJSON(w, 502, map[string]any{"error": "pr_actions_unavailable"})
 			return

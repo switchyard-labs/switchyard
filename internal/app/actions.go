@@ -231,7 +231,7 @@ func (a *App) requiredActionsPassed(repo, sha string) bool {
 		return true
 	}
 	revision := strOf(settings["revision"])
-	runs, err := a.Trestle.ListRecords("action_runs", filterEq("repo", repo)+" AND "+filterEq("source_sha", sha)+" AND "+filterEq("definition_revision", revision))
+	runs, err := a.Trestle.ListRecords("action_runs", filterEq("repo", repo)+" && "+filterEq("source_sha", sha)+" && "+filterEq("definition_revision", revision))
 	if err != nil {
 		return false
 	}

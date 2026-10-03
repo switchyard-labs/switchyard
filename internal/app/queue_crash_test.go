@@ -49,7 +49,7 @@ func (f *queueStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		items := []any{}
 		for _, record := range f.records[collection] {
 			matches := true
-			for _, predicate := range strings.Split(r.URL.Query().Get("filter"), " AND ") {
+			for _, predicate := range strings.Split(r.URL.Query().Get("filter"), " && ") {
 				if predicate == "" {
 					continue
 				}
@@ -69,6 +69,21 @@ func (f *queueStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		json.NewEncoder(w).Encode(map[string]any{"items": items})
+		return
+	}
+	if r.Method == "DELETE" && len(parts) == 6 {
+		for i, record := range f.records[collection] {
+			if record.id == parts[5] {
+				if r.Header.Get("If-Match") != strconv.Itoa(record.version) {
+					w.WriteHeader(409)
+					return
+				}
+				f.records[collection] = append(f.records[collection][:i], f.records[collection][i+1:]...)
+				w.WriteHeader(204)
+				return
+			}
+		}
+		w.WriteHeader(404)
 		return
 	}
 	var body struct {

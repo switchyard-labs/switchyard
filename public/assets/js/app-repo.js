@@ -7,6 +7,8 @@
   const ctx={legacy:!!q.get('name'),artifact:q.get('name')||'',owner:segments[0],repo:segments[1],ref:q.get('ref')||(segments[3]||''),kind:segments[2]||'tree',path:q.get('path')||segments.slice(4).join('/')};
   const base='/'+encodeURIComponent(ctx.owner)+'/'+encodeURIComponent(ctx.repo),root=ctx.legacy?'/api/repos/'+encodeURIComponent(ctx.artifact):'/api/repositories/'+encodeURIComponent(ctx.owner)+'/'+encodeURIComponent(ctx.repo);
   let hierarchy,files=[],overview={};
+  // Route identity remains visible while metadata and remote Git requests load.
+  if(!ctx.legacy){$('repo-name').textContent=ctx.repo||'Repository';$('repo-owner').textContent=ctx.owner||'';$('repo-owner').href='/'+encodeURIComponent(ctx.owner||'');$('tab-code').href=base;$('tab-prs').href=base+'/pulls';$('tab-actions').href=base+'/actions';$('tab-settings').href=base+'/settings';}
   const url=(path='',kind='tree',ref=ctx.ref)=>ctx.legacy?'/repo.html?'+new URLSearchParams({name:ctx.artifact,ref,path}):base+'/'+kind+'/'+encodeURIComponent(ref)+(path?'/'+path.split('/').map(encodeURIComponent).join('/'):'');
   const rawURL=path=>root+'/content?'+new URLSearchParams({ref:ctx.sha||ctx.ref,path});
   const editURL=path=>'/edit.html?'+new URLSearchParams({name:ctx.artifact,ref:ctx.ref,path});
@@ -34,5 +36,8 @@
     const node=hierarchy.index.get(ctx.path);if(ctx.path&&(!node||(!node.directory&&ctx.kind==='tree'))) {if(node&&!node.directory){await file();return;}throw new Error('This path does not exist at the selected commit.');}
     if(ctx.path&&node&&!node.directory){await file();return;}directory(node||hierarchy.tree);const prefix=ctx.path?ctx.path+'/':'';const candidate=['README.md','README.markdown','README'].map(p=>prefix+p).find(p=>files.includes(p));if(candidate)await readme(candidate,await(await content(candidate)).text());
   }catch(error){notice(error.message);if($('repo-latest').textContent.startsWith('Loading'))$('repo-latest').textContent='Repository unavailable';}}
+
+  async function loadStars(){if(ctx.legacy)return;const button=$('repo-star');if(!button)return;const data=await api(root+'/stars');button.innerHTML=SwitchyardIcons.icon('star')+' '+(data.starred?'Starred':'Star')+' <span class="badge">'+data.count+'</span>';button.setAttribute('aria-pressed',String(data.starred));button.disabled=false;button.onclick=async()=>{button.disabled=true;try{const response=await fetch(root+'/stars',{method:data.starred?'DELETE':'PUT',credentials:'same-origin'});if(response.status===401){location.href='/signin';return;}if(!response.ok)throw new Error();await loadStars();}catch{notice('Your star could not be updated. Please try again.');button.disabled=false;}};}
+  loadStars().catch(()=>{const button=$('repo-star');if(button)button.textContent='Stars unavailable';});
   start();
 })();

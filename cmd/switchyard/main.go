@@ -52,6 +52,10 @@ func main() {
 	actionsOrigin := flag.String("actions-worker", envOr("SWITCHYARD_ACTIONS_WORKER", ""), "HTTPS Cloudflare Actions Worker origin (optional)")
 	actionsKey := flag.String("actions-control-key", envOr("SWITCHYARD_ACTIONS_CONTROL_KEY_FILE", ""), "private file containing dedicated Actions control secret")
 	schemaMigrate := flag.Bool("schema-migrate", false, "apply additive schemas during an exclusive maintenance window and exit")
+	importRepo := flag.String("import-repository", "", "operator only: register one existing Artifacts repository and exit")
+	importOwner := flag.String("import-owner", "", "existing user explicitly authorized to own the imported repository")
+	importSlug := flag.String("import-slug", "", "public repository slug for the explicit operator import")
+	importVisibility := flag.String("import-visibility", "", "explicit public or private visibility for the operator import")
 	flag.Parse()
 
 	if *trePass == "" {
@@ -64,6 +68,19 @@ func main() {
 	tre := trestle.New(*treBase, *treUser, *trePass)
 	art := artifacts.New(*acc, *ns, *tokCmd)
 	a := app.New(tre, art, *static, *data)
+	if *importRepo != "" {
+		if *schemaPlan || *schemaMigrate {
+			log.Fatal("operator import and schema modes must be separate")
+		}
+		values, err := a.ImportUserRepository(*importRepo, *importOwner, *importSlug, *importVisibility)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := json.NewEncoder(os.Stdout).Encode(values); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 	if *schemaPlan || *schemaMigrate {
 		if *schemaPlan && *schemaMigrate {
 			log.Fatal("choose schema-plan or schema-migrate")
