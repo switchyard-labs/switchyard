@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Switchyard S">
+  <rect width="64" height="64" rx="14" fill="#1b1d1e"/>
+  <path d="M46 15H28c-8 0-13 4-13 10 0 6 5 9 12 9h10c5 0 8 2 8 6 0 5-4 8-10 8H17" fill="none" stroke="#ffad45" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M45 24H29c-4 0-6 1-6 3 0 2 2 3 6 3h9c9 0 14 4 14 11 0 8-6 12-16 12H18" fill="none" stroke="#f1eee8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
