@@ -81,3 +81,9 @@ Next: C5–C9 Git/durability/runner/migration batch. GitHub-quality repository/d
 | C4 | `0c3b1a9e5a76f205538b5657ab23d40fbf9e753e` | locally implemented / checks passed |
 
 These commits are local only. This documentation commit records their immutable identities without amending any checkpoint.
+
+## C5 — immutable integration and exact expected SHA
+
+Continuation authorization supersedes the earlier C4 batch stop. Git publication now checks the exact advertised old SHA with a private pre-push hook and retains non-force fast-forward checks; receive-pack supplies the final old-object compare-and-swap. Prepared merges capture base/source/commit/tree identities. Queue preview, semantic validation, change-scope risk and final publication use that same candidate, and publication rejects a changed candidate or moved source/base. Checks are stored separately in `commit_checks` against source SHA; legacy branch-only checks cannot authorize integration. Direct PR integration and workflow integration enqueue instead of bypassing queue validation. Repository archival and organization policy reads fail closed; policy examines all applicable records. Semantic validation rejects unsupported rules, missing referenced files and type mismatches.
+
+Validation: full Go race suite, vet and diff checks pass. Real disposable bare-Git tests cover exact publication, branch creation, remote rewind, changed advertised head and remote movement inside pre-receive after advertisement; rejected publication preserves the external update. Semantic tests cover absent/malformed contracts, equal values, type mismatch, missing files and unsupported rules. These are local protocol tests; Cloudflare-specific publication certification remains part of C25. Provision `commit_checks` before deployment. Durable queue claims/effects and workflow waiting/recovery remain C6/C7; the workflow integration effect now returns a queued result rather than incorrectly claiming a synchronous merge.

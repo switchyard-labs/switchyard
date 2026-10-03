@@ -50,30 +50,35 @@ func (a *App) handleEnqueuePR(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "check_not_passed"})
 		return
 	}
-	repo := pr["repo"].(string)
-	branch := pr["branch"].(string)
-	base := pr["base"].(string)
-	risk := "low"
-	if changed, err := a.changedFiles(repo, branch); err == nil {
-		if len(changed) > 8 {
-			risk = "high"
-		} else if len(changed) > 2 {
-			risk = "medium"
-		}
-	}
-	qid := "iq_" + randHex(10)
-	at := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-	_, _, err := a.Trestle.CreateRecord("iq", map[string]any{
-		"id": qid, "pr_id": prID, "repo": repo, "base": base, "branch": branch,
-		"status": "queued", "risk": risk, "policy": "check_pass + preview_clean",
-		"attempts": "0", "error": "", "created_at": at, "updated_at": nowStr(),
-	}, "iq-"+qid)
+	qid, err := a.enqueuePR(pr)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
-	log.Printf("integration queue: %s enqueued (risk=%s) by %s", qid, risk, user)
-	writeJSON(w, 201, map[string]any{"id": qid, "pr_id": prID, "status": "queued", "risk": risk, "policy": "check_pass + preview_clean"})
+	log.Printf("integration queue: %s enqueued by %s", qid, user)
+	writeJSON(w, 201, map[string]any{"id": qid, "pr_id": prID, "status": "queued"})
+}
+
+func (a *App) enqueuePR(pr map[string]any) (string, error) {
+	repo, branch, base, prID := strOf(pr["repo"]), strOf(pr["branch"]), strOf(pr["base"]), strOf(pr["id"])
+	changed, err := a.changedFiles(repo, branch)
+	if err != nil {
+		return "", err
+	}
+	risk := "low"
+	if len(changed) > 8 {
+		risk = "high"
+	} else if len(changed) > 2 {
+		risk = "medium"
+	}
+	qid := "iq_" + randHex(10)
+	at := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+	_, _, err = a.Trestle.CreateRecord("iq", map[string]any{
+		"id": qid, "pr_id": prID, "repo": repo, "base": base, "branch": branch,
+		"status": "queued", "risk": risk, "policy": "exact_source_check + immutable_preview + semantic + policy",
+		"attempts": "0", "error": "", "created_at": at, "updated_at": at,
+	}, "iq-"+qid)
+	return qid, err
 }
 
 func (a *App) handleListQueue(w http.ResponseWriter, r *http.Request) {
@@ -199,27 +204,20 @@ func (a *App) processQueueItem(it *queueItem) error {
 		return nil
 	}
 	// policy gate 2: preview integration must be clean (structural/semantic)
-	conflicts, err := a.Refs.PreviewMerge(it.repo, it.base, it.branch)
+	candidate, err := a.Refs.PrepareMerge(it.repo, it.base, it.branch, "integration queue "+it.prID)
 	if err != nil {
+		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "preview_failed: " + err.Error(), "updated_at": nowStr()})
 		return err
 	}
-	if len(conflicts) > 0 {
-		for _, f := range conflicts {
-			a.addFinding(it.prID, "error", "integration preview conflict in "+f, f)
-		}
-		// route the underlying attempt to conflict so the conflict-resolver
-		// repair loop is uniform with the preview endpoint.
-		if prs, _ := a.Trestle.ListRecords("prs", `id = "`+it.prID+`"`); len(prs) > 0 {
-			if aid, _ := prs[0]["attempt_id"].(string); aid != "" {
-				a.patchAttempt(aid, map[string]any{"status": "conflict", "updated_at": nowStr()})
-			}
-		}
-		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "preview_conflict: " + fmt.Sprint(conflicts), "updated_at": nowStr()})
+	defer candidate.Close()
+	if !a.checkPassedAt(it.prID, candidate.SourceSHA) {
+		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "exact_source_check_required", "updated_at": nowStr()})
 		return nil
 	}
+
 	// git merge is textually clean: validate repo contracts on the merged tree.
 	// A clean merge can still be a semantic conflict -> block.
-	sem, err := a.semanticFindings(it.repo, it.branch)
+	sem, err := semanticFindingsInTree(candidate.Dir)
 	if err != nil {
 		return err
 	}
@@ -236,7 +234,17 @@ func (a *App) processQueueItem(it *queueItem) error {
 		return nil
 	}
 	// policy gate: risk-based escalation (CP12)
-	policyDecision, policyReason := a.policyGateIntegrate(it.repo, it.risk)
+	changed, err := candidate.ChangedFiles()
+	if err != nil {
+		return err
+	}
+	risk := "low"
+	if len(changed) > 8 {
+		risk = "high"
+	} else if len(changed) > 2 {
+		risk = "medium"
+	}
+	policyDecision, policyReason := a.immutableIntegrationPolicy(it.repo, risk)
 	if policyDecision == "escalate" {
 		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": policyReason, "updated_at": nowStr()})
 		a.addFinding(it.prID, "error", policyReason, "")
@@ -247,7 +255,7 @@ func (a *App) processQueueItem(it *queueItem) error {
 		return nil
 	}
 	// integrate (CAS-guarded canonical-head freshness)
-	res, err := a.Refs.MergeBranch(it.repo, it.base, it.branch, "integration queue "+it.prID, "queue:"+it.id+":"+it.prID)
+	res, err := a.Refs.PublishPrepared(candidate)
 	if err != nil {
 		if strings.Contains(err.Error(), "CONFLICT") {
 			// canonical moved between preview and merge (or an external push):

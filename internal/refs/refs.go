@@ -3,7 +3,7 @@
 // UpdateRef is the CAS primitive: a ref update succeeds only if the current
 // ref value still equals the expected value; otherwise the write is STALE and
 // the caller reconciles. Git's non-force push provides the expected-old
-// enforcement (verified experimentally in E1); per-ref in-process serialization
+// enforcement together with an exact advertised-SHA pre-push guard; per-ref serialization
 // is an ordering convenience for control-plane writers.
 package refs
 
@@ -130,6 +130,10 @@ func (s *Service) currentSHA(repo, remote, branch string) (string, error) {
 // Update applies file changes to the current branch head and CAS-updates the
 // ref via a non-force push. Returns status "ok" or "stale".
 func (s *Service) Update(repo, branch, expected string, changes []Change, message, provenance string) (*Result, error) {
+	if err := validateBranch(branch); err != nil {
+		return nil, err
+	}
+
 	for _, c := range changes {
 		if err := ValidatePath(c.Path); err != nil {
 			return nil, err
@@ -147,7 +151,7 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 	if err != nil {
 		return nil, err
 	}
-	if expected != "" && current != expected {
+	if current != expected {
 		return &Result{Status: "stale", OldSHA: expected, NewSHA: current, Ref: "refs/heads/" + branch}, nil
 	}
 	// if the target branch does not exist yet, base it on the repo default branch
@@ -169,7 +173,7 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 	}
 	defer os.RemoveAll(dir)
 
-	newSHA, pushErr := s.push(repo, remote, branch, dir)
+	newSHA, pushErr := s.push(repo, remote, branch, dir, expected)
 	if pushErr != nil {
 		// a rejected non-force push means the ref moved; if it did, STALE,
 		// otherwise it is a genuine error.
@@ -275,55 +279,12 @@ func (s *Service) branchExists(remote, branch string) (string, bool, error) {
 // MergeBranch merges the source branch into the target branch and CAS-updates
 // the target (canonical integration primitive). Returns the new target SHA.
 func (s *Service) MergeBranch(repo, target, source, message, provenance string) (*Result, error) {
-	l := s.lock(repo, target)
-	l.Lock()
-	defer l.Unlock()
-	remote, err := s.remote(repo)
+	candidate, err := s.PrepareMerge(repo, target, source, message)
 	if err != nil {
 		return nil, err
 	}
-	current, err := s.currentSHA(repo, remote, target)
-	if err != nil {
-		return nil, err
-	}
-	dir, err := os.MkdirTemp(s.ScratchDir, "merge-*")
-	if err != nil {
-		return nil, err
-	}
-	args, err := s.authArgs(repo)
-	if err != nil {
-		return nil, err
-	}
-	c := append([]string{"clone", "--quiet"}, args...)
-	c = append(c, "--branch", target, remote, dir)
-	if err := git(dir, "", c...); err != nil {
-		return nil, fmt.Errorf("merge clone: %w", err)
-	}
-	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
-	// fetch the source branch
-	f := append([]string{}, args...)
-	f = append(f, "fetch", "--quiet", remote, source+":"+"src")
-	if err := git(dir, "", f...); err != nil {
-		return nil, fmt.Errorf("merge fetch: %w", err)
-	}
-	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "merge", "--no-ff", "--quiet", "-m", message, "src"); err != nil {
-		return nil, fmt.Errorf("merge: %w", err)
-	}
-	newSHA, pushErr := s.push(repo, remote, target, dir)
-	if pushErr != nil {
-		now, e := s.currentSHA(repo, remote, target)
-		if e == nil && now != "" && now != current {
-			return &Result{Status: "stale", OldSHA: current, NewSHA: now, Ref: "refs/heads/" + target}, nil
-		}
-		return nil, fmt.Errorf("merge push: %w", pushErr)
-	}
-	if s.Trestle != nil {
-		_, _, _ = s.Trestle.CreateRecord("ref_updates", map[string]any{
-			"repo": repo, "branch": target, "old_sha": current, "new_sha": newSHA,
-			"provenance": "merge:" + provenance, "occurred_at": time.Now().UTC().Format(time.RFC3339),
-		}, "refupd-"+repo+"-"+target+"-"+newSHA[:12])
-	}
-	return &Result{Status: "ok", OldSHA: current, NewSHA: newSHA, Ref: "refs/heads/" + target}, nil
+	defer candidate.Close()
+	return s.PublishPrepared(candidate)
 }
 
 // PreviewMerge tests whether the source branch merges cleanly into the target
@@ -508,7 +469,7 @@ func (s *Service) ResolveIntoSource(repo, target, source, message, provenance st
 		return nil, nil, fmt.Errorf("resolve commit: %w", err)
 	}
 	// push the resolution onto the source branch
-	if _, err := s.push(repo, remote, source, dir); err != nil {
+	if _, err := s.push(repo, remote, source, dir, srcSHA); err != nil {
 		return nil, nil, fmt.Errorf("resolve push: %w", err)
 	}
 	newSHA, _ := gitOut(dir, "rev-parse", "HEAD")
@@ -533,21 +494,12 @@ func (s *Service) repoTokenRemote(remote string) (string, error) {
 	return s.repoToken(name)
 }
 
-func (s *Service) push(repo, remote, branch, dir string) (string, error) {
-	head, err := gitOut(dir, "rev-parse", "HEAD")
-	if err != nil {
-		return "", err
-	}
+func (s *Service) push(repo, remote, branch, dir, expected string) (string, error) {
 	args, err := s.authArgs(repo)
 	if err != nil {
 		return "", err
 	}
-	pushArgs := append([]string{}, args...)
-	pushArgs = append(pushArgs, "push", "--quiet", remote, "HEAD:refs/heads/"+branch)
-	if err := git(dir, "", pushArgs...); err != nil {
-		return "", fmt.Errorf("push rejected (stale?): %w", err)
-	}
-	return strings.TrimSpace(head), nil
+	return pushExpected(dir, remote, branch, expected, args)
 }
 
 func git(dir, stdin string, args ...string) error {

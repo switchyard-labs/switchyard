@@ -49,13 +49,21 @@ func (a *App) semanticFindings(repo, branch string) ([]map[string]any, error) {
 	}
 	defer removeAll(dir)
 
+	return semanticFindingsInTree(dir)
+}
+
+func semanticFindingsInTree(dir string) ([]map[string]any, error) {
+
 	contractPath, err := refs.ContainedPath(dir, "switchyard.contract.json")
 	if err != nil {
 		return nil, err
 	}
 	raw, err := os.ReadFile(contractPath)
 	if err != nil {
-		return nil, nil // no contract declared
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
 	var contract struct {
 		Rules []contractRule `json:"rules"`
@@ -66,13 +74,10 @@ func (a *App) semanticFindings(repo, branch string) ([]map[string]any, error) {
 	findings := []map[string]any{}
 	for _, rule := range contract.Rules {
 		if rule.Kind != "field_equals" {
-			continue
+			return nil, fmt.Errorf("unsupported semantic rule %q", rule.Kind)
 		}
 		va, errA := mergedJSONField(dir, rule.A)
 		if errA != nil {
-			if os.IsNotExist(errA) {
-				continue // file absent from the merged tree: rule not applicable
-			}
 			findings = append(findings, map[string]any{
 				"severity": "error", "message": "semantic conflict: cannot read " + rule.A + ": " + errA.Error(), "file": fileA(rule.A),
 			})
@@ -80,9 +85,6 @@ func (a *App) semanticFindings(repo, branch string) ([]map[string]any, error) {
 		}
 		vb, errB := mergedJSONField(dir, rule.B)
 		if errB != nil {
-			if os.IsNotExist(errB) {
-				continue
-			}
 			findings = append(findings, map[string]any{
 				"severity": "error", "message": "semantic conflict: cannot read " + rule.B + ": " + errB.Error(), "file": fileA(rule.B),
 			})
@@ -129,17 +131,8 @@ func mergedJSONField(dir, selector string) (string, error) {
 			return "", fmt.Errorf("field %s missing", f)
 		}
 	}
-	switch v := cur.(type) {
-	case string:
-		return v, nil
-	case float64:
-		return fmt.Sprintf("%v", v), nil
-	case bool:
-		return fmt.Sprintf("%v", v), nil
-	default:
-		b, _ := json.Marshal(v)
-		return string(b), nil
-	}
+	encoded, err := json.Marshal(cur)
+	return string(encoded), err
 }
 
 func fileA(selector string) string {

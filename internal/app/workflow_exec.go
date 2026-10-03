@@ -408,29 +408,28 @@ func (e *wfExec) opIntegrate(args map[string]any) (map[string]any, error) {
 				return map[string]any{"pr": prID, "status": "integrated", "new_base_sha": items[0]["integrated_at"]}, nil
 			}
 		}
-		data, err := e.a.Artifacts.RawFile(repo, branch, "ATTEMPT.md")
-		ok := err == nil && len(strings.Split(strings.TrimSpace(string(data)), "\n")) >= 2
-		st := "fail"
-		if ok {
-			st = "pass"
-		}
-		_, _, _ = e.a.Trestle.CreateRecord("pr_checks", map[string]any{
-			"pr_id": prID, "status": st, "detail": "workflow deterministic check", "created_at": nowStr(),
-		}, "prcheck-"+prID+"-"+nowStr())
-		if !ok {
-			return map[string]any{"pr": prID, "status": "check_failed"}, nil
-		}
-		merge, err := e.a.Refs.MergeBranch(repo, base, branch, "integrate workflow "+e.runID, "workflow:"+e.runID+":"+prID)
+		_, sourceSHA, err := e.a.Refs.Snapshot(repo, base, branch)
 		if err != nil {
 			return nil, err
 		}
-		if merge.Status == "stale" {
-			return map[string]any{"pr": prID, "status": "stale"}, nil
+		data, err := e.a.Artifacts.RawFile(repo, sourceSHA, "ATTEMPT.md")
+		ok := err == nil && len(strings.Split(strings.TrimSpace(string(data)), "\n")) >= 2
+		status := "fail"
+		if ok {
+			status = "pass"
 		}
-		if id, ver, _, e2 := e.a.Trestle.FindRecord("prs", `id = "`+prID+`"`); e2 == nil && id != "" {
-			_ = e.a.Trestle.PatchRecord("prs", id, ver, map[string]any{"status": "integrated", "check_status": "pass", "integrated_at": nowStr()})
+		if err := e.a.setCommitCheck(prID, repo, sourceSHA, status, "workflow deterministic check"); err != nil {
+			return nil, err
 		}
-		return map[string]any{"pr": prID, "status": "integrated", "new_base_sha": merge.NewSHA}, nil
+		if !ok {
+			return map[string]any{"pr": prID, "status": "check_failed"}, nil
+		}
+		qid, err := e.a.enqueuePR(map[string]any{"id": prID, "repo": repo, "branch": branch, "base": base})
+		if err != nil {
+			return nil, err
+		}
+		return map[string]any{"pr": prID, "status": "queued", "queue_id": qid}, nil
+
 	})
 	if err != nil {
 		return nil, err

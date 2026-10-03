@@ -57,9 +57,17 @@ func (a *App) handlePRCheck(w http.ResponseWriter, r *http.Request) {
 	}
 	repo := pr["repo"].(string)
 	branch := pr["branch"].(string)
-	data, err := a.Artifacts.RawFile(repo, branch, "ATTEMPT.md")
+	_, sourceSHA, err := a.Refs.Snapshot(repo, strOf(pr["base"]), branch)
 	if err != nil {
-		a.setCheck(prID, "fail", "marker file missing: "+err.Error())
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
+	data, err := a.Artifacts.RawFile(repo, sourceSHA, "ATTEMPT.md")
+	if err != nil {
+		if err := a.setCommitCheck(prID, repo, sourceSHA, "fail", "marker file missing"); err != nil {
+			writeJSON(w, 502, map[string]any{"error": err.Error()})
+			return
+		}
 		writeJSON(w, 200, map[string]any{"check": "fail", "reason": "marker file missing"})
 		return
 	}
@@ -70,45 +78,17 @@ func (a *App) handlePRCheck(w http.ResponseWriter, r *http.Request) {
 		status = "fail"
 		detail = "expected at least 2 lines (init + run), got " + string(rune('0'+min(lines, 9)))
 	}
-	a.setCheck(prID, status, detail)
+	if err := a.setCommitCheck(prID, repo, sourceSHA, status, detail); err != nil {
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
 	writeJSON(w, 200, map[string]any{"check": status, "lines": lines, "detail": detail})
 }
 
 // handlePRIntegrate merges the PR branch into the base branch (canonical) via
 // the ref substrate, only if the deterministic check passed.
 func (a *App) handlePRIntegrate(w http.ResponseWriter, r *http.Request) {
-	user := a.currentUser(r)
-	if user == "" {
-		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
-		return
-	}
-	prID := r.PathValue("id")
-	pr := a.prByID(r, prID)
-	if pr == nil {
-		writeJSON(w, 404, map[string]any{"error": "pr_not_found"})
-		return
-	}
-	if !a.checkPassed(prID) {
-		writeJSON(w, 409, map[string]any{"error": "check_not_passed"})
-		return
-	}
-	repo := pr["repo"].(string)
-	branch := pr["branch"].(string)
-	base := pr["base"].(string)
-	res, err := a.Refs.MergeBranch(repo, base, branch, "integrate PR "+prID, "user:"+user+" pr:"+prID)
-	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
-		return
-	}
-	if res.Status == "stale" {
-		writeJSON(w, 409, map[string]any{"error": "base moved; retry integration"})
-		return
-	}
-	// mark PR integrated
-	if id, ver, _, e := a.Trestle.FindRecord("prs", `id = "`+prID+`"`); e == nil && id != "" {
-		_ = a.Trestle.PatchRecord("prs", id, ver, map[string]any{"status": "integrated", "check_status": "pass", "integrated_at": time.Now().UTC().Format(time.RFC3339)})
-	}
-	writeJSON(w, 200, map[string]any{"pr": prID, "status": "integrated", "new_base_sha": res.NewSHA})
+	a.handleEnqueuePR(w, r)
 }
 
 func (a *App) handleListPRs(w http.ResponseWriter, r *http.Request) {
@@ -143,14 +123,35 @@ func (a *App) setCheck(prID, status, detail string) {
 	}, "prcheck-"+prID+"-"+time.Now().UTC().Format("20060102150405"))
 }
 
-func (a *App) checkPassed(prID string) bool {
-	items, err := a.Trestle.ListRecords("pr_checks", `pr_id = "`+prID+`"`)
-	if err != nil || len(items) == 0 {
+func (a *App) setCommitCheck(prID, repo, sha, status, detail string) error {
+	_, _, err := a.Trestle.CreateRecord("commit_checks", map[string]any{
+		"pr_id": prID, "repo": repo, "source_sha": sha, "status": status, "detail": detail, "created_at": nowStr(),
+	}, "commit-check-"+prID+"-"+sha+"-"+randHex(10))
+	return err
+}
+
+func (a *App) checkPassedAt(prID, sha string) bool {
+	items, err := a.Trestle.ListRecords("commit_checks", filterEq("pr_id", prID)+" AND "+filterEq("source_sha", sha))
+	if err != nil {
 		return false
 	}
-	// the most recently created check must pass
-	latest := items[len(items)-1]
-	return latest["status"] == "pass"
+	var latest map[string]any
+	for _, item := range items {
+		if latest == nil || strOf(item["created_at"]) > strOf(latest["created_at"]) {
+			latest = item
+		}
+	}
+	return latest != nil && latest["status"] == "pass"
+}
+
+func (a *App) checkPassed(prID string) bool {
+	items, err := a.Trestle.ListRecords("prs", filterEq("id", prID))
+	if err != nil || len(items) != 1 {
+		return false
+	}
+	pr := items[0]
+	_, sha, err := a.Refs.Snapshot(strOf(pr["repo"]), strOf(pr["base"]), strOf(pr["branch"]))
+	return err == nil && a.checkPassedAt(prID, sha)
 }
 
 // handleGetPR exposes a product-shaped pull request snapshot. Familiar Git
@@ -167,7 +168,7 @@ func (a *App) handleGetPR(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 404, map[string]any{"error": "pr_not_found"})
 		return
 	}
-	checks, _ := a.Trestle.ListRecords("pr_checks", `pr_id = "`+id+`"`)
+	checks, _ := a.Trestle.ListRecords("commit_checks", filterEq("pr_id", id))
 	findings, _ := a.Trestle.ListRecords("findings", `target = "`+id+`"`)
 	queue, _ := a.Trestle.ListRecords("iq", `pr_id = "`+id+`"`)
 	attempt := map[string]any(nil)
