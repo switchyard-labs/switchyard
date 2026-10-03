@@ -1,0 +1,79 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "switchyard-actions-probe-20261003",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-03",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "artifacts": [
+    {
+      "binding": "ARTIFACTS",
+      "namespace": "switchyard-cp0"
+    }
+  ],
+  "containers": [
+    {
+      "class_name": "CiSandbox",
+      "image": "docker.io/cloudflare/sandbox:0.12.1@sha256:ea9b35e61c800eddbc4450fad333e5dd26033a06f7d36624388b0711bef9f8c5",
+      "max_instances": 1,
+      "instance_type": "basic"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SANDBOX",
+        "class_name": "CiSandbox"
+      }
+    ]
+  },
+  "workflows": [
+    {
+      "name": "switchyard-actions-probe-20261003",
+      "binding": "CI_WORKFLOW",
+      "class_name": "Actions"
+    }
+  ],
+  "exports": {
+    "CiSandbox": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  },
+  "r2_buckets": [
+    {
+      "binding": "BACKUP_BUCKET",
+      "bucket_name": "switchyard-actions-probe-20261003"
+    }
+  ],
+  "vars": {
+    "BACKUP_BUCKET_NAME": "switchyard-actions-probe-20261003",
+    "CLOUDFLARE_ACCOUNT_ID": "b7f20353ee8a9e5d2003f52c74ba795e",
+    "ARTIFACTS_NAMESPACE": "switchyard-cp0",
+    "ALLOWED_REPOS": "codex-actions-probe-20261003"
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true
+    }
+  },
+  "triggers": {
+    "events": [
+      {
+        "type": "cf.artifacts.repo.pushed",
+        "filter": {
+          "namespace": "switchyard-cp0",
+          "repo_name": "codex-actions-probe-20261003"
+        },
+        "targets": [
+          {
+            "type": "workflow",
+            "workflow_name": "switchyard-actions-probe-20261003"
+          }
+        ]
+      }
+    ]
+  }
+}

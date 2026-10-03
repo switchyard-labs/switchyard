@@ -1,19 +1,18 @@
 package app
 
 import (
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"regexp"
 	"strings"
 	"time"
 )
 
-// refTransition identity: a git ref movement is the same logical fact
-// regardless of which path observed it (Cloudflare queue event or periodic
-// reconciliation). The idempotency identity is (repo, ref, before, after);
-// it deliberately does NOT include delivery metadata (message id, seen_at) so
-// both paths converge onto one durable domain event and one broadcast.
 const zeroSHA = "0000000000000000000000000000000000000000"
 
-// normalizeZero maps the all-zero "null" SHAs used for branch create/delete
-// events to the empty string so both paths agree on the identity.
+var eventSHA = regexp.MustCompile(`^[0-9a-f]{40}$`)
+
 func normalizeZero(sha string) string {
 	if sha == zeroSHA {
 		return ""
@@ -21,45 +20,54 @@ func normalizeZero(sha string) string {
 	return sha
 }
 
-// observeTransition is the single normalized ingest path for git ref movement.
-// It records an append-only audit observation (ref_obs) and one logical domain
-// event (events, keyed by the ref-transition identity). The domain event is
-// deduplicated at the Trestle boundary via its Idempotency-Key; SSE is only
-// broadcast for the first creation (replayed == false). The same transition
-// observed by the queue fast path and later by reconciliation yields exactly
-// one domain event and one broadcast.
-func (a *App) observeTransition(repo, branch, before, after, source string) (replayed bool, err error) {
-	before = normalizeZero(before)
-	after = normalizeZero(after)
-	now := time.Now().UTC().Format(time.RFC3339)
-
-	// append-only audit observation (distinct per source+time; not the
-	// dedup boundary).
-	_, _, _ = a.Trestle.CreateRecord("ref_obs", map[string]any{
-		"repo": repo, "branch": branch, "sha": after, "seen_at": now,
-	}, "refobs-"+repo+"-"+branch+"-"+after+"-"+source+"-"+now)
-
-	// one logical domain fact: identity = repo + ref + before + after.
-	ref := "refs/heads/" + branch
-	payload := map[string]any{"ref": ref, "before": before, "after": after, "source": source, "seen_at": now}
-	key := "gitref-" + repo + "-" + ref + "-" + before + "-" + after
-	id, replayed, err := a.Trestle.CreateRecord("events", map[string]any{
-		"type": "git.ref_changed", "repo_name": repo, "payload": payload, "occurred_at": now,
-	}, key)
+// Persist the first immutable envelope BEFORE advancing the ref observation.
+// Queue and reconciliation retries use that exact body, not a new timestamp.
+func (a *App) observeTransition(repo, branch, before, after, source string) (bool, error) {
+	before, after = normalizeZero(before), normalizeZero(after)
+	ref := branch
+	if !strings.HasPrefix(ref, "refs/") {
+		ref = "refs/heads/" + ref
+	}
+	if repo == "" || (!strings.HasPrefix(ref, "refs/heads/") && !strings.HasPrefix(ref, "refs/tags/")) || strings.Contains(ref, "..") || (before != "" && !eventSHA.MatchString(before)) || (after != "" && !eventSHA.MatchString(after)) {
+		return false, fmt.Errorf("invalid ref transition")
+	}
+	id := fmt.Sprintf("gitref-%x", sha256.Sum256([]byte(repo+"\x00"+ref+"\x00"+before+"\x00"+after)))
+	_, _, receipt, err := a.Trestle.FindRecord("event_receipts", filterEq("id", id))
 	if err != nil {
-		// Trestle Idempotency-Key returns replayed=true only for byte-identical
-		// content. A 409 idempotency_conflict means the same transition
-		// identity already exists with different path metadata (seen_at/source)
-		// — i.e. the OTHER path (queue vs reconciliation) already durably
-		// recorded this transition. Treat that as convergence: the domain fact
-		// exists exactly once, so the caller should not retry or broadcast.
-		if strings.Contains(err.Error(), "idempotency_conflict") {
-			return true, nil
-		}
 		return false, err
 	}
-	if !replayed {
-		a.Hub.Publish(map[string]any{"id": id, "type": "git.ref_changed", "repo": repo, "payload": payload, "replayed": false})
+	if receipt == nil {
+		now := time.Now().UTC().Format(time.RFC3339Nano)
+		envelope := map[string]any{"type": "git.ref_changed", "repo_name": repo, "payload": map[string]any{"ref": ref, "before": before, "after": after, "source": source, "seen_at": now}, "occurred_at": now}
+		_, _, err = a.Trestle.CreateRecord("event_receipts", map[string]any{"id": id, "repo": repo, "envelope": envelope}, "event-intent-"+id+"-"+randHex(8))
+		var readErr error
+		_, _, receipt, readErr = a.Trestle.FindRecord("event_receipts", filterEq("id", id))
+		if readErr != nil {
+			return false, readErr
+		}
+		if receipt == nil {
+			return false, fmt.Errorf("event intent unavailable: %v", err)
+		}
 	}
-	return replayed, nil
+	encoded, err := json.Marshal(receipt["envelope"])
+	if err != nil {
+		return false, err
+	}
+	var envelope map[string]any
+	if err = json.Unmarshal(encoded, &envelope); err != nil {
+		return false, err
+	}
+	payload, ok := envelope["payload"].(map[string]any)
+	if !ok || envelope["type"] != "git.ref_changed" || envelope["repo_name"] != repo || payload["ref"] != ref || payload["before"] != before || payload["after"] != after {
+		return false, fmt.Errorf("event receipt identity mismatch")
+	}
+	eventID, replayed, err := a.Trestle.CreateRecord("events", envelope, id)
+	if err != nil {
+		return false, err
+	}
+	if !replayed && a.Hub != nil {
+		a.Hub.Publish(map[string]any{"id": eventID, "type": "git.ref_changed", "repo": repo, "payload": envelope["payload"], "replayed": false})
+	}
+	_, _, err = a.Trestle.CreateRecord("ref_obs", map[string]any{"repo": repo, "branch": branch, "sha": after, "seen_at": envelope["occurred_at"]}, "ref-observation-"+id)
+	return replayed, err
 }

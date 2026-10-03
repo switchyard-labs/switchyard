@@ -34,3 +34,13 @@ Preferred next step: enable R2 for this account through the dashboard, then veri
 Alternative: an account-owner-configured Artifacts Workers Builds connection with a persistent deploy-scoped build token can support the documented standard build route. It does not by itself establish the custom Actions execution architecture.
 
 No shared Linode changes, demo Git pushes, Workers deployments, subscriptions, billing changes or reference repository edits were made. C10–C25, including all requested visual redesign and Warden/Gantry editor adaptation, remain pending. The R2 setup request is pending with Nick; elapsed time is not approval or completion.
+
+## Prerequisite resolved and C10 execution evidence
+
+The material above records the earlier blocked investigation. Nick enabled R2 and explicitly authorized provisioning the existing API/R2 credentials as encrypted secrets on `switchyard-actions-probe-20261003`. R2 is accessible. The disposable Worker, Workflow, one-instance Sandbox application and snapshot bucket were deployed; no shared Linode service or project Git remote was changed.
+
+A signed manual dispatch passed a meaningful Node test and asserted checkout SHA `213c6fa8adf42b443730a555d3b645ae6fe69873`. A subsequent **native Artifacts push**, without a dispatch request, passed at SHA `b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402`, Workflow `11a042fc-df57-4acb-b9d4-4ffccff88fbc`, definition revision `7a140063092a5bbb0bc9f98fce4289611e87a96fec5a9cee6ebb7edd8cad6a72`. Its [status](C10/native-status.json) and [captured logs](C10/native-logs.json) are sanitized evidence.
+
+Real execution caught two issues before certification: R2 write results cannot be returned from durable steps, and the SDK's workspace intentionally excludes `.git` (the source checkout is `/tmp/ci-source`). Both were corrected and the run repeated. An event receipt test caught first-delivery variable shadowing; the regression now verifies failed publication does not advance observation and retry preserves the exact envelope. Full `go test -race ./...`, Worker TypeScript check and all four Worker protocol tests passed. Credentials were neither logged nor committed. The test resources remain available for C11–C25 and will be cleaned up after the end-to-end gate.
+
+C10 establishes the real custom CI path and its architecture. Trestle normalization/check gates are C11; UI/log viewer/security/deployment gates are C12–C16. Standard Workers Builds has no configured connection/deployment token and remains an explicit provider-setup limitation; no successful Builds preview/deployment is claimed.

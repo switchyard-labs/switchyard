@@ -1,1 +1,5 @@
 .nift/.lock
+
+node_modules/
+.wrangler/
+.dev.vars

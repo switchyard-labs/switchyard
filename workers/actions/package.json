@@ -1,0 +1,1 @@
+{"name":"switchyard-actions","private":true,"type":"module","scripts":{"typecheck":"tsc --noEmit","build":"wrangler deploy --dry-run --outdir /tmp/switchyard-actions-build","test":"node --test test/*.test.mjs"},"dependencies":{"@cloudflare/ci":"0.2.0"},"devDependencies":{"wrangler":"4.118.0","typescript":"6.0.3","@cloudflare/workers-types":"5.20260730.1","@types/node":"24.12.0"}}
