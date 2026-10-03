@@ -9,7 +9,9 @@ echo "[2/6] static accessibility"
 python3 scripts/a11y-static-check.py
 
 echo "[3/6] Go formatting"
-if find internal cmd -name '*.go' -print0 | xargs -0 gofmt -l | grep -q .; then
+format_drift=$(find internal cmd -name '*.go' -print0 | xargs -0 gofmt -l)
+if [[ -n "$format_drift" ]]; then
+  echo "$format_drift" >&2
   echo "gofmt drift detected" >&2; exit 1
 fi
 
