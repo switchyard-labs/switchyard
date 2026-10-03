@@ -97,3 +97,12 @@ kbd { padding: 1px 4px; border: 1px solid var(--border-strong); border-radius: 3
 .code-dialog-intro { margin:10px 0 14px; }
 .clone-method { gap:6px; margin-bottom:12px; }
 .clone-method [aria-selected="true"] { background:var(--panel-soft); }
+
+/* Root files stay above the README; only the README body owns its scroll. */
+.repository-layout:not(.has-file) .repository-content { display:flex; flex-direction:column; overflow:hidden; }
+.repository-layout:not(.has-file) .repository-breadcrumbs,
+.repository-layout:not(.has-file) .repository-commit { flex-shrink:0; }
+.repository-layout:not(.has-file) #repository-directory { flex-shrink:0; max-height:55%; overflow:auto; }
+.repository-layout:not(.has-file) .repository-readme { display:flex; flex-direction:column; flex:1; min-height:0; margin-top:12px; }
+.repository-readme-head { flex-shrink:0; }
+.repository-readme .markdown-body { min-height:0; overflow:auto; overscroll-behavior:contain; }

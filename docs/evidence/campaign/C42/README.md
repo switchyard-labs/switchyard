@@ -23,3 +23,14 @@ checks every repository bottom against the contribution card top. Screenshots an
 dates and fixed document bounds. Firefox and WebKit are UNAVAILABLE through the
 connected CUA surfaces (only Chromium IAB and MCP Apps were exposed); no binaries
 were installed to manufacture coverage. Whole-surface certification remains open.
+
+Latest screenshot follow-up: repository root content no longer scrolls across
+files and README; README body owns its auto-scroll, with its heading fixed. A
+very large file listing may independently scroll within its bounded region.
+Outside popover dismissal passed all six widths; the click listener now uses
+capture so another control stopping propagation cannot prevent closing it.
+Avatar/menu both remain 38×38 with no account text. Single-select chevrons have
+11px right inset and 34px text padding throughout the shared component system.
+Loading/error paragraphs in commit/PR/Work lists now share a 16px inset.
+`readme-card-scroll.png` records the actual updated repository. The local brochure
+DOM confirmed distinct dashboard.jpg and repo.jpg homepage images after Nift build.

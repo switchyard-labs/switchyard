@@ -28,7 +28,7 @@
     function close(){if(d.open)d.close();trigger.setAttribute('aria-expanded','false');trigger.focus();}
     trigger.onclick=()=>{if(d.open){close();return;}d.show();trigger.setAttribute('aria-expanded','true');mode('https');position();$('clone-mode-https').focus();};
     d.addEventListener('close',()=>{clearCredential();trigger.setAttribute('aria-expanded','false');trigger.focus();});
-    document.addEventListener('click',e=>{if(d.open&&!d.contains(e.target)&&!trigger.contains(e.target))close();});
+    document.addEventListener('click',e=>{if(d.open&&!d.contains(e.target)&&!trigger.contains(e.target))close();},true);
     document.addEventListener('keydown',e=>{if(d.open&&e.key==='Escape'){e.preventDefault();close();}});
     window.addEventListener('resize',position);document.addEventListener('scroll',position,true);
     const modes=['https','sy'];function mode(name){for(const key of modes){const button=$('clone-mode-'+key);button.setAttribute('aria-selected',String(key===name));button.tabIndex=key===name?0:-1;$('clone-'+key).hidden=key!==name;}position();}
