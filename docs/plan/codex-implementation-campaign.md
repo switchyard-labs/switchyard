@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C13 locally implemented and verified. C14–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -159,3 +159,7 @@ Verification used the real Go application, an isolated local SQLite Trestle inst
 ## C13 — bounded read-only Actions logs
 
 Implemented repository/step-authorized exact-SHA log pages, inert downloads and cursor-resumable SSE with disconnect and wait bounds. Warden-inspired ANSI text rendering provides follow/pause, search, copy, capture timing, download and reconnect without stdin or execution. Actual Cloudflare output passed browser search/reconnect checks; evidence and capture limitations are recorded in `docs/evidence/campaign/C13`. Actions/app race tests and ANSI security tests pass. C14–C25 remain pending.
+
+## C14 — durable Actions controls
+
+Implemented canonical authenticated manual dispatch, exact-source PR dispatch, rerun all/failed, idempotent cancellation and administrator JavaScript definition approval. Queued intent is persisted before Cloudflare effects and recovered after ambiguous responses; failed-job reuse is bound to parent SHA, commands and definition. Real disposable manual, browser-selective-rerun and cancellation-before-manifest evidence is in `docs/evidence/campaign/C14`. Actions/app race tests, vet and six Worker protocol tests pass. Preview/deployment links remain unavailable without a verified Workers Builds connection/token, so that portion is not certified. C15–C25 remain pending.

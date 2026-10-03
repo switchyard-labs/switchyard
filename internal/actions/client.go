@@ -42,6 +42,8 @@ type Run struct {
 	ID                 string            `json:"run_id"`
 	DefinitionRevision string            `json:"definition_revision"`
 	Jobs               []Job             `json:"jobs"`
+	RerunOf            string            `json:"rerun_of,omitempty"`
+	SelectedJobs       []string          `json:"selected_jobs,omitempty"`
 }
 type Client struct {
 	base   string

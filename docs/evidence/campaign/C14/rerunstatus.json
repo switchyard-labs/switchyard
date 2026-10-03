@@ -1,0 +1,167 @@
+{
+  "can_admin": true,
+  "can_run": true,
+  "checks": [
+    {
+      "definition_revision": "1d974d3d47f5e537ff7b165cd864f4a97a96289fd4c3162423e3bef892448951",
+      "id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e-failure",
+      "job_id": "failure",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e",
+      "source_sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+      "status": "failure"
+    },
+    {
+      "definition_revision": "1d974d3d47f5e537ff7b165cd864f4a97a96289fd4c3162423e3bef892448951",
+      "id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e-verify",
+      "job_id": "verify",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e",
+      "source_sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+      "status": "success"
+    }
+  ],
+  "deployments_enabled": false,
+  "enabled": true,
+  "jobs": [
+    {
+      "id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e-failure",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e",
+      "state": {
+        "id": "failure",
+        "name": "failure",
+        "status": "failed",
+        "steps": [
+          {
+            "finished_at": "2026-10-03T06:45:54.226Z",
+            "id": "intentional",
+            "log_key": "runs/manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e/failure-intentional.json",
+            "name": "intentional",
+            "started_at": "2026-10-03T06:45:47.069Z",
+            "status": "failed",
+            "truncated": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e-verify",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e",
+      "state": {
+        "id": "verify",
+        "name": "verify",
+        "reused_from": "manual-a0b5dbd3c3265122519e44f9421e1f86c74af01c55e86c3a152dad06eacca665",
+        "status": "succeeded",
+        "steps": [
+          {
+            "finished_at": "2026-10-03T06:43:22.087Z",
+            "id": "unit",
+            "log_key": "runs/manual-a0b5dbd3c3265122519e44f9421e1f86c74af01c55e86c3a152dad06eacca665/verify-unit.json",
+            "name": "unit",
+            "started_at": "2026-10-03T06:43:14.490Z",
+            "status": "succeeded",
+            "truncated": false
+          }
+        ]
+      }
+    }
+  ],
+  "run": {
+    "actor": "alice",
+    "created_at": "2026-10-03T06:45:42.2727611Z",
+    "definition_revision": "1d974d3d47f5e537ff7b165cd864f4a97a96289fd4c3162423e3bef892448951",
+    "id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e",
+    "ref": "refs/heads/main",
+    "repo": "codex-actions-probe-20261003",
+    "source_sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+    "state": {
+      "external_status": "errored",
+      "finished_at": "2026-10-03T06:45:54.424Z",
+      "manifest": {
+        "finished_at": "2026-10-03T06:45:54.424Z",
+        "jobs": [
+          {
+            "id": "verify",
+            "name": "verify",
+            "reused_from": "manual-a0b5dbd3c3265122519e44f9421e1f86c74af01c55e86c3a152dad06eacca665",
+            "status": "succeeded",
+            "steps": [
+              {
+                "finished_at": "2026-10-03T06:43:22.087Z",
+                "id": "unit",
+                "log_key": "runs/manual-a0b5dbd3c3265122519e44f9421e1f86c74af01c55e86c3a152dad06eacca665/verify-unit.json",
+                "name": "unit",
+                "started_at": "2026-10-03T06:43:14.490Z",
+                "status": "succeeded",
+                "truncated": false
+              }
+            ]
+          },
+          {
+            "id": "failure",
+            "name": "failure",
+            "status": "failed",
+            "steps": [
+              {
+                "finished_at": "2026-10-03T06:45:54.226Z",
+                "id": "intentional",
+                "log_key": "runs/manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e/failure-intentional.json",
+                "name": "intentional",
+                "started_at": "2026-10-03T06:45:47.069Z",
+                "status": "failed",
+                "truncated": false
+              }
+            ]
+          }
+        ],
+        "run": {
+          "actor": "alice",
+          "definition_revision": "1d974d3d47f5e537ff7b165cd864f4a97a96289fd4c3162423e3bef892448951",
+          "event": null,
+          "jobs": [
+            {
+              "id": "verify",
+              "steps": [
+                {
+                  "command": "node --test ci.test.mjs && git -C /tmp/ci-source rev-parse HEAD",
+                  "id": "unit",
+                  "timeout_ms": 60000
+                }
+              ]
+            },
+            {
+              "id": "failure",
+              "steps": [
+                {
+                  "command": "node -e \"console.error(\"bounded failure probe\"); process.exit(1)\"",
+                  "id": "intentional",
+                  "timeout_ms": 30000
+                }
+              ]
+            }
+          ],
+          "owner": "switchyard-cp0",
+          "provider": "cloudflare-artifacts",
+          "providerData": {
+            "namespace": "switchyard-cp0"
+          },
+          "ref": "refs/heads/main",
+          "repo": "codex-actions-probe-20261003",
+          "rerun_of": "manual-a0b5dbd3c3265122519e44f9421e1f86c74af01c55e86c3a152dad06eacca665",
+          "run_id": "manual-41fa9958f8cf735f4f888c0ce77fee734874e1844dde9e43ec0e836a55a83a0e",
+          "selected_jobs": [
+            "failure"
+          ],
+          "sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+          "trigger": "rerun"
+        },
+        "started_at": "2026-10-03T06:45:46.641Z",
+        "status": "failed"
+      },
+      "status": "failure"
+    },
+    "trigger": "rerun"
+  }
+}

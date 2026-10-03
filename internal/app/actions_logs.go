@@ -94,6 +94,28 @@ func (a *App) handleActionLogs(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 503, map[string]any{"error": "logs_unavailable"})
 		return
 	}
+	logRunID := id
+	for _, job := range state.Manifest.Jobs {
+		if job.ReusedFrom == "" {
+			continue
+		}
+		for _, command := range state.Manifest.Run.Jobs {
+			if command.ID != job.ID {
+				continue
+			}
+			for _, step := range command.Steps {
+				if command.ID+"-"+step.ID != label {
+					continue
+				}
+				_, _, parent, lookupErr := a.Trestle.FindRecord("action_runs", filterEq("id", job.ReusedFrom))
+				if lookupErr != nil || parent == nil || parent["repo"] != repo || parent["source_sha"] != run["source_sha"] || parent["definition_revision"] != run["definition_revision"] {
+					writeJSON(w, 502, map[string]any{"error": "invalid_reused_capture"})
+					return
+				}
+				logRunID = job.ReusedFrom
+			}
+		}
+	}
 	cursorText := r.URL.Query().Get("cursor")
 	if cursorText == "" {
 		cursorText = r.Header.Get("Last-Event-ID")
@@ -127,7 +149,7 @@ func (a *App) handleActionLogs(w http.ResponseWriter, r *http.Request) {
 	defer deadline.Stop()
 	var capture actionLogCapture
 	for {
-		err = a.Actions.Logs(r.Context(), id, label, &capture)
+		err = a.Actions.Logs(r.Context(), logRunID, label, &capture)
 		if err == nil {
 			break
 		}

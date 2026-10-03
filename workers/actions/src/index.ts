@@ -1,10 +1,10 @@
 import { CIWorkflow, type CiContext, type CiParams, type CloudflareArtifacts, type CiRunnerResult, isCiRunnerFailure } from '@cloudflare/ci';
 import { type CiBindings, CiSandbox } from '@cloudflare/ci/worker';
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
-import { validateRun, signature, equalSignature, digest, boundedBody } from './protocol.mjs';
+import { validateRun, signature, equalSignature, digest, boundedBody, validateRerunParent } from './protocol.mjs';
 export { CiSandbox };
 type Step = {id:string; name?:string; command:string; timeout_ms:number};
-type Run = CiParams<CloudflareArtifacts> & {run_id:string; definition_revision:string; jobs:{id:string; name?:string; steps:Step[]}[]};
+type Run = CiParams<CloudflareArtifacts> & {run_id:string; definition_revision:string; jobs:{id:string; name?:string; steps:Step[]}[];rerun_of?:string;selected_jobs?:string[]};
 type Env = CiBindings & { CONTROL_SECRET:string; ARTIFACTS_NAMESPACE:string; ALLOWED_REPOS:string };
 const json = (value:unknown, status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 const key = (id:string)=>`runs/${id}/manifest.json`;
@@ -43,6 +43,10 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
    });
    if(owner!==run.run_id)return;
   }
+  const parent=run.selected_jobs?await step.do('validate-rerun-parent',async()=>{
+ const stored=await this.env.BACKUP_BUCKET.get(key(run.rerun_of!));if(!stored)throw new Error('Parent unavailable');const previous=await stored.json<any>();
+ return validateRerunParent(run,previous);
+ }):null;
   const manifest:{run:Run;status:string;started_at:string;finished_at?:string;jobs:any[]}={run,status:'running',started_at:await step.do('started-at',async()=>new Date().toISOString()),jobs:[]};
   // Workflow step results must be structured-cloneable; R2 HeadResult is not.
   const save=async()=>{await this.env.BACKUP_BUCKET.put(key(run.run_id),JSON.stringify(manifest));};
@@ -51,6 +55,7 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
    // Sequential lanes bound this installation to one runner. A job starts from
    // the immutable checkout; chained steps restore only that job's snapshot.
    for(const job of run.jobs) {
+    if(parent&&!run.selected_jobs!.includes(job.id)){manifest.jobs.push({...parent.jobs.find((view:any)=>view.id===job.id),reused_from:parent.jobs.find((view:any)=>view.id===job.id).reused_from||run.rerun_of});await save();continue;}
     const view={id:job.id,name:job.name||job.id,status:'running',steps:[] as any[]};manifest.jobs.push(view);let prior:CiRunnerResult|undefined;
     for(const command of job.steps) {
      const label=`${job.id}-${command.id}`;
@@ -105,7 +110,7 @@ export default {
    const match=url.pathname.match(/^\/runs\/([A-Za-z0-9_-]{1,90})(?:\/(cancel|logs))?$/);
    if(match) {
     const id=match[1],instance=await env.CI_WORKFLOW.get(id);
-    if(match[2]==='cancel'&&request.method==='POST'){await instance.terminate();return json({id,status:'cancelled'});}
+    if(match[2]==='cancel'&&request.method==='POST'){const current=await instance.status();if(['terminated','complete','errored'].includes(current.status))return json({id,status:current.status});await instance.terminate();return json({id,status:'cancelled'});}
     if(request.method!=='GET')return json({error:'method_not_allowed'},405);
     const status=await instance.status(),manifest=await env.BACKUP_BUCKET.get(key(id));
     if(match[2]==='logs') {

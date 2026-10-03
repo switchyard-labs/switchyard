@@ -1,0 +1,108 @@
+{
+  "can_admin": true,
+  "can_run": true,
+  "checks": [
+    {
+      "definition_revision": "1d974d3d47f5e537ff7b165cd864f4a97a96289fd4c3162423e3bef892448951",
+      "id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2-failure",
+      "job_id": "failure",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2",
+      "source_sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+      "status": "cancelled"
+    },
+    {
+      "definition_revision": "1d974d3d47f5e537ff7b165cd864f4a97a96289fd4c3162423e3bef892448951",
+      "id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2-verify",
+      "job_id": "verify",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2",
+      "source_sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+      "status": "cancelled"
+    }
+  ],
+  "deployments_enabled": false,
+  "enabled": true,
+  "jobs": [
+    {
+      "id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2-failure",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2",
+      "state": {
+        "id": "failure",
+        "name": "",
+        "status": "queued",
+        "steps": null
+      }
+    },
+    {
+      "id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2-verify",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2",
+      "state": {
+        "id": "verify",
+        "name": "",
+        "status": "queued",
+        "steps": null
+      }
+    }
+  ],
+  "run": {
+    "actor": "alice",
+    "created_at": "2026-10-03T06:46:46.081004199Z",
+    "definition_revision": "1d974d3d47f5e537ff7b165cd864f4a97a96289fd4c3162423e3bef892448951",
+    "id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2",
+    "ref": "refs/heads/main",
+    "repo": "codex-actions-probe-20261003",
+    "source_sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+    "state": {
+      "external_status": "terminated",
+      "finished_at": "",
+      "manifest": {
+        "finished_at": "",
+        "jobs": null,
+        "run": {
+          "actor": "alice",
+          "definition_revision": "1d974d3d47f5e537ff7b165cd864f4a97a96289fd4c3162423e3bef892448951",
+          "event": null,
+          "jobs": [
+            {
+              "id": "verify",
+              "steps": [
+                {
+                  "command": "node --test ci.test.mjs && git -C /tmp/ci-source rev-parse HEAD",
+                  "id": "unit",
+                  "timeout_ms": 60000
+                }
+              ]
+            },
+            {
+              "id": "failure",
+              "steps": [
+                {
+                  "command": "node -e \"console.error(\"bounded failure probe\"); process.exit(1)\"",
+                  "id": "intentional",
+                  "timeout_ms": 30000
+                }
+              ]
+            }
+          ],
+          "owner": "switchyard-cp0",
+          "provider": "cloudflare-artifacts",
+          "providerData": {
+            "namespace": "switchyard-cp0"
+          },
+          "ref": "refs/heads/main",
+          "repo": "codex-actions-probe-20261003",
+          "run_id": "manual-2f30f6c43a00a28a1c359892f2bd5ec95f81183b16bca6ffc4e5f037c01e58b2",
+          "sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+          "trigger": "manual"
+        },
+        "started_at": "2026-10-03T06:46:46.081004199Z",
+        "status": "cancelled"
+      },
+      "status": "cancelled"
+    },
+    "trigger": "manual"
+  }
+}

@@ -22,6 +22,8 @@ export function validateRun(value, namespace, allowedRepos) {
    stepIDs.add(step.id); count++;
   }
  }
+ if(value.rerun_of!==undefined && (!/^[a-zA-Z0-9_-]{1,90}$/.test(value.rerun_of)||value.rerun_of===value.run_id))throw new Error('invalid_parent');
+ if(value.selected_jobs!==undefined && (!value.rerun_of||!Array.isArray(value.selected_jobs)||!value.selected_jobs.length||new Set(value.selected_jobs).size!==value.selected_jobs.length||!value.selected_jobs.every(id=>ids.has(id))))throw new Error('invalid_job_selection');
  if (count > 32) throw new Error('step_budget_exceeded');
  return value;
 }
@@ -36,4 +38,12 @@ export async function signature(secret, timestamp, method, path, body) {
 export function equalSignature(a, b) {
  if (typeof a !== 'string' || a.length !== 64 || b.length !== 64) return false;
  let d=0; for(let i=0;i<64;i++) d|=a.charCodeAt(i)^b.charCodeAt(i); return d===0;
+}
+
+export function validateRerunParent(run, previous) {
+ const jobIdentity=jobs=>jobs.map(job=>[job.id,job.name||'',job.steps.map(step=>[step.id,step.name||'',step.command,step.timeout_ms])]);
+ if(!previous||previous.run.repo!==run.repo||previous.run.sha!==run.sha||previous.run.definition_revision!==run.definition_revision||JSON.stringify(jobIdentity(previous.run.jobs))!==JSON.stringify(jobIdentity(run.jobs))||!['succeeded','failed'].includes(previous.status))throw new Error('parent_identity_mismatch');
+ const failed=run.jobs.filter(job=>previous.jobs.find(view=>view.id===job.id)?.status!=='succeeded').map(job=>job.id);
+ if(JSON.stringify(failed)!==JSON.stringify(run.selected_jobs))throw new Error('invalid_failed_job_selection');
+ return previous;
 }

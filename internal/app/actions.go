@@ -95,6 +95,9 @@ func (a *App) syncActionSnapshot(snapshot actions.Snapshot) error {
 		}
 		old, _ := existing["state"].(map[string]any)
 		oldStatus := strOf(old["status"])
+		if old["cancel_requested"] == true && !actions.Terminal(status) {
+			state["cancel_requested"] = true
+		}
 		if actions.Terminal(oldStatus) && oldStatus != status {
 			return fmt.Errorf("Actions terminal result cannot regress")
 		}
@@ -144,6 +147,9 @@ func (a *App) syncActionSnapshot(snapshot actions.Snapshot) error {
 func (a *App) reconcileActions(ctx context.Context) error {
 	if a.Actions == nil {
 		return nil
+	}
+	if err := a.recoverActionIntents(ctx); err != nil {
+		return err
 	}
 	cursor := ""
 	seen := map[string]bool{}

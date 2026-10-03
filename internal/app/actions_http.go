@@ -18,7 +18,7 @@ func (a *App) handleActions(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": "actions_settings_unavailable"})
 		return
 	}
-	writeJSON(w, 200, map[string]any{"items": items, "settings": settings, "enabled": a.Actions != nil})
+	writeJSON(w, 200, map[string]any{"items": items, "settings": settings, "enabled": a.Actions != nil, "can_run": a.CanRepository(a.repositoryMetaByOwner(r.PathValue("owner"), r.PathValue("repo")), a.currentUser(r), WriteRepo), "can_admin": a.CanRepository(a.repositoryMetaByOwner(r.PathValue("owner"), r.PathValue("repo")), a.currentUser(r), AdminRepo), "deployments_enabled": false})
 }
 func (a *App) handleActionRun(w http.ResponseWriter, r *http.Request) {
 	repo := a.canonicalActionsRepo(r)
@@ -42,5 +42,5 @@ func (a *App) handleActionRun(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": "actions_unavailable"})
 		return
 	}
-	writeJSON(w, 200, map[string]any{"run": run, "jobs": jobs, "checks": checks, "enabled": a.Actions != nil})
+	writeJSON(w, 200, map[string]any{"run": run, "jobs": jobs, "checks": checks, "enabled": a.Actions != nil, "can_run": a.CanRepository(a.repositoryMetaByOwner(r.PathValue("owner"), r.PathValue("repo")), a.currentUser(r), WriteRepo), "can_admin": a.CanRepository(a.repositoryMetaByOwner(r.PathValue("owner"), r.PathValue("repo")), a.currentUser(r), AdminRepo), "deployments_enabled": false})
 }

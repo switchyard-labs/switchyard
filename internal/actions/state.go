@@ -15,10 +15,11 @@ type StepState struct {
 	Truncated  bool   `json:"truncated"`
 }
 type JobState struct {
-	ID     string      `json:"id"`
-	Name   string      `json:"name"`
-	Status string      `json:"status"`
-	Steps  []StepState `json:"steps"`
+	ID         string      `json:"id"`
+	ReusedFrom string      `json:"reused_from,omitempty"`
+	Name       string      `json:"name"`
+	Status     string      `json:"status"`
+	Steps      []StepState `json:"steps"`
 }
 type Manifest struct {
 	Run        Run        `json:"run"`

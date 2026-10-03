@@ -15,3 +15,14 @@ test('request body stops reading at the byte limit', async()=>{
 test('reject colliding job-step log identities',()=>{
  const value=run();value.jobs=[{id:'a-b',steps:[{id:'c',command:'true',timeout_ms:1000}]},{id:'a',steps:[{id:'b-c',command:'true',timeout_ms:1000}]}];assert.throws(()=>validateRun(value,'test',['repo']),/ambiguous_step_identity/);
 });
+
+test('failed-job rerun rejects a different commit and successful-job substitution',async()=>{
+ const {validateRerunParent}=await import('../src/protocol.mjs');
+ const jobs=[{id:'passed',steps:[{id:'test',command:'true',timeout_ms:1000}]},{id:'failed',steps:[{id:'test',command:'false',timeout_ms:1000}]}];
+ const run={repo:'fixture',sha:'a'.repeat(40),definition_revision:'b'.repeat(64),jobs,selected_jobs:['failed']};
+ const previous={run:{...run},status:'failed',jobs:[{id:'passed',status:'succeeded'},{id:'failed',status:'failed'}]};
+ assert.equal(validateRerunParent(run,previous),previous);
+ assert.throws(()=>validateRerunParent({...run,sha:'c'.repeat(40)},previous));
+ assert.throws(()=>validateRerunParent({...run,selected_jobs:['passed']},previous));
+ assert.throws(()=>validateRerunParent({...run,jobs:[{...jobs[0],steps:[{...jobs[0].steps[0],command:'different'}]},jobs[1]]},previous));
+});
