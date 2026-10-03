@@ -264,7 +264,7 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(a.StaticDir, "org-settings.html"))
 		return
 	}
-	if strings.HasPrefix(r.URL.Path, "/work/") {
+	if strings.HasPrefix(r.URL.Path, "/work/") && r.URL.Path != "/work/" {
 		http.ServeFile(w, r, filepath.Join(a.StaticDir, "work-detail.html"))
 		return
 	}
@@ -274,6 +274,10 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path == "/settings" || strings.HasPrefix(r.URL.Path, "/settings/") {
 		http.ServeFile(w, r, filepath.Join(a.StaticDir, "settings.html"))
+		return
+	}
+	if page, ok := map[string]string{"/work": "work.html", "/pulls": "pulls.html", "/signin": "signin.html"}[strings.TrimSuffix(r.URL.Path, "/")]; ok {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, page))
 		return
 	}
 	parts0 := strings.Split(strings.Trim(r.URL.Path, "/"), "/")

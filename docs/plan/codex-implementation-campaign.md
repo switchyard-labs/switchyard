@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18 repository redesign verified; C19–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18 repository redesign verified; C19 workspace and identity redesign verified; C20–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -185,3 +185,9 @@ Replaced the flat source prototype with a directory table, real parent/folder na
 Validation: actual disposable Artifacts nested fixture pushed with ordinary Git; browser folder/parent navigation and keyboard path search opened actual `src/routes.mjs`. Permanent staged browser checks passed seven source and four 390px empty-state assertions. Two Node hierarchy tests, full Go race suite, vet, Nift and static gates passed. Evidence: docs/evidence/campaign/C18. Per-file commit history and a total commit count are not fabricated; the sample is labeled recent. The slow current overview read is recorded for C23/C24. These layouts establish the repository foundation; C22 owns the broader matrix.
 
 C17 commit: `af3886f`.
+
+## C19 — workspace, identities, settings and authentication
+
+C18 commit: `676a38d`. Replaced prototype dashboard/demo panels with ordinary accessible repositories, pull requests and recent Work. Work creation now uses a focused native dialog; account and organization profiles have real selected tabs, repository search/visibility filters, pins/activity and People/Teams. Account/org/repository settings share section navigation, readable forms and contextual links outside the global header; Actions configuration is reachable from repository settings. Authentication has centered forms, registration name/new-password state, bounded input, disabled submission and friendly errors. Removed the previous competing identity/settings CSS families and use a single identity stylesheet with shared tokens. Fixed canonical Work/Pulls/Sign-in routing and the Work trailing-slash detail collision. Work lists attach authorized repository/assignee detail fields.
+
+Full Go race suite/vet, static product gates and 15 permanent browser assertions passed. Actual isolated fixtures and 1280/390px evidence are in docs/evidence/campaign/C19. Ordinary history author/time rendering and error handling are corrected. Rich PR/diff/editor and decision surfaces continue in C20/C21; full product widths and states remain the C22 gate. No project push, shared deployment or reference edits.

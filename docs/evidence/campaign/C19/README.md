@@ -1,0 +1,7 @@
+# C19 — ordinary workspace and identity surfaces
+
+The real local Go/Trestle preview serves a three-column dashboard with actual accessible repositories and Work, a Work list with creation dialog, public profile pins/search/activity, organization People/Teams, constrained authentication forms and section-based account/org/repository settings. The isolated Alice fixtures were created through authenticated APIs; the organization owns no repositories, so its empty state is intentional. No fabricated PR, popularity, contribution or commit counts were added.
+
+Permanent `scripts/cua-identity-smoke-stages.mjs` passed 15 browser assertions across profile filtering, settings selection, Work dialog focus/status filtering and registration field state. Desktop screenshots are 1280px; organization and registration screenshots are 390px. Manual organization People/Teams navigation displayed actual owner and team records. This is selected-surface evidence; the full C22 matrix remains pending.
+
+The route regression caught `/work/` being served as a detail page and verifies canonical Work/Pulls/Sign-in never fall back to Dashboard. Full Go race suite, vet and static product gates passed. History now renders the actual author/timestamp fields and catches commit detail errors. Approved Actions configuration is reachable from repository settings. Credential values are not present in these screenshots.

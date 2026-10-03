@@ -1,0 +1,28 @@
+[
+  {
+    "stage": "registration",
+    "checks": 3,
+    "scroll": 375,
+    "width": 390,
+    "nameVisible": true,
+    "passwordMode": "new-password"
+  },
+  {
+    "stage": "profile",
+    "checks": 5,
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "stage": "settings",
+    "checks": 3,
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "stage": "work",
+    "checks": 4,
+    "scroll": 1265,
+    "width": 1280
+  }
+]

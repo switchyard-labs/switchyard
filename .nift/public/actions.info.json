@@ -22,6 +22,7 @@
     "public/assets/css/actions.css",
     "public/assets/css/app.css",
     "public/assets/css/components.css",
+    "public/assets/css/identity.css",
     "public/assets/css/theme.css",
     "public/assets/images/favicon.webp",
     "public/assets/js/app-action-controls.mjs",

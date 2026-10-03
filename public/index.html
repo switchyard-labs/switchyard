@@ -7,8 +7,9 @@
 		<link rel="icon" type="image/webp" href="/assets/images/favicon.webp">
 		<link rel="stylesheet" href="/assets/css/theme.css?v=c18">
 		<link rel="stylesheet" href="/assets/css/components.css?v=c17b">
-		<link rel="stylesheet" href="/assets/css/app.css?v=c17">
-	</head>
+		<link rel="stylesheet" href="/assets/css/app.css?v=c19">
+		<link rel="stylesheet" href="/assets/css/identity.css?v=c19">
+	<link rel="stylesheet" href="/assets/css/identity.css?v=c19"></head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
 		<header class="site-header">
@@ -21,57 +22,27 @@
 			</div>
 		</header>
 		<main class="site-main" id="main-content">
-			<div class="dashboard-shell dashboard-v2">
-			  <section class="dashboard-header">
-			    <div>
-			      <p class="eyebrow">Overview</p>
-			      <h1>Your Switchyard</h1>
-			      <p class="lede">Repositories, Work, Pull Requests and agent activity in one place. Git stays ordinary; Switchyard adds coordination when you need it.</p>
-			    </div>
-			    <div class="dashboard-actions">
-			      <a class="btn primary" href="/repositories.html">Browse repositories</a>
-			      <a class="btn" href="/work.html">View Work</a>
-			    </div>
+			<div class="home-layout">
+			  <aside class="home-sidebar">
+			    <a class="home-account" id="home-account" href="/signin"><img id="home-avatar" src="/api/avatars/user/guest" alt=""><span><strong id="home-username">Your workspace</strong><small id="home-account-description">Sign in to get started</small></span></a>
+			    <nav class="home-navigation" aria-label="Workspace"><a href="/" aria-current="page">Overview</a><a href="/work">Work</a><a href="/pulls">Pull requests</a><a href="/organizations">Organizations</a></nav>
+			    <div class="home-repo-heading"><h2>Repositories</h2><a href="/repositories" aria-label="Browse all repositories">View all</a></div>
+			    <div id="repos" class="home-repos"><p class="muted">Loading repositories…</p></div>
+			  </aside>
+			  <section class="home-feed">
+			    <header class="home-heading"><div><h1 id="home-greeting">Your workspace</h1><p class="muted">Pick up where you left off.</p></div><a class="btn primary" href="/work?new=1">New work</a></header>
+			    <section class="home-section"><div class="section-head"><h2>Pull requests</h2><a href="/pulls">View all</a></div><div id="home-pulls" class="home-feed-list"><div class="loading-state">Loading pull requests…</div></div></section>
+			    <section class="home-section"><div class="section-head"><h2>Recent work</h2><a href="/work">View all</a></div><div id="work" class="home-feed-list"><div class="loading-state">Loading work…</div></div></section>
 			  </section>
-			  <div class="dashboard-primary">
-			    <section class="panel dashboard-repos">
-			      <div class="section-head">
-			        <div><h2>Repositories</h2><p class="muted">Repositories you can access, including visibility and default branch.</p></div>
-			        <a class="btn mini" href="/organizations">Organizations</a>
-			      </div>
-			      <div id="repos" class="list repo-dashboard-list"><p class="muted">Loading repositories…</p></div>
-			    </section>
-			    <section class="panel dashboard-work">
-			      <div class="section-head">
-			        <div><h2>Recent Work</h2><p class="muted">Human-first issues/tasks. Open one to see comments, Attempts and linked Pull Requests.</p></div>
-			        <a class="btn mini" href="/work.html">View all Work</a>
-			      </div>
-			      <div id="work" class="list"><p class="muted">Loading work…</p></div>
-			    </section>
-			  </div>
-			  <aside class="dashboard-side">
-			    <section class="panel demo-repos-panel">
-			      <p class="eyebrow">Try the repository UI</p>
-			      <h2>Curated demo repositories</h2>
-			      <p class="muted">Use these to inspect files, syntax highlighting, branches and README rendering without touching project state.</p>
-			      <div class="demo-repo-links">
-			        <a href="/repo.html?name=demo-basic"><strong>demo-basic</strong><span>ordinary Git repository</span></a>
-			        <a href="/repo.html?name=demo-agents"><strong>demo-agents</strong><span>concurrent Attempts</span></a>
-			        <a href="/repo.html?name=demo-conflict"><strong>demo-conflict</strong><span>textual conflict</span></a>
-			        <a href="/repo.html?name=demo-semantic"><strong>demo-semantic</strong><span>semantic conflict</span></a>
-			        <a href="/repo.html?name=demo-workflow"><strong>demo-workflow</strong><span>durable workflow</span></a>
-			      </div>
-			    </section>
-			    <section class="panel">
-			      <div class="section-head"><div><h2>Live activity</h2><p class="muted">Repository events delivered over SSE.</p></div><a class="btn mini" href="/operations">Operations</a></div>
-			      <div id="live" class="list"><p class="muted">Sign in to stream repository activity.</p></div>
-			    </section>
+			  <aside class="home-context">
+			    <section><h2>Ready for review</h2><p class="muted">Decisions that need your attention, with context and evidence.</p><a class="btn" href="/operations#attention">Needs attention</a></section>
+			    <section><div class="section-head"><h2>Repository activity</h2></div><div id="live" class="home-activity"><p class="muted">Sign in to see updates.</p></div></section>
 			  </aside>
 			</div>
 		</main>
 		<script src="/assets/js/code-surface.js?v=c18"></script>
 		<script src="/assets/js/markdown.js?v=c18"></script>
 		<script src="/assets/js/code-blocks.js"></script>
-		<script src="/assets/js/app.js?v=c17"></script>
+		<script src="/assets/js/app.js?v=c19"></script>
 	</body>
 </html>

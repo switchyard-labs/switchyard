@@ -25,8 +25,21 @@ func (a *App) handleListWork(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
+	details, err := a.Trestle.ListRecords("work_details", "")
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "work_details_unavailable"})
+		return
+	}
+	byWork := map[string]map[string]any{}
+	for _, detail := range details {
+		byWork[strOr(detail["work_id"])] = detail
+	}
 	out := []map[string]any{}
 	for _, it := range items {
+		if detail := byWork[strOr(it["id"])]; detail != nil {
+			it["repo"] = detail["repo"]
+			it["assignee"] = detail["assignee"]
+		}
 		out = append(out, it)
 	}
 	writeJSON(w, 200, map[string]any{"items": out})
