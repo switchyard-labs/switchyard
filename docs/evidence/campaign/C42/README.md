@@ -45,3 +45,10 @@ and directory/file only; root pages omit the path breadcrumb. Actual Chromium
 source proof: zero duplicate context rows, owner /alice, repo /alice/railway,
 path main/src/routes.mjs and five real source lines. The maintained canonical
 navigation helper now checks these invariants. See single-repository-heading.png.
+
+The avatar-only global header passed 54 actual Chromium cases: dashboard, profile,
+repository, source, editor, Actions, repository settings, PR list and Work at
+1600/1280/1024/768/430/390. Each checks equal 38px controls, no account text,
+zero inner image border, image filling the control, and no document overflow.
+This is header geometry coverage, not certification of all loaded body states.
+Evidence: header-54-cases.json; maintained helper scripts/cua-header-matrix.mjs.
