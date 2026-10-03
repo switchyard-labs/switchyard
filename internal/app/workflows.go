@@ -318,7 +318,7 @@ func (a *App) StartWorkflowRunner(ctx context.Context, interval time.Duration) {
 		interval = 2 * time.Second
 	}
 	log.Printf("workflow runner started (interval %s)", interval)
-	go func() {
+	a.launchWorker(func() {
 		t := time.NewTicker(interval)
 		defer t.Stop()
 		for {
@@ -330,7 +330,7 @@ func (a *App) StartWorkflowRunner(ctx context.Context, interval time.Duration) {
 				a.pumpRuns()
 			}
 		}
-	}()
+	})
 }
 
 func (a *App) pumpRuns() {
@@ -355,7 +355,8 @@ func (a *App) pumpRuns() {
 		}
 		a.wfInFlight[id] = true
 		a.wfMu.Unlock()
-		go func(runID string) {
+		if !a.launchWorker(func() {
+			runID := id
 			defer func() {
 				a.wfMu.Lock()
 				delete(a.wfInFlight, runID)
@@ -364,7 +365,11 @@ func (a *App) pumpRuns() {
 			if err := a.executeRun(runID); err != nil {
 				log.Printf("workflow run %s: %v", runID, err)
 			}
-		}(id)
+		}) {
+			a.wfMu.Lock()
+			delete(a.wfInFlight, id)
+			a.wfMu.Unlock()
+		}
 	}
 }
 

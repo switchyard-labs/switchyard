@@ -1,0 +1,28 @@
+{
+  "artifacts": {},
+  "http": {},
+  "states": {
+    "action_runs": {
+      "recorded": 6
+    },
+    "integration_effects": {},
+    "iq": {},
+    "workflow_claims": {
+      "claimed": 2
+    },
+    "workflow_runs": {
+      "completed": 1,
+      "failed": 1
+    }
+  },
+  "trestle": {
+    "trestle_http": {
+      "count": 252,
+      "errors": 0,
+      "rate_limited": 0,
+      "total_ms": 371.409054,
+      "max_ms": 159.091246
+    }
+  },
+  "unavailable_collections": []
+}

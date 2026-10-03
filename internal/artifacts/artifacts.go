@@ -13,11 +13,13 @@ import (
 	"os/exec"
 	"strings"
 	"switchyard/internal/process"
+	"switchyard/internal/telemetry"
 	"sync"
 	"time"
 )
 
 type Client struct {
+	Metrics   telemetry.Registry
 	AccountID string
 	Namespace string
 	TokenCmd  string // e.g. /opt/cp0/switchyard/token.sh
@@ -29,12 +31,14 @@ type Client struct {
 }
 
 func New(accountID, namespace, tokenCmd string) *Client {
-	return &Client{
+	client := &Client{
 		AccountID: accountID,
 		Namespace: namespace,
 		TokenCmd:  tokenCmd,
 		http:      &http.Client{Timeout: 30 * time.Second},
 	}
+	client.http.Transport = telemetry.Transport{Registry: &client.Metrics, Name: "artifacts_http"}
+	return client
 }
 
 // NewWithHTTP supplies an explicit HTTP transport for embedded deployments
@@ -238,10 +242,8 @@ func (c *Client) MintToken(repo, scope string, ttlSeconds int) (string, error) {
 
 // LsRemote returns the ref->sha map for a git remote (read path for CAS).
 func LsRemote(remote, token string) (map[string]string, error) {
-	cmd, cancel := process.Command(2*time.Minute, "git", "ls-remote", remote)
+	cmd, cancel := process.Command(2*time.Minute, "git", "-c", "http.extraHeader=Authorization: Bearer "+token, "ls-remote", remote)
 	defer cancel()
-	// pass the token as an extra header
-	cmd.Args = append(cmd.Args[:0:0], "git", "-c", "http.extraHeader=Authorization: Bearer "+token, "ls-remote", remote)
 	out, err := process.Capture(cmd, false)
 	if err != nil {
 		return nil, fmt.Errorf("ls-remote: %v", err)

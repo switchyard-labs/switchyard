@@ -193,7 +193,7 @@ func (a *App) StartActions(ctx context.Context, interval time.Duration) {
 	if interval < time.Second {
 		interval = time.Second
 	}
-	go func() {
+	a.launchWorker(func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
@@ -209,7 +209,7 @@ func (a *App) StartActions(ctx context.Context, interval time.Duration) {
 			case <-ticker.C:
 			}
 		}
-	}()
+	})
 }
 
 // The newest run, not merely the newest passing check, is authoritative. A

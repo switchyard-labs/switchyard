@@ -8,6 +8,8 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -15,8 +17,28 @@ import (
 
 func Command(timeout time.Duration, name string, args ...string) (*exec.Cmd, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	var gitConfig []string
+	if name == "git" {
+		clean := make([]string, 0, len(args))
+		for i := 0; i < len(args); i++ {
+			if args[i] == "-c" && i+1 < len(args) && strings.HasPrefix(strings.ToLower(args[i+1]), "http.extraheader=") {
+				gitConfig = append(gitConfig, strings.SplitN(args[i+1], "=", 2)[1])
+				i++
+				continue
+			}
+			clean = append(clean, args[i])
+		}
+		args = clean
+	}
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), "LANG=C.UTF-8", "GIT_TERMINAL_PROMPT=0", "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL=/dev/null"}
+	if len(gitConfig) > 0 {
+		cmd.Env = append(cmd.Env, "GIT_CONFIG_COUNT="+strconv.Itoa(len(gitConfig)))
+		for i, value := range gitConfig {
+			index := strconv.Itoa(i)
+			cmd.Env = append(cmd.Env, "GIT_CONFIG_KEY_"+index+"=http.extraHeader", "GIT_CONFIG_VALUE_"+index+"="+value)
+		}
+	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	cmd.WaitDelay = time.Second
 	cmd.Cancel = func() error {

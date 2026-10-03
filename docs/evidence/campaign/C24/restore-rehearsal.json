@@ -1,0 +1,19 @@
+{
+  "/api/users/alice/repositories": {
+    "status": 200,
+    "items": 2,
+    "total": null
+  },
+  "/api/users/alice/contributions": {
+    "status": 200,
+    "items": 10,
+    "total": 10
+  },
+  "/api/owners/alice": {
+    "status": 200,
+    "items": 0,
+    "total": null
+  },
+  "credential_key_preserved": true,
+  "private_config_preserved": true
+}

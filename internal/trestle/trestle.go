@@ -12,11 +12,13 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"switchyard/internal/telemetry"
 	"sync"
 	"time"
 )
 
 type Client struct {
+	Metrics   telemetry.Registry
 	BaseURL   string
 	adminUser string
 	adminPass string
@@ -28,12 +30,14 @@ type Client struct {
 
 func New(baseURL, adminUser, adminPass string) *Client {
 	jar, _ := cookiejar.New(nil)
-	return &Client{
+	client := &Client{
 		BaseURL:   strings.TrimRight(baseURL, "/"),
 		adminUser: adminUser,
 		adminPass: adminPass,
 		http:      &http.Client{Jar: jar, Timeout: 30 * time.Second},
 	}
+	client.http.Transport = telemetry.Transport{Registry: &client.Metrics, Name: "trestle_http"}
+	return client
 }
 
 // ensureLogin logs in as admin and keeps a fresh CSRF token. Safe to call

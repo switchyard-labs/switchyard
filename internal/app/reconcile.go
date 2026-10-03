@@ -18,7 +18,7 @@ func (a *App) StartReconciler(ctx context.Context, interval time.Duration) {
 		interval = 30 * time.Second
 	}
 	log.Printf("reconciler started (interval %s)", interval)
-	go func() {
+	a.launchWorker(func() {
 		t := time.NewTicker(interval)
 		defer t.Stop()
 		for {
@@ -31,10 +31,18 @@ func (a *App) StartReconciler(ctx context.Context, interval time.Duration) {
 				}
 			}
 		}
-	}()
+	})
 }
 
-func (a *App) reconcileOnce() error {
+func (a *App) reconcileOnce() (resultErr error) {
+	started := time.Now()
+	defer func() {
+		status := 200
+		if resultErr != nil {
+			status = 500
+		}
+		a.Metrics.Record("reconciliation", time.Since(started), status)
+	}()
 	repos, err := a.Artifacts.ListRepos()
 	if err != nil {
 		return err

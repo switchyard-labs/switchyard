@@ -159,7 +159,7 @@ func (a *App) StartIntegrationQueue(ctx context.Context, interval time.Duration)
 		interval = 3 * time.Second
 	}
 	log.Printf("integration queue worker started (interval %s)", interval)
-	go func() {
+	a.launchWorker(func() {
 		t := time.NewTicker(interval)
 		defer t.Stop()
 		for {
@@ -170,7 +170,7 @@ func (a *App) StartIntegrationQueue(ctx context.Context, interval time.Duration)
 				a.pumpQueue()
 			}
 		}
-	}()
+	})
 }
 
 func (a *App) pumpQueue() {
@@ -229,7 +229,8 @@ func (a *App) pumpQueue() {
 		a.wfMu.Unlock()
 		return
 	}
-	go func(it *queueItem) {
+	if !a.launchWorker(func() {
+		it := best
 		defer func() {
 			a.wfMu.Lock()
 			a.iqBusy = false
@@ -238,7 +239,11 @@ func (a *App) pumpQueue() {
 		if err := a.processQueueItem(it); err != nil {
 			log.Printf("integration queue %s: %v", it.id, err)
 		}
-	}(best)
+	}) {
+		a.wfMu.Lock()
+		a.iqBusy = false
+		a.wfMu.Unlock()
+	}
 }
 
 func (a *App) processQueueItem(it *queueItem) error {

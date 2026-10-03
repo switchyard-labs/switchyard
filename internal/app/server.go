@@ -4,9 +4,11 @@
 package app
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -19,10 +21,15 @@ import (
 	"switchyard/internal/agent"
 	"switchyard/internal/artifacts"
 	"switchyard/internal/refs"
+	"switchyard/internal/telemetry"
 	"switchyard/internal/trestle"
 )
 
 type App struct {
+	Metrics           telemetry.Registry
+	workerMu          sync.Mutex
+	workers           sync.WaitGroup
+	closing           bool
 	workflowCrashHook func(string)
 	queueCrashHook    func(string) // test-only injection, unset by constructors
 
@@ -260,7 +267,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/queue", a.authorizeHandler(a.handleListQueue))
 	mux.HandleFunc("POST /api/queue/{id}/requeue", a.authorizeHandler(a.handleRequeueItem))
 
-	return a.withSession(mux)
+	return a.measureHTTP(a.withSession(mux))
 }
 
 // serveStatic serves the Nift-built public/ directory. Unknown paths that look
@@ -416,5 +423,20 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 
 func readJSON(r *http.Request, out any) error {
 	defer r.Body.Close()
-	return json.NewDecoder(io.LimitReader(r.Body, 8<<20)).Decode(out)
+	data, err := io.ReadAll(io.LimitReader(r.Body, (8<<20)+1))
+	if err != nil {
+		return err
+	}
+	if len(data) > 8<<20 {
+		return fmt.Errorf("JSON body exceeds 8 MiB")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	if err := decoder.Decode(out); err != nil {
+		return err
+	}
+	var extra any
+	if err := decoder.Decode(&extra); err != io.EOF {
+		return fmt.Errorf("request must contain one JSON value")
+	}
+	return nil
 }

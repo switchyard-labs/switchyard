@@ -125,7 +125,15 @@ func (q *QueueConsumer) Ack(acks []string, retries []string) error {
 // consumeOnce pulls one batch from the Cloudflare queue, ingests every
 // `cf.artifacts.repo.pushed` event through observeTransition, and acknowledges
 // successfully-ingested messages (retrying failed ones).
-func (a *App) consumeOnce() error {
+func (a *App) consumeOnce() (resultErr error) {
+	started := time.Now()
+	defer func() {
+		status := 200
+		if resultErr != nil {
+			status = 500
+		}
+		a.Metrics.Record("event_consumer", time.Since(started), status)
+	}()
 	msgs, err := a.Queue.Pull(10, 30000)
 	if err != nil {
 		return err
@@ -201,7 +209,7 @@ func (a *App) StartEventConsumer(ctx context.Context, interval time.Duration) {
 		interval = 5 * time.Second
 	}
 	log.Printf("event consumer started (queue=%s, interval %s)", a.Queue.QueueID, interval)
-	go func() {
+	a.launchWorker(func() {
 		t := time.NewTicker(interval)
 		defer t.Stop()
 		// first pass immediately
@@ -218,5 +226,5 @@ func (a *App) StartEventConsumer(ctx context.Context, interval time.Duration) {
 				}
 			}
 		}
-	}()
+	})
 }

@@ -6,12 +6,16 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"switchyard/internal/actions"
@@ -30,6 +34,7 @@ func envOr(key, def string) string {
 }
 
 func main() {
+	metricsListen := flag.String("metrics-listen", envOr("SWITCHYARD_METRICS_LISTEN", ""), "optional loopback-only operational metrics listener")
 	listen := flag.String("listen", envOr("SWITCHYARD_LISTEN", "127.0.0.1:8080"), "listen address")
 	treBase := flag.String("trestle", envOr("SWITCHYARD_TRESTLE_URL", "http://127.0.0.1:7350"), "Trestle base URL")
 	treUser := flag.String("trestle-user", envOr("SWITCHYARD_TRESTLE_USER", "admin"), "Trestle admin user")
@@ -100,6 +105,8 @@ func main() {
 		return
 	}
 
+	workerContext, stopWorkers := context.WithCancel(context.Background())
+	defer stopWorkers()
 	// agent substrate: credential store keyed from env or a persisted data key
 	key, err := loadOrCreateKey(filepath.Join(*data, "secret.key"))
 	if err != nil {
@@ -154,10 +161,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		a.StartActions(context.Background(), 10*time.Second)
+		a.StartActions(workerContext, 10*time.Second)
 	}
 	if d, err := time.ParseDuration(*reconcile); err == nil {
-		a.StartReconciler(context.Background(), d)
+		a.StartReconciler(workerContext, d)
 	}
 	// event-driven fast path (Cloudflare queue) — optional; reconciliation
 	// remains the safety net if no queue is configured.
@@ -165,18 +172,59 @@ func main() {
 		a.Queue = app.NewQueueConsumer(*acc, *queueID, art.AccountToken)
 	}
 	if qi, err := time.ParseDuration(*queueInt); err == nil {
-		a.StartEventConsumer(context.Background(), qi)
+		a.StartEventConsumer(workerContext, qi)
 	}
 	// durable workflow runner (CP7)
 	if wi, err := time.ParseDuration(*wfInt); err == nil {
-		a.StartWorkflowRunner(context.Background(), wi)
+		a.StartWorkflowRunner(workerContext, wi)
 	}
 	// integration queue worker (CP9)
 	if qi2, err := time.ParseDuration(*iqInt); err == nil {
-		a.StartIntegrationQueue(context.Background(), qi2)
+		a.StartIntegrationQueue(workerContext, qi2)
 	}
 	log.Printf("switchyard control plane listening on %s (trestle=%s, namespace=%s)", *listen, *treBase, *ns)
-	log.Fatal(http.ListenAndServe(*listen, a.Handler()))
+	server := &http.Server{Addr: *listen, Handler: a.Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 32 << 10}
+	var metricsServer *http.Server
+	if *metricsListen != "" {
+		host, _, err := net.SplitHostPort(*metricsListen)
+		if err != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
+			log.Fatal("metrics-listen must use a literal loopback IP")
+		}
+		listener, err := net.Listen("tcp", *metricsListen)
+		if err != nil {
+			log.Fatal(err)
+		}
+		metricsServer = &http.Server{Handler: http.HandlerFunc(a.OperationalMetrics), ReadHeaderTimeout: 5 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 30 * time.Second}
+		go func() {
+			if err := metricsServer.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Printf("metrics listener stopped: %v", err)
+			}
+		}()
+	}
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(signals)
+	stopped := make(chan struct{})
+	go func() {
+		<-signals
+		stopWorkers()
+		shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		if metricsServer != nil {
+			_ = metricsServer.Shutdown(shutdown)
+		}
+		if err := server.Shutdown(shutdown); err != nil {
+			log.Printf("HTTP drain: %v", err)
+		}
+		if err := a.DrainWorkers(shutdown); err != nil {
+			log.Printf("Worker drain timed out; durable leases require recovery: %v", err)
+		}
+		close(stopped)
+	}()
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
+	<-stopped
 }
 
 // loadOrCreateKey returns a 32-byte AES key from env or a persisted file.

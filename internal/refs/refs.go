@@ -320,6 +320,7 @@ func (s *Service) PreviewMerge(repo, target, source string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer os.RemoveAll(dir)
 	args, err := s.authArgs(repo)
 	if err != nil {
 		return nil, err
@@ -335,13 +336,20 @@ func (s *Service) PreviewMerge(repo, target, source string) ([]string, error) {
 	if err := git(dir, "", f...); err != nil {
 		return nil, fmt.Errorf("preview fetch: %w", err)
 	}
-	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "merge", "--no-commit", "--no-ff", "src"); err == nil {
+	mergeErr := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "merge", "--no-commit", "--no-ff", "src")
+	if mergeErr == nil {
 		// clean; abort to avoid leaving a merge in progress
 		_ = git(dir, "", "merge", "--abort")
 		return nil, nil
 	}
 	// conflicted: enumerate unmerged files
-	out, _ := gitOut(dir, "diff", "--name-only", "--diff-filter=U")
+	out, diffErr := gitOut(dir, "diff", "--name-only", "--diff-filter=U")
+	if diffErr != nil {
+		return nil, fmt.Errorf("preview conflict inspection: %w", diffErr)
+	}
+	if strings.TrimSpace(out) == "" {
+		return nil, fmt.Errorf("preview merge failed without textual conflicts: %w", mergeErr)
+	}
 	_ = git(dir, "", "merge", "--abort")
 	var conflicts []string
 	for _, f := range strings.Fields(out) {
@@ -372,6 +380,12 @@ func (s *Service) PreviewMergedTree(repo, target, source string) (string, error)
 	if err != nil {
 		return "", err
 	}
+	keep := false
+	defer func() {
+		if !keep {
+			_ = os.RemoveAll(dir)
+		}
+	}()
 	args, err := s.authArgs(repo)
 	if err != nil {
 		return "", err
@@ -388,11 +402,19 @@ func (s *Service) PreviewMergedTree(repo, target, source string) (string, error)
 		return "", fmt.Errorf("preview-tree fetch: %w", err)
 	}
 	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "merge", "--no-commit", "--no-ff", "src"); err != nil {
+		out, diffErr := gitOut(dir, "diff", "--name-only", "--diff-filter=U")
+		if diffErr != nil {
+			return "", fmt.Errorf("preview-tree conflict inspection: %w", diffErr)
+		}
+		if strings.TrimSpace(out) == "" {
+			return "", fmt.Errorf("preview-tree merge failed without textual conflicts: %w", err)
+		}
 		// textual conflict: no merged tree to validate
 		_ = git(dir, "", "merge", "--abort")
 		_ = os.RemoveAll(dir)
 		return "", nil
 	}
+	keep = true
 	return dir, nil
 }
 
