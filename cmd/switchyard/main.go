@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -26,6 +27,16 @@ import (
 	"switchyard/internal/trestle"
 )
 
+var (
+	version   = "dev"
+	commit    = "unknown"
+	buildDate = "unknown"
+)
+
+func printVersion() {
+	fmt.Printf("switchyard %s\ncommit: %s\nbuilt: %s\nGo: %s\n", version, commit, buildDate, runtime.Version())
+}
+
 func envOr(key, def string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -34,6 +45,11 @@ func envOr(key, def string) string {
 }
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "version" {
+		printVersion()
+		return
+	}
+	showVersion := flag.Bool("version", false, "print build metadata and exit")
 	metricsListen := flag.String("metrics-listen", envOr("SWITCHYARD_METRICS_LISTEN", ""), "optional loopback-only operational metrics listener")
 	listen := flag.String("listen", envOr("SWITCHYARD_LISTEN", "127.0.0.1:8080"), "listen address")
 	treBase := flag.String("trestle", envOr("SWITCHYARD_TRESTLE_URL", "http://127.0.0.1:7350"), "Trestle base URL")
@@ -62,6 +78,10 @@ func main() {
 	importSlug := flag.String("import-slug", "", "public repository slug for the explicit operator import")
 	importVisibility := flag.String("import-visibility", "", "explicit public or private visibility for the operator import")
 	flag.Parse()
+	if *showVersion {
+		printVersion()
+		return
+	}
 
 	if *trePass == "" {
 		log.Fatal("SWITCHYARD_TRESTLE_PASS is required")
