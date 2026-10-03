@@ -36,7 +36,10 @@ func main() {
 	tokCmd := flag.String("artifacts-token-cmd", envOr("SWITCHYARD_ARTIFACTS_TOKEN_CMD", "/opt/cp0/switchyard/token.sh"), "token helper")
 	static := flag.String("static", envOr("SWITCHYARD_STATIC_DIR", "./public"), "Nift build output directory")
 	data := flag.String("data", envOr("SWITCHYARD_DATA_DIR", "./data"), "control-plane data dir")
-	strutBin := flag.String("strut-bin", envOr("SWITCHYARD_STRUT_BIN", "/opt/cp0/switchyard/deterministic-worker"), "Strut worker binary")
+	// Strut worker is no longer required: the deterministic adapter is
+	// in-process Go. SWITCHYARD_STRUT_BIN is accepted for compatibility but
+	// unused.
+	_ = flag.String("strut-bin", envOr("SWITCHYARD_STRUT_BIN", ""), "unused (deterministic adapter is in-process; retained for compatibility)")
 	reconcile := flag.String("reconcile-interval", envOr("SWITCHYARD_RECONCILE_INTERVAL", "15s"), "reconciliation interval")
 	queueID := flag.String("queue-id", envOr("SWITCHYARD_QUEUE_ID", ""), "Cloudflare queue id for Artifacts events (fast path)")
 	queueInt := flag.String("queue-pull-interval", envOr("SWITCHYARD_QUEUE_PULL_INTERVAL", "5s"), "queue pull interval")
@@ -54,7 +57,6 @@ func main() {
 	tre := trestle.New(*treBase, *treUser, *trePass)
 	art := artifacts.New(*acc, *ns, *tokCmd)
 	a := app.New(tre, art, *static, *data)
-	a.StrutBin = *strutBin
 	// agent substrate: credential store keyed from env or a persisted data key
 	key := loadOrCreateKey(filepath.Join(*data, "secret.key"))
 	a.Secrets = agent.NewCredentialStore(
@@ -73,7 +75,6 @@ func main() {
 		key)
 	a.Roles = agent.BuiltinRoles
 	a.Runner = &agent.DeterministicRunner{
-		StrutBin: *strutBin, WorkDir: filepath.Join(*data, "scratch"),
 		Apply: func(exec *agent.Execution, path, content string) (string, error) {
 			return "", nil // handled by the run handler via refs
 		},

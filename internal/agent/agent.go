@@ -213,52 +213,34 @@ type Runner interface {
 	Run(exec *Execution, task map[string]any) error
 }
 
-// DeterministicRunner shells to the compiled Strut deterministic worker.
+// DeterministicRunner is the in-process deterministic adapter: it produces a
+// fixed, attributable edit (current + append) with no subprocess. This is the
+// certified substrate for workflows, reviews, conflict resolution and the
+// dogfood loop. The runner abstraction stays so a real coding-agent CLI (or a
+// future Strut/bounded-executor) can slot in without changing the substrate.
 type DeterministicRunner struct {
-	StrutBin string
-	WorkDir  string
 	// Apply applies the produced file change (path+content) — the control
 	// plane owns Git mutation through the ref substrate.
 	Apply func(exec *Execution, path, content string) (string, error)
 }
 
 func (r *DeterministicRunner) Run(ex *Execution, task map[string]any) error {
-	tmp, err := os.MkdirTemp(r.WorkDir, "agent-")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmp)
 	file, _ := task["file"].(string)
 	appendLine, _ := task["append"].(string)
-	input := filepath.Join(tmp, "in.txt")
-	output := filepath.Join(tmp, "out.txt")
+	current := ""
 	if cur, ok := task["current"].(string); ok {
-		if err := os.WriteFile(input, []byte(cur), 0644); err != nil {
-			return err
-		}
+		current = cur
 	}
-	tb := fmt.Sprintf(`{"input_path":%q,"output_path":%q,"append":%q}`, input, output, appendLine)
-	taskFile := filepath.Join(tmp, "task.json")
-	if err := os.WriteFile(taskFile, []byte(tb), 0644); err != nil {
-		return err
-	}
-	cmd := exec.Command(r.StrutBin)
-	cmd.Env = append(os.Environ(), "SWITCHYARD_TASK="+taskFile)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("agent worker: %s", strings.TrimSpace(string(out)))
-	}
-	newContent, err := os.ReadFile(output)
-	if err != nil {
-		return errors.New("agent worker produced no output")
-	}
+	// deterministic edit: current + append (identical to the original
+	// deterministic worker's input + append).
+	newContent := current + appendLine
 	ex.Output = fmt.Sprintf("deterministic edit of %s (+%d bytes)", file, len(newContent))
 	if ex.Result == nil {
 		ex.Result = map[string]string{}
 	}
-	ex.Result[file] = string(newContent)
+	ex.Result[file] = newContent
 	if r.Apply != nil {
-		sha, err := r.Apply(ex, file, string(newContent))
+		sha, err := r.Apply(ex, file, newContent)
 		if err != nil {
 			return err
 		}
