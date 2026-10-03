@@ -356,6 +356,14 @@ func (a *App) orgProfile(org map[string]any) map[string]any {
 func (a *App) handleGetOwnerProfile(w http.ResponseWriter, r *http.Request) {
 	slug := normalizeOwnerSlug(r.PathValue("slug"))
 	ns, e := a.Trestle.ListRecords("owner_namespaces", `slug = "`+slug+`"`)
+	// Accounts created before owner namespaces/profile pages existed should still
+	// have a valid profile. Repair that durable namespace lazily instead of
+	// rendering "Profile unavailable" for an otherwise valid user.
+	if (e != nil || len(ns) == 0) && a.userRecord(slug) != nil {
+		if err := a.ensureOwnerNamespace(slug, "user", slug); err == nil {
+			ns, e = a.Trestle.ListRecords("owner_namespaces", `slug = "`+slug+`"`)
+		}
+	}
 	if e != nil || len(ns) == 0 {
 		writeJSON(w, 404, map[string]any{"error": "owner_not_found"})
 		return
