@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -167,3 +167,7 @@ Implemented canonical authenticated manual dispatch, exact-source PR dispatch, r
 ## C15 — CI credential boundaries
 
 Strict approved configuration exports reject arbitrary environment/secret/credential options. Administrator grants control approval; provider rejection occurs before Trestle source persistence. Typed references expose only encrypted Worker binding names/purposes. Runner credential injection remains disabled, and known privileged values/encodings are redacted from captures. A real sandbox probe found no privileged command/readable process environment or persistent Git authorization header; evidence and limits are in `docs/evidence/campaign/C15`. Seven Worker protocol tests and Actions/app race suites pass. Generic CI has no organization-secret or privileged deployment injection; Goja hard heap isolation remains an operational-hardening item. C16–C25 pending.
+
+## C16 — current competition and platform alignment
+
+Read the current challenge, announcement, submission form, rules, Artifacts/custom CI and Builds documentation. `docs/plan/cloudflare-competition-alignment.md` maps actual Worker/Artifacts execution to evidence and remaining gates, records residency/license/manual-entry prerequisites and avoids claiming eligibility or submission. Added source-level runnable README and corrected active authority/runtime descriptions while preserving historical CP0 evidence. Existing MIT LICENSE verified. C17–C25 remain pending; preview/deployment setup and full dogfood/submission materials remain uncertified.

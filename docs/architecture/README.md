@@ -31,7 +31,8 @@ gates, deferred choices, and separate upstream work.
 ## 2. Current architecture decisions (settled enough to build around)
 
 - **Authority split**: Artifacts = Git truth; Trestle = coordination truth;
-  Strut = bounded/disposable execution; Nift = web/docs build layer
+  Go adapters = deterministic/bounded local execution; Workers/Workflows/CI
+  Sandbox = repository CI; R2 = snapshots/captures; Nift = web/docs build layer
   ([`docs/README.md`](../README.md)).
 - **Domain model**: Work, Attempt, Pull Request; Issue is a Work subtype; Review
   (familiar) containing structured Review Findings; distinct conflict categories;
@@ -101,15 +102,14 @@ See [`../plan/dependencies.md`](../plan/dependencies.md):
   writes); cluster-identity ergonomics (raft ServerID must equal the Gantry
   node_id); candidate user-facing realtime (not blocking — we use the Worker
   bridge).
-- **Strut**: release gate (current-main surface must ship: HTTP streaming/SSE,
-  cancellable processes/pipes, crypto, cancellation); candidate stdlib items
-  (string search/contains, `embed_dir` `<map>` example fix, type-inference
-  ergonomics).
+- **Strut**: historical CP0 executor validation, not an active release gate or
+  runtime dependency. Current deterministic execution is Go.
 - **Nift**: consume released Nift capabilities; no ad-hoc modification.
 - **Cloudflare**: operational notes (Workers Paid requirement, `cf` CLI gaps in
-  event-subscription enums and http-pull enablement); billing begins 2026-10-14.
+  event-subscription enums and http-pull enablement); the October 2026 announcement states Artifacts billing begins 2026-10-15.
 - **Warden / gantry-core**: consume `gantry-core/editor` and `gantry-core/agent`;
-  do not transplant Warden's UI.
+  adapt Warden's explorer/editor interaction model without an interactive
+  terminal, as requested for C20; preserve dependency/license attribution.
 
 ## 7. Known critical upstream defect (context)
 
@@ -124,3 +124,4 @@ Switchyard, not the single-node foundation. Full reproduction:
 The implementation gameplan is in [`../plan/checkpoints.md`](../plan/checkpoints.md).
 The next checkpoint (CP1) is architecture synthesis + contract verification, not
 product implementation.
+Current implementation and limits are recorded in [the campaign ledger](../plan/codex-implementation-campaign.md); [Cloudflare Actions](cloudflare-actions.md) documents the native CI execution path.

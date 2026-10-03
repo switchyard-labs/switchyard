@@ -29,8 +29,11 @@ current design on top of them.
 - **Trestle = coordination/application truth.** Authoritative for Work, Attempts,
   executions, leases, reviews/findings, workflow state, integration state,
   provenance, policy/application state, and normalized Git events.
-- **Strut = bounded/disposable execution.** Strut workers execute steps; they do
-  not own durable orchestration state.
+- **Go runner adapters = bounded local execution.** The deterministic adapter
+  runs in-process; external coding-agent CLIs use the bounded process/sandbox
+  boundary. Strut is historical, not a runtime prerequisite.
+- **Cloudflare Workers/Workflows/CI Sandbox = repository CI execution.**
+  Signed exact-SHA results feed Trestle Actions/checks; R2 owns captures/snapshots.
 - **Nift** builds the Switchyard web product/docs layer.
 
 The Artifacts ↔ Trestle connection is an **at-least-once, idempotent,
@@ -47,3 +50,4 @@ transaction.
 6. `architecture/editor.md` — the browser editor and draft state.
 7. `architecture/realtime.md`, `architecture/open-questions.md`.
 8. `product/*` then `plan/*` for requirements and the implementation gameplan.
+Current runtime details: [Cloudflare Actions](architecture/cloudflare-actions.md) and [competition alignment](plan/cloudflare-competition-alignment.md).

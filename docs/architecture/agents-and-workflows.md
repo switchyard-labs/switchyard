@@ -14,7 +14,7 @@ budget accounting, and output classification.
 | **Provider Profile** | How an external model/agent is invoked: provider, model, connection type, credential *reference* (opaque id). Non-secret. | Settings-visible |
 | **Principal** | Authorization/audit identity of an invocation (e.g., `agent:execution-981`), derived from role + credential + session. | Internal, shown in provenance |
 | **Execution** | One actual run: id, role, principal, provider used, budget consumed, events, outcome. | Per-run views |
-| **Worker / Executor** | Infrastructure performing the run (Strut step-executor, an agent-CLI process, a remote runner). | Internal ops / fleet view |
+| **Worker / Executor** | Infrastructure performing the run (Go deterministic adapter, a bounded agent-CLI process, a Cloudflare CI runner). | Internal ops / fleet view |
 
 Only Role and Execution need to be prominent in normal UX. `credential ≠
 profile ≠ execution` is a hard rule.
@@ -59,9 +59,11 @@ explicitly provisional pending independent review (Codex thread T2).
 - Authoring: a constrained JavaScript API over durable workflow state — steps
   (`agent`, `gate`, `integrate`, `approve`, `spawn`, `waitFor`, `timeout`) with
   no arbitrary side effects.
-- Execution: a durable interpreter (state in Trestle, steps executed by Strut
-  step-executors) with deterministic step ids + idempotency keys; resumes from
-  the last checkpoint on crash. Not a long-lived JS process.
+- Execution: a durable interpreter with state in Trestle, deterministic step
+  identities and persisted effect intents; it resumes after a crash. The current
+  deterministic adapter is Go, while real coding-agent subprocesses use the
+  bounded runner boundary. Strut is not a runtime dependency. Repository CI is
+  a separate Cloudflare Worker/Workflow domain.
 - Sub-workflows are child state machines; approvals are durable waiting states;
   cancellation is a durable token.
 - Workflows and hooks reference **roles, never secrets**.
