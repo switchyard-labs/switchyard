@@ -5,7 +5,47 @@ this and understand the design without the chat history. It deliberately
 distinguishes proven facts, current decisions, working hypotheses, experimental
 gates, deferred choices, and separate upstream work.
 
-## 1. Proven facts (validated in Checkpoint 0)
+## Current implementation, October 4 2026
+
+```mermaid
+flowchart LR
+ N[Nift: build time] --> E[Generated UI embedded in Go binary]
+ E --> G[Switchyard: API, control plane, workflows, integration]
+ G <--> T[Trestle: durable coordination truth]
+ G <--> A[Artifacts: Git truth via HTTPS and scoped tokens]
+ A --> Q[Repository subscription / Cloudflare Queue]
+ Q --> G
+ G --> S[Authenticated browser SSE and activity]
+ A --> W[Native CI trigger / Worker]
+ W --> B[Direct Artifacts binding: exact commit and bounded config]
+ B --> F[Workers Workflow / CI Sandbox]
+ F --> R[R2 run state, snapshots and captures]
+ R --> G
+```
+
+The two event paths are parallel fan-out, not a Worker-to-Queue relay. Go polls
+signed exact-SHA Worker manifests into Actions and required-check state. Nift,
+Node, templates, public asset directories and Strut are build-time or historical
+artifacts, not separately deployed Switchyard runtime components. External Git,
+Trestle, Cloudflare services and host system libraries remain permitted dependencies.
+The release serves embedded UI unless an explicit development static override is set.
+
+CodeMirror 6 and the Gantry explorer are implemented editor dependencies; Save
+and Commit remain separate. Browser SSE is served by Go. A Worker/Durable Object
+SSE bridge is a historical proposal, not the current deployed path. Git transport
+is HTTPS; native Artifacts SSH is unavailable and a gateway is deferred. Generic
+Workflow CI is certified; Builds/Worker Preview needs legitimate scoped setup.
+
+The application entry point still selects DeterministicRunner. CLIRunner is an
+isolated library boundary, not a certified production provider. Genuine external
+Agent selection, authorized credential resolution, production wiring and bounded
+concurrency remain open. Do not treat the deterministic two-Attempt fixture as
+concurrent external Agents. C36 independently proves ordinary push → automatic CI,
+Queue/ref observation, SSE, deduplication and reconciliation. See the
+[campaign ledger](../plan/codex-implementation-campaign.md) and
+[C36 evidence](../evidence/campaign/C36/README.md).
+
+## 1. Historical proven facts (validated in Checkpoint 0)
 
 - **Cloudflare Artifacts behaves as faithful Git truth**: repo create/import/fork,
   scoped tokens, ordinary `git clone/commit/push`, REST reads (log/commit/tree/
@@ -52,8 +92,8 @@ gates, deferred choices, and separate upstream work.
 - **Editor**: persistent browser editor, Save ≠ Commit, recoverable transient
   draft state, shared diff surface, hideable Agent panel, no terminal. See
   [`editor.md`](editor.md).
-- **Realtime**: browser realtime via a Worker/Durable-Object SSE bridge to
-  Trestle. See [`realtime.md`](realtime.md).
+- **Realtime**: authenticated browser SSE is served by Go from durable
+  coordination events. The Worker/Durable-Object bridge is historical. See [`realtime.md`](realtime.md).
 - **Product/UX**: GitHub-like familiarity in the simple case, agent-native
   capability revealed progressively; dark-first, site-wide title `Switchyard`,
   favicon, full-screen mobile hamburger menu. See
@@ -66,7 +106,7 @@ gates, deferred choices, and separate upstream work.
   last-writer-wins. **Requires the draft experiments (E2/E3).**
 - `UpdateRef` CAS semantics are obtainable through Artifacts' Git protocol
   (Git's expected-old ref behaviour) — **must be verified under contention (E1)**.
-- CodeMirror 6 as the editor (provisional; not yet an extracted dependency).
+- CodeMirror 6 is implemented and certified for the C20 shortcut/selection surface.
 - Work is auto-created (implicit) when an Agent is asked to do something without
   one — exact auto-creation heuristics are a Codex-review thread (T3/T4-adjacent).
 - The first Agent vertical slice uses one runner adapter (coding-agent CLI),
@@ -100,8 +140,7 @@ See [`../plan/dependencies.md`](../plan/dependencies.md):
 
 - **Trestle**: clustered side-effect bug (events/audit/outbox absent on Raft
   writes); cluster-identity ergonomics (raft ServerID must equal the Gantry
-  node_id); candidate user-facing realtime (not blocking — we use the Worker
-  bridge).
+  node_id); candidate user-facing realtime (not blocking — Go serves browser SSE).
 - **Strut**: historical CP0 executor validation, not an active release gate or
   runtime dependency. Current deterministic execution is Go.
 - **Nift**: consume released Nift capabilities; no ad-hoc modification.
@@ -122,6 +161,6 @@ Switchyard, not the single-node foundation. Full reproduction:
 ## 8. Where this leads
 
 The implementation gameplan is in [`../plan/checkpoints.md`](../plan/checkpoints.md).
-The next checkpoint (CP1) is architecture synthesis + contract verification, not
-product implementation.
+CP0/CP1 documents above retain their historical experiment context; the active
+implementation campaign has advanced through C34–C43 with explicitly open gates.
 Current implementation and limits are recorded in [the campaign ledger](../plan/codex-implementation-campaign.md); [Cloudflare Actions](cloudflare-actions.md) documents the native CI execution path.
