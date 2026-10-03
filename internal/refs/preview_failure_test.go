@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"switchyard/internal/artifacts"
 	"testing"
 )
@@ -106,6 +107,15 @@ func TestCombinedPreviewReturnsOneTreeOrConflictAndNeverPublishes(t *testing.T) 
 	if len(entries) != 0 {
 		t.Fatal("conflicted preview leaked scratch")
 	}
+	dir, conflicts, err = service.PreviewConflictTree("repo", "main", "source")
+	if err != nil || dir == "" || len(conflicts) != 1 {
+		t.Fatalf("provider conflict tree %q %v %v", dir, conflicts, err)
+	}
+	data, err = os.ReadFile(filepath.Join(dir, "file with spaces.txt"))
+	if err != nil || !strings.Contains(string(data), "<<<<<<<") {
+		t.Fatal("missing conflict markers", err)
+	}
+	os.RemoveAll(dir)
 	after := fixtureGit(t, root, "--git-dir", remote, "rev-parse", "refs/heads/main")
 	if after != before {
 		t.Fatal("preview changed canonical ref")

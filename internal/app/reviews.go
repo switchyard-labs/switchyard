@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"switchyard/internal/agent"
 	"time"
 )
 
@@ -28,7 +29,22 @@ func (a *App) handleReviewAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 	repo := attempt["repo"].(string)
 	branch := attempt["branch"].(string)
-	findings, err := a.deterministicReview(repo, branch, attemptID)
+	ctx, configured, err := a.requestedProvider(r, "reviewer")
+	if err != nil {
+		writeJSON(w, 400, map[string]any{"error": err.Error()})
+		return
+	}
+	var findings []map[string]any
+	var providerExecution string
+	if configured {
+		var ex *agent.Execution
+		findings, ex, err = a.providerReview(ctx, repo, branch, attemptID)
+		if ex != nil {
+			providerExecution = ex.ID
+		}
+	} else {
+		findings, err = a.deterministicReview(repo, branch, attemptID)
+	}
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -38,6 +54,10 @@ func (a *App) handleReviewAttempt(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
 			return
 		}
+	}
+	if providerExecution != "" {
+		writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "findings": findings, "execution": providerExecution, "reviewed_by": user})
+		return
 	}
 	// record the review execution through the substrate (reviewer role)
 	ex := &ExecutionRecord{ID: "exe_" + randHex(8), Role: "reviewer", AttemptID: attemptID, Adapter: "deterministic", Status: "succeeded", Output: "reviewed", Started: time.Now().UTC()}
@@ -182,6 +202,25 @@ func (a *App) handleResolveConflict(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	base := rr.DefaultBranch
+	ctx, configured, err := a.requestedProvider(r, "conflict-resolver")
+	if err != nil {
+		writeJSON(w, 400, map[string]any{"error": err.Error()})
+		return
+	}
+	if configured {
+		result, files, err := a.providerConflict(ctx, repo, base, branch, attemptID, user)
+		if err != nil {
+			writeJSON(w, 502, map[string]any{"error": err.Error()})
+			return
+		}
+		// A model proposal is never declared semantically resolved before preview.
+		if err = a.patchAttempt(attemptID, map[string]any{"status": "repair_proposed", "updated_at": nowStr()}); err != nil {
+			writeJSON(w, 502, map[string]any{"error": "repair state persistence failed"})
+			return
+		}
+		writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "status": "repair_proposed", "resolved_files": files, "new_sha": result.NewSHA, "notice": "Run preview and review before integration"})
+		return
+	}
 	res, resolved, err := a.Refs.ResolveIntoSource(repo, base, branch, "resolve attempt "+attemptID, "conflict-resolver:"+user+":"+attemptID)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})

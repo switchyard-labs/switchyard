@@ -1,0 +1,13 @@
+# Personal provider and task model configuration
+
+Users can select a provider, model ID and their own encrypted credential in Settings → Agent providers. Default selection plus independent Implementer, Reviewer and Conflict resolver selections are stored per authenticated user. Each task picker can change the model/provider/credential for that invocation without changing saved defaults. Work Attempt controls and editor proposals use the picker; workflow implementation inherits its initiating owner's defaults. The API is GET/PUT `/api/settings/agent`; task overrides use `X-Switchyard-Agent` with identifiers only.
+
+Cortex/Warden source was inspected read-only. API-key provider choices match OpenCode Zen, OpenCode Go, OpenRouter, OpenAI, Anthropic, Google and DeepSeek. Model IDs remain editable; automatic catalog discovery and subscription OAuth login are not implemented. Existing host OpenCode login files are not shared with server users.
+
+The selected provider/model enters the sandbox JSON Task. An administrator can configure `SWITCHYARD_AGENT_ADAPTER` to an absolute executable implementing the bounded JSON adapter protocol. Execution requires a non-root service, bubblewrap and prlimit; personal credentials are decrypted into a disposable private file and removed after invocation. A process-wide gate limits provider execution to two concurrent runs. Missing runner configuration fails explicitly; it does not silently execute the deterministic adapter for a configured coding provider.
+
+Reviewer results are bounded, validated findings against the reviewed file inventory; no provider file changes are published during review. Conflict repairs are CAS-guarded proposals scoped to conflicted files. They require subsequent preview/review and are not labelled semantically resolved by the model alone.
+
+Verification: Go full tests and vet; ownership/provider-mismatch/malformed-model tests; saved-role selection and per-task override tests. Chromium saved distinct review/resolver choices and verified them after reload; task picker inherited the saved review selection. Screenshots use synthetic non-working credentials and test model IDs in the isolated preview. No coding-provider request was made. Synthetic credentials and selections are removed after certification.
+
+C25 remains CONDITIONAL: a production coding adapter and legitimate personal provider credential have not been configured/exercised. Linode currently runs as root, so actual sandbox execution must wait for a dedicated service-user deployment. Configuration UI/role dispatch is not evidence of a real coding-provider run.

@@ -238,3 +238,15 @@ html[data-density="compact"] .panel { padding: 14px; }
 .repo-directory-row>.visibility-pill { justify-self: end; }
 .repo-directory-row>.commit-activity { grid-column: 2; }
 @media(max-width:560px) { .repo-directory-row { gap: 4px 10px; } .repo-directory-row>.commit-activity { width: 86px; height: 28px; } }
+
+/* Personal Agent choices share the product's ordinary form surfaces. */
+.agent-task-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: auto; background: var(--surface, #252728); color: var(--text, #e6e8e9); border: 1px solid var(--border, #3b3e40); border-radius: 8px; padding: 24px; }
+.agent-task-dialog::backdrop { background: rgb(0 0 0 / .55); }
+.agent-task-dialog .form-stack { display: grid; gap: 16px; }
+.agent-task-dialog label { display: grid; gap: 6px; }
+.agent-task-dialog h2 { margin: 0; font-size: 18px; }
+#agent-role-preferences { display: grid; gap: 12px; }
+#agent-role-preferences fieldset { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border: 1px solid var(--border, #3b3e40); border-radius: 6px; padding: 16px; min-width: 0; }
+#agent-role-preferences legend { padding: 0 8px; }
+#agent-role-preferences fieldset select:last-child { grid-column: 1 / -1; }
+@media (max-width: 540px) { #agent-role-preferences fieldset { grid-template-columns: 1fr; } }

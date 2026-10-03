@@ -926,14 +926,16 @@
       return;
     }
     try {
-      let saved = await saveDraft();
+      const agentHeaders = await SwitchyardAgentSelection("implementer");
+ if (!agentHeaders) return;
+ let saved = await saveDraft();
       const proposedPath = saved.path;
       $("agent-panel").textContent =
         "Agent is preparing a proposal against draft rev " +
         currentRevision +
         "…";
       const r = await api("/api/drafts/" + saved.id + "/agent-propose", {
-        method: "POST",
+        method: "POST", headers:{"Content-Type":"application/json",...agentHeaders},
         body: JSON.stringify({
           prompt,
           expected_revision: String(saved.revision),
@@ -993,7 +995,10 @@
     }
     $("agent-panel").textContent = "Running formal Attempt…";
     try {
-      const r = await api("/api/attempts/" + attempt + "/run", {
+      const agentHeaders = await SwitchyardAgentSelection("implementer");
+ if (!agentHeaders) return;
+ const r = await api("/api/attempts/" + attempt + "/run", {
+ headers:{"Content-Type":"application/json",...agentHeaders},
         method: "POST",
         body: "{}",
       });

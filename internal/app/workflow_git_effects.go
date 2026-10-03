@@ -47,7 +47,7 @@ func (e *wfExec) durableAgentUpdate(repo, branch, file, prompt string) (any, err
 		if ctx == nil {
 			ctx = context.Background()
 		}
-		execution, err := e.a.runViaSubstrateContext(ctx, "implementer", "wf:"+e.runID, repo, branch, file, string(content), prompt)
+		execution, err := e.a.runViaSubstrateContext(agentUserContext(ctx, e.actor), "implementer", "wf:"+e.runID, repo, branch, file, string(content), prompt)
 		if err != nil {
 			return nil, err
 		}

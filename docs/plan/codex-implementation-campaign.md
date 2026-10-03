@@ -219,3 +219,7 @@ authorized draft/publish lifecycle and audited metadata in Trestle; binary asset
 are separate R2 objects with SHA256/size metadata. Actions integration and later
 sy archive/release commands use the same contracts. Neither checkpoint is yet
 implemented or certified. SSH remains deferred; no fake tab is added.
+
+## C25 addition — personal providers and task models
+
+Implemented personal provider/model/credential defaults, independent implementation, review and conflict-resolution selections, and per-invocation pickers in the editor and Work Attempt controls. Workflow implementation inherits the initiating user's selection. Overrides do not overwrite saved defaults; credential ownership and provider matching are enforced server-side. Full Go tests and vet pass; isolated Chromium saved/reloaded distinct role choices and opened the inherited review picker. Evidence and explicit execution limits: `docs/evidence/campaign/C25/provider-settings.md`. Real provider execution remains CONDITIONAL pending a configured coding adapter, non-root production service and legitimate personal credential. This addition does not mark the remaining C23–C46 campaign complete.

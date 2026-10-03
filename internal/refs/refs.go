@@ -372,6 +372,15 @@ func (s *Service) PreviewMergedTree(repo, target, source string) (string, error)
 // and semantic preview. A successful caller owns dir and must remove it.
 // Conflicts and failures clean their scratch automatically; remote refs never move.
 func (s *Service) PreviewMergedTreeWithConflicts(repo, target, source string) (string, []string, error) {
+	return s.previewTree(repo, target, source, false)
+}
+
+// PreviewConflictTree preserves textual conflict markers for a bounded provider
+// proposal. The caller owns cleanup; this never pushes or updates any Git ref.
+func (s *Service) PreviewConflictTree(repo, target, source string) (string, []string, error) {
+	return s.previewTree(repo, target, source, true)
+}
+func (s *Service) previewTree(repo, target, source string, preserveConflicts bool) (string, []string, error) {
 	l := s.lock(repo, target)
 	l.Lock()
 	defer l.Unlock()
@@ -416,6 +425,10 @@ func (s *Service) PreviewMergedTreeWithConflicts(repo, target, source string) (s
 		}
 		if strings.TrimSpace(out) == "" {
 			return "", nil, fmt.Errorf("preview-tree merge failed without textual conflicts: %w", err)
+		}
+		if preserveConflicts {
+			keep = true
+			return dir, strings.Split(strings.TrimSpace(out), "\n"), nil
 		}
 		// textual conflict: no merged tree to validate
 		_ = git(dir, "", "merge", "--abort")

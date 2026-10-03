@@ -18,11 +18,14 @@ import (
 const maxResultBytes = 8 << 20
 
 type Task struct {
-	Repo    string `json:"repo"`
-	Branch  string `json:"branch"`
-	File    string `json:"file"`
-	Current string `json:"current"`
-	Prompt  string `json:"prompt"`
+	Role     string `json:"role,omitempty"`
+	Provider string `json:"provider,omitempty"`
+	Model    string `json:"model,omitempty"`
+	Repo     string `json:"repo"`
+	Branch   string `json:"branch"`
+	File     string `json:"file"`
+	Current  string `json:"current"`
+	Prompt   string `json:"prompt"`
 }
 
 func (t Task) Validate() error {

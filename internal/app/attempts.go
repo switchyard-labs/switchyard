@@ -86,7 +86,12 @@ func (a *App) handleRunAttempt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ex, res, err := a.runAgentStepContext(r.Context(), "implementer", attemptID, repo, branch, file, string(cur),
+	agentCtx, err := a.agentRequestContext(r, "implementer")
+	if err != nil {
+		writeJSON(w, 400, map[string]any{"error": err.Error()})
+		return
+	}
+	ex, res, err := a.runAgentStepContext(agentCtx, "implementer", attemptID, repo, branch, file, string(cur),
 		"\n// run by "+user+" at "+time.Now().UTC().Format(time.RFC3339)+"\n", head, "user:"+user)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
@@ -137,13 +142,34 @@ func (a *App) runViaSubstrate(role, attemptID, repo, branch, file, currentConten
 func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, repo, branch, file, currentContent, appendLine string) (*agent.Execution, error) {
 	now := time.Now().UTC()
 	ex := &agent.Execution{ID: "exe_" + randHex(8), Role: role, AttemptID: attemptID, Adapter: "deterministic", Status: "running", Started: now}
-	task := agent.Task{Repo: repo, Branch: branch, File: file, Current: currentContent, Prompt: appendLine}
+	task := agent.Task{Role: role, Repo: repo, Branch: branch, File: file, Current: currentContent, Prompt: appendLine}
 	ctx, cancel := context.WithTimeout(parent, 2*time.Minute)
 	defer cancel()
 	if a.Runner == nil {
 		return nil, fmt.Errorf("Agent runner unavailable")
 	}
-	err := a.Runner.Run(ctx, ex, task)
+	runner := a.Runner
+	if user, _ := parent.Value(agentUserKey{}).(string); user != "" {
+		selection, selectionErr := a.agentSelection(user, role)
+		if override, ok := parent.Value(agentOverrideKey{}).(AgentSelection); ok {
+			selection, selectionErr = override, nil
+		}
+		if selectionErr != nil {
+			return nil, selectionErr
+		}
+		if selection.Provider != "" {
+			if a.ProviderRunner == nil {
+				return nil, fmt.Errorf("provider runner is not configured on this server")
+			}
+			runner, selectionErr = a.ProviderRunner(selection)
+			if selectionErr != nil {
+				return nil, selectionErr
+			}
+			task.Provider, task.Model = selection.Provider, selection.Model
+			ex.Adapter = selection.Provider
+		}
+	}
+	err := runner.Run(ctx, ex, task)
 	ex.Finished = time.Now().UTC()
 	status := ex.Status
 	if status == "" || status == "running" {
@@ -159,7 +185,7 @@ func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, re
 		"finished_at": ex.Finished.Format(time.RFC3339),
 	}, "exec-"+ex.ID)
 	if persistErr == nil {
-		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"branch": branch, "file": file, "status": ex.Status, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": ex.Adapter == "cli-sandbox"}}, "execution-meta-"+ex.ID)
+		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"branch": branch, "file": file, "status": ex.Status, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": task.Provider != "" || ex.Adapter == "cli-sandbox", "provider": task.Provider, "model": task.Model, "role": role}}, "execution-meta-"+ex.ID)
 	}
 
 	if persistErr != nil {

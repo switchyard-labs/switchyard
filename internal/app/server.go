@@ -34,18 +34,19 @@ type App struct {
 	workflowCrashHook func(string)
 	queueCrashHook    func(string) // test-only injection, unset by constructors
 
-	Trestle   *trestle.Client
-	Artifacts *artifacts.Client
-	Refs      *refs.Service
-	StaticDir string
-	DataDir   string
-	Hub       *Hub
-	Secrets   *agent.CredentialStore
-	Runner    agent.Runner
-	Roles     []agent.Role
-	Actions   actions.Provider
-	Queue     *QueueConsumer
-	DemoMode  bool
+	Trestle        *trestle.Client
+	Artifacts      *artifacts.Client
+	Refs           *refs.Service
+	StaticDir      string
+	DataDir        string
+	Hub            *Hub
+	Secrets        *agent.CredentialStore
+	Runner         agent.Runner
+	ProviderRunner func(AgentSelection) (agent.Runner, error)
+	Roles          []agent.Role
+	Actions        actions.Provider
+	Queue          *QueueConsumer
+	DemoMode       bool
 
 	authMu        sync.Mutex
 	loginAttempts map[string]loginWindow
@@ -88,6 +89,7 @@ func switchyardCollections() [][2]any {
 		{"pr_checks", []trestle.CollectionField{{Name: "pr_id", Type: "text"}, {Name: "status", Type: "text"}, {Name: "detail", Type: "text"}, {Name: "created_at", Type: "text"}}},
 		{"ref_obs", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "sha", Type: "text"}, {Name: "seen_at", Type: "text"}}},
 		{"credential_owners", []trestle.CollectionField{{Name: "credential_id", Type: "text", Unique: true}, {Name: "username", Type: "text"}}},
+		{"agent_preferences", []trestle.CollectionField{{Name: "username", Type: "text", Unique: true}, {Name: "provider", Type: "text"}, {Name: "models", Type: "json"}, {Name: "credentials", Type: "json"}, {Name: "roles", Type: "json"}}},
 		{"credentials", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "name", Type: "text"}, {Name: "provider", Type: "text"}, {Name: "scope", Type: "text"}, {Name: "ciphertext", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "last_used", Type: "text"}}},
 		{"execution_metadata", []trestle.CollectionField{{Name: "execution_id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "metadata", Type: "json"}}},
 		{"executions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "role", Type: "text"}, {Name: "attempt_id", Type: "text"}, {Name: "adapter", Type: "text"}, {Name: "status", Type: "text"}, {Name: "output", Type: "text"}, {Name: "started_at", Type: "text"}, {Name: "finished_at", Type: "text"}}},
@@ -207,6 +209,8 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/work/{id}/provenance", a.authorizeHandler(a.handleWorkProvenance))
 
 	// agents + credentials (CP6)
+	mux.HandleFunc("GET /api/settings/agent", a.authorizeHandler(a.handleAgentSettings))
+	mux.HandleFunc("PUT /api/settings/agent", a.authorizeHandler(a.handleAgentSettings))
 	mux.HandleFunc("POST /api/credentials", a.authorizeHandler(a.handleCreateCredential))
 	mux.HandleFunc("GET /api/credentials", a.authorizeHandler(a.handleListCredentials))
 	mux.HandleFunc("POST /api/credentials/{id}/rotate", a.authorizeHandler(a.handleRotateCredential))

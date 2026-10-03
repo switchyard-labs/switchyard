@@ -16,6 +16,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -160,6 +161,9 @@ func main() {
 		return tre.PatchRecord("credentials", rid, ver, map[string]any{"ciphertext": ct, "last_used": ""})
 	})
 	a.Roles = agent.BuiltinRoles
+	if adapter := strings.TrimSpace(os.Getenv("SWITCHYARD_AGENT_ADAPTER")); adapter != "" {
+		a.ConfigureProviderRunner(adapter, 2)
+	}
 	a.Runner = &agent.DeterministicRunner{
 		Apply: func(exec *agent.Execution, path, content string) (string, error) {
 			return "", nil // handled by the run handler via refs

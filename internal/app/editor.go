@@ -302,7 +302,12 @@ func (a *App) handleAgentProposeDraft(w http.ResponseWriter, r *http.Request) {
 	path, _ := d["path"].(string)
 	cur, _ := d["content"].(string)
 	appendLine := "\n// Agent proposal: " + strings.TrimSpace(in.Prompt) + "\n"
-	ex, err := a.runViaSubstrateContext(r.Context(), "implementer", "draft:"+draftID, strOr(d["repo"]), strOr(d["branch"]), path, cur, appendLine)
+	agentCtx, err := a.agentRequestContext(r, "implementer")
+	if err != nil {
+		writeJSON(w, 400, map[string]any{"error": err.Error()})
+		return
+	}
+	ex, err := a.runViaSubstrateContext(agentCtx, "implementer", "draft:"+draftID, strOr(d["repo"]), strOr(d["branch"]), path, cur, appendLine)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
