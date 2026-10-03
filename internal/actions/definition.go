@@ -72,6 +72,7 @@ func (d Definition) Validate() error {
 			return fmt.Errorf("invalid Actions ref")
 		}
 	}
+	labels := map[string]bool{}
 	jobs := map[string]bool{}
 	count := 0
 	for _, job := range d.Jobs {
@@ -85,6 +86,11 @@ func (d Definition) Validate() error {
 			if !actionID.MatchString(step.ID) || steps[step.ID] || len(step.Command) == 0 || len(step.Command) > 8192 || step.TimeoutMS < 1000 || step.TimeoutMS > 120000 {
 				return fmt.Errorf("invalid or duplicate Actions step")
 			}
+			label := job.ID + "-" + step.ID
+			if labels[label] {
+				return fmt.Errorf("ambiguous Actions step identity")
+			}
+			labels[label] = true
 			steps[step.ID] = true
 		}
 	}

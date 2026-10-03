@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"switchyard/internal/actions"
 	"switchyard/internal/agent"
 	"switchyard/internal/artifacts"
 	"switchyard/internal/refs"
@@ -34,6 +35,7 @@ type App struct {
 	Secrets   *agent.CredentialStore
 	Runner    agent.Runner
 	Roles     []agent.Role
+	Actions   actions.Provider
 	Queue     *QueueConsumer
 	DemoMode  bool
 
@@ -61,6 +63,13 @@ func switchyardCollections() [][2]any {
 		{"work", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "title", Type: "text"}, {Name: "kind", Type: "text"}, {Name: "status", Type: "text"}, {Name: "owner", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"work_details", []trestle.CollectionField{{Name: "work_id", Type: "text", Unique: true}, {Name: "body", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "assignee", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"work_comments", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "work_id", Type: "text"}, {Name: "author", Type: "text"}, {Name: "body", Type: "text"}, {Name: "created_at", Type: "text"}}},
+		{"action_definitions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "revision", Type: "text"}, {Name: "definition", Type: "json"}, {Name: "approved_by", Type: "text"}, {Name: "created_at", Type: "text"}}},
+		{"action_settings", []trestle.CollectionField{{Name: "repo", Type: "text", Unique: true}, {Name: "revision", Type: "text"}, {Name: "required_jobs", Type: "json"}}},
+		{"action_runs", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "source_sha", Type: "text"}, {Name: "ref", Type: "text"}, {Name: "definition_revision", Type: "text"}, {Name: "trigger", Type: "text"}, {Name: "actor", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "state", Type: "json"}}},
+		{"action_jobs", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "run_id", Type: "text"}, {Name: "state", Type: "json"}}},
+		{"action_steps", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "run_id", Type: "text"}, {Name: "state", Type: "json"}}},
+		{"action_checks", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "source_sha", Type: "text"}, {Name: "run_id", Type: "text"}, {Name: "job_id", Type: "text"}, {Name: "definition_revision", Type: "text"}, {Name: "status", Type: "text"}}},
+		{"external_executions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "run_id", Type: "text"}, {Name: "provider", Type: "text"}, {Name: "provider_id", Type: "text"}, {Name: "state", Type: "json"}}},
 		{"event_receipts", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "envelope", Type: "json"}}},
 		{"events", []trestle.CollectionField{{Name: "type", Type: "text"}, {Name: "repo_name", Type: "text"}, {Name: "payload", Type: "json"}, {Name: "occurred_at", Type: "text"}}},
 		{"ref_updates", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "old_sha", Type: "text"}, {Name: "new_sha", Type: "text"}, {Name: "provenance", Type: "text"}, {Name: "occurred_at", Type: "text"}}},
@@ -116,6 +125,8 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repositories", a.authorizeHandler(a.handleListRepositoryMeta))
 	mux.HandleFunc("POST /api/repositories/register", a.authorizeHandler(a.handleRegisterRepositoryMeta))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}", a.authorizeHandler(a.handleGetRepositoryMeta))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions", a.authorizeHandler(a.handleActions))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions/{id}", a.authorizeHandler(a.handleActionRun))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/tree", a.authorizeHandler(a.handleCanonicalRepoTree))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/content", a.authorizeHandler(a.handleCanonicalRepoContent))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/refs", a.authorizeHandler(a.handleCanonicalRepoRefs))

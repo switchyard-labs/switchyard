@@ -12,12 +12,13 @@ export function validateRun(value, namespace, allowedRepos) {
  if (!/^[0-9a-f]{40}$/.test(value.sha) || !/^refs\/(heads|tags)\/[A-Za-z0-9][A-Za-z0-9._/-]{0,250}$/.test(value.ref) || value.ref.includes('..')) throw new Error('invalid_git_identity');
  if (!/^[a-zA-Z0-9_-]{1,90}$/.test(value.run_id) || !/^[0-9a-f]{64}$/.test(value.definition_revision)) throw new Error('invalid_run_identity');
  if (!Array.isArray(value.jobs) || value.jobs.length < 1 || value.jobs.length > 8) throw new Error('invalid_jobs');
- let count = 0; const ids = new Set();
+ let count = 0; const ids = new Set(); const labels = new Set();
  for (const job of value.jobs) {
   if (!/^[a-zA-Z0-9_-]{1,40}$/.test(job.id) || ids.has(job.id) || !Array.isArray(job.steps) || job.steps.length < 1 || job.steps.length > 16) throw new Error('invalid_job');
   ids.add(job.id); const stepIDs = new Set();
   for (const step of job.steps) {
    if (!/^[a-zA-Z0-9_-]{1,40}$/.test(step.id) || stepIDs.has(step.id) || typeof step.command !== 'string' || !step.command.trim() || step.command.length > 8192 || !Number.isInteger(step.timeout_ms) || step.timeout_ms < 1000 || step.timeout_ms > 120000) throw new Error('invalid_step');
+   const label=`${job.id}-${step.id}`; if(labels.has(label))throw new Error('ambiguous_step_identity');labels.add(label);
    stepIDs.add(step.id); count++;
   }
  }

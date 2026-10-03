@@ -280,6 +280,9 @@ func (a *App) processQueueItem(it *queueItem) error {
 			return a.finishQueuePublication(it, claim, candidate.CommitSHA)
 		}
 		if claim.effect.Phase == "publishing" {
+			if !a.checkPassedAt(it.prID, candidate.SourceSHA) {
+				return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "required checks changed before publication", "updated_at": nowStr()})
+			}
 			if err := claim.save("publishing"); err != nil {
 				return err
 			}

@@ -32,6 +32,17 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
    input={...input,run_id:event.instanceId,definition_revision:definition.revision,jobs:definition.jobs};
   }
   const run=validateRun(input,this.env.ARTIFACTS_NAMESPACE,this.env.ALLOWED_REPOS.split(',')) as Run;
+  if (!('run_id' in event.payload)) {
+   const owner=await step.do('claim-native-event',async()=>{
+    const identity=await digest(JSON.stringify([run.owner,run.repo,run.ref,run.sha,(event.payload as any).beforeSha||'',run.definition_revision]));
+    const receipt=`events/${identity}.json`;
+    const claimed=await this.env.BACKUP_BUCKET.put(receipt,JSON.stringify({owner:run.run_id}),{onlyIf:{etagDoesNotMatch:'*'}});
+    if(claimed)return run.run_id;
+    const existing=await this.env.BACKUP_BUCKET.get(receipt);if(!existing)throw new Error('Native event claim unavailable');
+    return (await existing.json<{owner:string}>()).owner;
+   });
+   if(owner!==run.run_id)return;
+  }
   const manifest:{run:Run;status:string;started_at:string;finished_at?:string;jobs:any[]}={run,status:'running',started_at:await step.do('started-at',async()=>new Date().toISOString()),jobs:[]};
   // Workflow step results must be structured-cloneable; R2 HeadResult is not.
   const save=async()=>{await this.env.BACKUP_BUCKET.put(key(run.run_id),JSON.stringify(manifest));};

@@ -125,6 +125,24 @@ func (a *App) setCommitCheck(prID, repo, sha, status, detail string) error {
 }
 
 func (a *App) checkPassedAt(prID, sha string) bool {
+	_, _, pr, err := a.Trestle.FindRecord("prs", filterEq("id", prID))
+	if err != nil || pr == nil {
+		return false
+	}
+	repo := strOf(pr["repo"])
+	_, _, settings, err := a.Trestle.FindRecord("action_settings", filterEq("repo", repo))
+	if err != nil {
+		return false
+	}
+	if settings != nil {
+		var required []string
+		if decodeAction(settings["required_jobs"], &required) != nil {
+			return false
+		}
+		if len(required) > 0 {
+			return a.requiredActionsPassed(repo, sha)
+		}
+	}
 	items, err := a.Trestle.ListRecords("commit_checks", filterEq("pr_id", prID)+" AND "+filterEq("source_sha", sha))
 	if err != nil {
 		return false
@@ -135,7 +153,10 @@ func (a *App) checkPassedAt(prID, sha string) bool {
 			latest = item
 		}
 	}
-	return latest != nil && latest["status"] == "pass"
+	if latest == nil || latest["status"] != "pass" {
+		return false
+	}
+	return latest["repo"] == repo
 }
 
 func (a *App) checkPassed(prID string) bool {
@@ -181,5 +202,20 @@ func (a *App) handleGetPR(w http.ResponseWriter, r *http.Request) {
 	if repo, base, branch := strOr(pr["repo"]), strOr(pr["base"]), strOr(pr["branch"]); repo != "" && base != "" && branch != "" {
 		diff, files, _ = a.Refs.DiffRefs(repo, base, branch)
 	}
-	writeJSON(w, 200, map[string]any{"pr": pr, "checks": checks, "findings": findings, "queue": queue, "attempt": attempt, "work": work, "files": files, "diff": diff})
+	actionChecks := []map[string]any{}
+	sourceSHA := ""
+	var err error
+	if a.Refs != nil {
+		_, sourceSHA, err = a.Refs.Snapshot(strOf(pr["repo"]), strOf(pr["base"]), strOf(pr["branch"]))
+		if err != nil {
+			writeJSON(w, 502, map[string]any{"error": "pr_source_unavailable"})
+			return
+		}
+		actionChecks, err = a.Trestle.ListRecords("action_checks", filterEq("repo", strOf(pr["repo"]))+" AND "+filterEq("source_sha", sourceSHA))
+		if err != nil {
+			writeJSON(w, 502, map[string]any{"error": "pr_actions_unavailable"})
+			return
+		}
+	}
+	writeJSON(w, 200, map[string]any{"pr": pr, "checks": checks, "action_checks": actionChecks, "source_sha": sourceSHA, "findings": findings, "queue": queue, "attempt": attempt, "work": work, "files": files, "diff": diff})
 }

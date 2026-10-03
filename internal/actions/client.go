@@ -38,6 +38,7 @@ type Run struct {
 	SHA                string            `json:"sha"`
 	Ref                string            `json:"ref"`
 	Trigger            string            `json:"trigger"`
+	Actor              string            `json:"actor,omitempty"`
 	ID                 string            `json:"run_id"`
 	DefinitionRevision string            `json:"definition_revision"`
 	Jobs               []Job             `json:"jobs"`

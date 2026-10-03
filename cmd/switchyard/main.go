@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"switchyard/internal/actions"
 	"switchyard/internal/agent"
 
 	"switchyard/internal/app"
@@ -48,6 +49,8 @@ func main() {
 	wfInt := flag.String("workflow-interval", envOr("SWITCHYARD_WORKFLOW_INTERVAL", "2s"), "workflow runner interval")
 	iqInt := flag.String("queue-integrate-interval", envOr("SWITCHYARD_QUEUE_INTEGRATE_INTERVAL", "3s"), "integration queue worker interval")
 	schemaPlan := flag.Bool("schema-plan", false, "print read-only Switchyard schema migration plan and exit")
+	actionsOrigin := flag.String("actions-worker", envOr("SWITCHYARD_ACTIONS_WORKER", ""), "HTTPS Cloudflare Actions Worker origin (optional)")
+	actionsKey := flag.String("actions-control-key", envOr("SWITCHYARD_ACTIONS_CONTROL_KEY_FILE", ""), "private file containing dedicated Actions control secret")
 	schemaMigrate := flag.Bool("schema-migrate", false, "apply additive schemas during an exclusive maintenance window and exit")
 	flag.Parse()
 
@@ -120,6 +123,21 @@ func main() {
 	}
 	if err := a.Provision(); err != nil {
 		log.Fatalf("provision: %v", err)
+	}
+	if *actionsOrigin != "" {
+		info, err := os.Lstat(*actionsKey)
+		if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0 {
+			log.Fatal("Actions control key must be an existing private regular file")
+		}
+		secret, err := os.ReadFile(*actionsKey)
+		if err != nil || len(secret) < 32 || len(secret) > 256 {
+			log.Fatal("Actions control key must contain 32–256 bytes")
+		}
+		a.Actions, err = actions.New(*actionsOrigin, string(secret))
+		if err != nil {
+			log.Fatal(err)
+		}
+		a.StartActions(context.Background(), 10*time.Second)
 	}
 	if d, err := time.ParseDuration(*reconcile); err == nil {
 		a.StartReconciler(context.Background(), d)

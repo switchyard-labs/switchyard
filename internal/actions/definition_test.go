@@ -37,3 +37,14 @@ func TestDefinitionRejectsDuplicateStep(t *testing.T) {
 		t.Fatal("duplicate step accepted")
 	}
 }
+
+func TestDefinitionRejectsAmbiguousLogIdentity(t *testing.T) {
+	d, err := CompileDefinition(sampleDefinition)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.Jobs = []Job{{ID: "a-b", Steps: []Step{{ID: "c", Command: "true", TimeoutMS: 1000}}}, {ID: "a", Steps: []Step{{ID: "b-c", Command: "true", TimeoutMS: 1000}}}}
+	if d.Validate() == nil {
+		t.Fatal("colliding log/step keys accepted")
+	}
+}

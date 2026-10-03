@@ -11,3 +11,7 @@ test('request body stops reading at the byte limit', async()=>{
  await assert.rejects(()=>boundedBody({body:stream}),/request_too_large/);assert.equal(cancelled,true);
  assert.equal(await boundedBody(new Request('https://example.com',{method:'POST',body:'héllo'})),'héllo');
 });
+
+test('reject colliding job-step log identities',()=>{
+ const value=run();value.jobs=[{id:'a-b',steps:[{id:'c',command:'true',timeout_ms:1000}]},{id:'a',steps:[{id:'b-c',command:'true',timeout_ms:1000}]}];assert.throws(()=>validateRun(value,'test',['repo']),/ambiguous_step_identity/);
+});

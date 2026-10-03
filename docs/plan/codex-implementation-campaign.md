@@ -22,7 +22,7 @@ The latest adopted outline requires uninterrupted sequential C5–C25 work, with
 | Workflow effects/approval/budget | STILL PRESENT | replay completion persistence gaps; C7 |
 | Real runner isolation | STILL PRESENT | no context/limits; C8 |
 | Schema migrations | STILL PRESENT | existence-only provisioning; C9 |
-| Cloudflare Actions | STILL PRESENT | separate CI domain absent; C10–16 |
+| Cloudflare Actions | PARTIAL | native CI and distinct domain verified; UI/controls/security gates C12–16 pending |
 | Repository/profile/editor/product quality | STILL PRESENT | supplied screenshots and current source; C17–21 |
 | Certification gate false positive | STILL PRESENT → addressed in C0 | pipefail/gofmt grep pipeline replaced by captured output |
 
@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C9 locally implemented and verified. C10–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C11 locally implemented and verified. C12–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -128,14 +128,20 @@ The client exposes typed HTTP conflict/validation errors, checks response/marsha
 Validation: full Go race suite and vet pass; schema tests reject incompatible existing collections without writes, preserve additive IDs/defaults, reject stale plans, follow 237 records and detect cursor loops, and classify 409/412/422 errors without returning sensitive error details. No Trestle source, live schema or shared service changed. Operational migration procedure: `docs/architecture/schema-migrations.md`.
 
 
-## C10 — account prerequisite investigation (incomplete)
+## Historical C10 prerequisite investigation (resolved below)
 
 C9 commit: `6d744c5`. Cloudflare account checks confirm Workers/Workflows access but R2 is not enabled (HTTP 403, code 10042). The inspected official CI SDK 0.2.0 snapshots every successful runner to R2, including uncached runners. Existing OAuth can access Builds configuration, but no build token is registered; the standard Artifacts Builds integration has a dashboard setup contract and a connection API shape that is not yet verified for Artifacts. A bounded undocumented-provider probe was rejected without creating a resource; this is not proof of an upstream defect. Evidence and exact continuation prerequisites: `docs/evidence/campaign/C10-cloudflare-prerequisites.md`.
 
-The sequential campaign is awaiting account-owner R2 setup before custom CI can be validated. This is a genuine cloud-service prerequisite, not a checkpoint batch boundary. C10 is not marked complete, and C17–C25 visual/editor/brochure work is not claimed done. No push/deployment or live schema change. The async request to Nick remains pending.
+At that earlier stopping point, the sequential campaign awaited account-owner R2 setup before custom CI could be validated. This is a genuine cloud-service prerequisite, not a checkpoint batch boundary. C10 is not marked complete, and C17–C25 visual/editor/brochure work is not claimed done. No push/deployment or live schema change. That request was subsequently answered; see the C10 execution evidence below.
 
 ## C10 — R2 enabled; real Cloudflare CI architecture
 
 The earlier R2 prerequisite is resolved by Nick. Implemented and exercised a native Artifacts push → deployed Worker/Workflow → official CI Sandbox runner → R2 snapshot/status/log path. Manual and native runs passed with exact-SHA output. Added approved JavaScript definition compilation, signed bounded control APIs, durable dispatch identity and immutable Git event receipts. Full Go race suite, TypeScript check and four Worker tests passed. Evidence: `docs/evidence/campaign/C10-cloudflare-prerequisites.md`; architecture: `docs/architecture/cloudflare-actions.md`.
 
 C10 custom-CI architecture is complete; standard Workers Builds connection/token setup remains explicitly unavailable and must be reflected in C14 controls and final limitations. C11–C25 remain pending. No project push, shared deployment, sibling/reference edits or billing enrollment.
+
+## C11 — distinct Actions domain and exact-SHA checks
+
+C10 commit: `e2d6abd`. Added definitions/settings, immutable run identities, normalized jobs/steps/checks/external execution records and signed provider polling; schema version 3 is additive. Canonical repository list/detail endpoints authorize before effects. Required Actions checks replace the marker demo gate when configured and must match current definition revision and exact source SHA. Queued reruns fence earlier success; timestamp ties fail closed; terminal snapshots cannot regress. Integration Queue resumption revalidates checks immediately before publication. Worker native event claims deduplicate at the R2 conditional-write boundary; colliding job/step log keys are rejected.
+
+Verification: full Go race suite and vet passed before the final marker-gate change; the final app/CLI race regression run also passed. Worker TypeScript check and five protocol tests passed. Backend fixtures cover recorded real Cloudflare snapshot normalization, exact-SHA/definition invalidation, queued reruns, timestamp ties, replay, terminal regression and failed check persistence. No shared schema/deployment or project push. C12–C25 remain pending; Workers Builds setup remains unavailable and explicit.
