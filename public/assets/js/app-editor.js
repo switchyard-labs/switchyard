@@ -1052,6 +1052,7 @@
         encodeURIComponent(repository.slug);
       canonicalRoot = "/api/repositories" + canonicalBase;
       const metadata = await api(canonicalRoot);
+      window.SwitchyardIdentity.mount(repository.owner_slug, repository.slug, 'Editor', metadata);
       canWrite = metadata.can_write === true;
       [
         "btn-save",

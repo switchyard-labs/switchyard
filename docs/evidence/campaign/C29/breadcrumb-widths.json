@@ -1,0 +1,98 @@
+[
+  {
+    "horizontal": -15,
+    "imageLoaded": true,
+    "links": [
+      {
+        "href": "/alice",
+        "text": "alice"
+      },
+      {
+        "href": "/alice/railway",
+        "text": "railway"
+      }
+    ],
+    "vertical": 0,
+    "width": 1600
+  },
+  {
+    "horizontal": -15,
+    "imageLoaded": true,
+    "links": [
+      {
+        "href": "/alice",
+        "text": "alice"
+      },
+      {
+        "href": "/alice/railway",
+        "text": "railway"
+      }
+    ],
+    "vertical": 0,
+    "width": 1280
+  },
+  {
+    "horizontal": -15,
+    "imageLoaded": true,
+    "links": [
+      {
+        "href": "/alice",
+        "text": "alice"
+      },
+      {
+        "href": "/alice/railway",
+        "text": "railway"
+      }
+    ],
+    "vertical": 0,
+    "width": 1024
+  },
+  {
+    "horizontal": -15,
+    "imageLoaded": true,
+    "links": [
+      {
+        "href": "/alice",
+        "text": "alice"
+      },
+      {
+        "href": "/alice/railway",
+        "text": "railway"
+      }
+    ],
+    "vertical": 0,
+    "width": 768
+  },
+  {
+    "horizontal": -15,
+    "imageLoaded": true,
+    "links": [
+      {
+        "href": "/alice",
+        "text": "alice"
+      },
+      {
+        "href": "/alice/railway",
+        "text": "railway"
+      }
+    ],
+    "vertical": 0,
+    "width": 430
+  },
+  {
+    "horizontal": -15,
+    "imageLoaded": true,
+    "links": [
+      {
+        "href": "/alice",
+        "text": "alice"
+      },
+      {
+        "href": "/alice/railway",
+        "text": "railway"
+      }
+    ],
+    "vertical": 0,
+    "width": 390
+  }
+]

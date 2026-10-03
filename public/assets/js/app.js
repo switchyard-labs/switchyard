@@ -12,6 +12,26 @@
   };
   function icon(name) { return '<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">'+(iconPaths[name]||'')+'</svg>'; }
   window.SwitchyardIcons = { icon };
+  function mountRepositoryIdentity(owner, repo, section, metadata = {}) {
+    const main = document.getElementById('main-content');
+    if (!main || !owner || !repo || main.querySelector('.repository-context')) return;
+    const base = '/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo);
+    const nav = document.createElement('nav');
+    nav.className = 'repository-context';
+    nav.setAttribute('aria-label', 'Repository location');
+    const ownerLink = document.createElement('a');
+    ownerLink.href = '/' + encodeURIComponent(owner);
+    const image = document.createElement('img');
+    image.width = 24; image.height = 24; image.alt = '';
+    image.src = '/api/avatars/' + (metadata.owner_type === 'org' ? 'org' : 'user') + '/' + encodeURIComponent(metadata.owner_id || owner);
+    ownerLink.append(image, document.createTextNode(owner));
+    const repoLink = document.createElement('a'); repoLink.href = base; repoLink.textContent = repo;
+    nav.append(ownerLink, document.createTextNode(' / '), repoLink);
+    if (section) { const current = document.createElement('span'); current.textContent = section; current.setAttribute('aria-current', 'page'); nav.append(document.createTextNode(' / '), current); }
+    main.prepend(nav);
+    if (!metadata.owner_type) api('/api/owners/' + encodeURIComponent(owner)).then(profile => { if (profile.avatar_url) image.src = profile.avatar_url; }).catch(() => {});
+  }
+  window.SwitchyardIdentity = {mount: mountRepositoryIdentity};
  document.querySelectorAll(".hamburger").forEach(button=>button.innerHTML=icon("menu"));
   async function api(path, opts) {
     const res = await fetch(path, {
@@ -248,6 +268,10 @@
   async function renderDemoBanner(){ try{const d=await api("/api/demo"); if(d.enabled){let b=document.getElementById("demo-banner");if(!b){b=document.createElement("div");b.id="demo-banner";b.className="demo-banner";document.body.prepend(b)}b.textContent=d.guest?"Public demo · read-only guest browsing":"Demo environment";b.hidden=false}}catch(_){}}
 
   document.addEventListener("DOMContentLoaded", async () => {
+    const route = location.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+    const sections = {tree:'Code',blob:'Source',commits:'Commits',commit:'Commit',pull:'Pull request',pulls:'Pull requests',actions:'Actions',settings:'Settings',work:'Work',branches:'Branches',tags:'Tags'};
+    const reservedOwners = new Set(['api','assets','organizations','work','settings','operations','repositories','pulls','signin']);
+    if (route.length >= 3 && !reservedOwners.has(route[0]) && sections[route[2]]) mountRepositoryIdentity(route[0], route[1], sections[route[2]]);
     renderDemoBanner();
     startLive();
     if (document.getElementById("repos") || document.getElementById("work")) await renderDashboard();

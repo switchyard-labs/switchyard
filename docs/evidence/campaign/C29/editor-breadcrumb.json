@@ -1,0 +1,10 @@
+{
+  "avatar": "/api/avatars/user/alice",
+  "context": "alice / railway / Editor",
+  "documentOverflow": 0,
+  "links": [
+    "/alice",
+    "/alice/railway"
+  ],
+  "url": "http://127.0.0.1:18127/edit.html?name=codex-actions-probe-20261003&ref=editor-c20&path=src%2Froutes.mjs"
+}
