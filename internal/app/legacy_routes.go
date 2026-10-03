@@ -12,7 +12,7 @@ import (
 // Resolve physical-name bookmarks through registered identity, never by
 // guessing an owner or granting access to account-wide Artifacts repositories.
 func (a *App) redirectLegacyRepository(w http.ResponseWriter, r *http.Request) bool {
-	section, legacy := map[string]string{"/repo.html": "", "/history.html": "commits", "/repo-settings.html": "settings"}[r.URL.Path]
+	section, legacy := map[string]string{"/repo.html": "", "/history.html": "commits", "/repo-settings.html": "settings", "/edit.html": "edit"}[r.URL.Path]
 	if !legacy || r.URL.Query().Get("name") == "" {
 		return false
 	}
@@ -58,6 +58,21 @@ func legacyRepositoryTarget(meta map[string]any, query url.Values, section strin
 	}
 	if section == "commits" {
 		return base + "/commits/" + url.PathEscape(ref), nil
+	}
+	if section == "edit" {
+		target := base + "/edit/" + url.PathEscape(ref)
+		if path != "" {
+			if err := refs.ValidatePath(path); err != nil {
+				return "", err
+			}
+			for _, part := range strings.Split(path, "/") {
+				target += "/" + url.PathEscape(part)
+			}
+		}
+		if attempt := query.Get("attempt"); attempt != "" {
+			target += "?" + url.Values{"attempt": {attempt}}.Encode()
+		}
+		return target, nil
 	}
 	if path != "" {
 		if err := refs.ValidatePath(path); err != nil {

@@ -3,9 +3,12 @@
 (function () {
   "use strict";
   const q = new URLSearchParams(location.search),
-    name = q.get("name"),
-    ref = q.get("ref") || "main";
-  let path = q.get("path") || "";
+    route = location.pathname.split('/').filter(Boolean).map(decodeURIComponent),
+    canonical = route.length >= 4 && route[2] === 'edit',
+    repositoryIdentity = canonical ? route[0] + '/' + route[1] : q.get("name"),
+    ref = canonical ? route[3] : q.get("ref") || "main";
+  let name = repositoryIdentity;
+  let path = canonical ? route.slice(4).join('/') : q.get("path") || "";
   const attempt = q.get("attempt") || "";
   const $ = (id) => document.getElementById(id),
     esc = (s) =>
@@ -209,9 +212,7 @@
     );
   }
   function editorURL(p) {
-    const x = new URLSearchParams({ name, ref, path: p });
-    if (attempt) x.set("attempt", attempt);
-    return "/edit.html?" + x.toString();
+    return canonicalBase + '/edit/' + encodeURIComponent(ref) + (p ? '/' + p.split('/').map(encodeURIComponent).join('/') : '') + (attempt ? '?' + new URLSearchParams({attempt}) : '');
   }
   function detect() {
     const id = SwitchyardCode.detectLanguage(path);
@@ -268,7 +269,7 @@
   function setPath(p) {
     path = p;
     q.set("path", p);
-    history.replaceState(null, "", location.pathname + "?" + q.toString());
+    history.replaceState(null, "", editorURL(path));
     if (!tabs.includes(p)) tabs.push(p);
     renderTabs();
     $("editor-title").textContent = p || "New file";
@@ -1045,6 +1046,7 @@
           (r) => r.artifact_name === name || r.full_name === name,
         );
       if (!repository) throw Error("Repository access is required.");
+      name = repository.artifact_name;
       canonicalBase =
         "/" +
         encodeURIComponent(repository.owner_slug) +

@@ -15,6 +15,8 @@ func TestLegacyRepositoryBookmarkUsesCanonicalIdentity(t *testing.T) {
 		{"name=physical&path=docs%2Fhello+world.md", "", "/alice/railway/blob/main/docs/hello%20world.md"},
 		{"name=physical", "commits", "/alice/railway/commits/main"},
 		{"name=physical", "settings", "/alice/railway/settings"},
+		{"name=physical&ref=feature-x&path=src%2Fhello+world.mjs&attempt=wk_123", "edit", "/alice/railway/edit/feature-x/src/hello%20world.mjs?attempt=wk_123"},
+		{"name=physical", "edit", "/alice/railway/edit/main"},
 	} {
 		q, _ := url.ParseQuery(tc.query)
 		got, err := legacyRepositoryTarget(meta, q, tc.section)

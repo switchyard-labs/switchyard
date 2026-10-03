@@ -315,6 +315,10 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	}
 	parts0 := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	if len(parts0) >= 3 && validOwnerSlug(parts0[0]) && validRepoSlug(parts0[1]) {
+		if len(parts0) >= 4 && parts0[2] == "edit" {
+			a.serveAsset(w, r, "edit.html")
+			return
+		}
 		if len(parts0) == 3 && parts0[2] == "work" {
 			a.serveAsset(w, r, "work.html")
 			return

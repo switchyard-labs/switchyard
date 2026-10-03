@@ -41,3 +41,19 @@ export async function verifyCanonicalNavigation(tab, origin, owner, repo) {
   results.push({surface: 'console', entries: await tab.dev.logs({levels: ['error', 'warn'], limit: 50})});
   return results;
 }
+
+// Call on an authenticated disposable editor branch with known committed paths.
+export async function verifyCanonicalEditor(tab, origin, owner, repo, ref, firstPath, nextFile) {
+ const base=`${origin}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/edit/${encodeURIComponent(ref)}/`;
+ await tab.goto(base+firstPath.split('/').map(encodeURIComponent).join('/'));
+ await ready(tab,tab.playwright.getByRole('treeitem',{name:nextFile,exact:true}));
+ await tab.playwright.getByRole('treeitem',{name:nextFile,exact:true}).click();
+ const url=await tab.url();
+ if(!url.startsWith(base)||url.includes('?path=')||!url.endsWith('/'+encodeURIComponent(nextFile)))throw Error('File navigation lost canonical editor path');
+ await tab.reload();
+ await ready(tab,tab.playwright.getByRole('textbox',{name:'File editor',exact:true}));
+ const title=await tab.playwright.locator('#editor-title').innerText();
+ if(!title.endsWith(nextFile))throw Error('Editor refresh changed selected file');
+ const ownerHref=await tab.playwright.getByRole('navigation',{name:'Repository location'}).getByRole('link',{name:owner,exact:true}).getAttribute('href');
+ return {url:await tab.url(),title,ownerHref,console:await tab.dev.logs({levels:['error','warn'],limit:20})};
+}
