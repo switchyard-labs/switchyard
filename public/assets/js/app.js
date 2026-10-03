@@ -14,7 +14,7 @@
   window.SwitchyardIcons = { icon };
   function mountRepositoryIdentity(owner, repo, section, metadata = {}) {
     const main = document.getElementById('main-content');
-    if (!main || !owner || !repo || main.querySelector('.repository-context')) return;
+    if (!main || !owner || !repo || main.querySelector('.repository-context') || main.querySelector('.repository-page')) return;
     const base = '/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo);
     const nav = document.createElement('nav');
     nav.className = 'repository-context';

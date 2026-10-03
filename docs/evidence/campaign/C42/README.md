@@ -37,3 +37,11 @@ DOM confirmed distinct dashboard.jpg and repo.jpg homepage images after Nift bui
 
 File-page breadcrumb now precedes both columns. Real Chromium file route measured
 Files and viewer card tops both at 380.96875px; `aligned-file-cards.png` records it.
+
+Latest continuation: the repository browser no longer mounts the shared duplicate
+owner/repository context row. Its own avatar/owner link and linked repository
+heading provide the identity once. Deep source breadcrumbs contain selected ref
+and directory/file only; root pages omit the path breadcrumb. Actual Chromium
+source proof: zero duplicate context rows, owner /alice, repo /alice/railway,
+path main/src/routes.mjs and five real source lines. The maintained canonical
+navigation helper now checks these invariants. See single-repository-heading.png.

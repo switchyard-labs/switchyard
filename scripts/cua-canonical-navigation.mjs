@@ -57,3 +57,20 @@ export async function verifyCanonicalEditor(tab, origin, owner, repo, ref, first
  const ownerHref=await tab.playwright.getByRole('navigation',{name:'Repository location'}).getByRole('link',{name:owner,exact:true}).getAttribute('href');
  return {url:await tab.url(),title,ownerHref,console:await tab.dev.logs({levels:['error','warn'],limit:20})};
 }
+
+// The repository browser owns one identity row; deeper breadcrumbs contain only ref/path.
+export async function verifyRepositoryHeading(tab, origin, owner, repo, ref, path) {
+ const base=`${origin}/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+ const target=base+'/blob/'+encodeURIComponent(ref)+'/'+path.split('/').map(encodeURIComponent).join('/');
+ if(await tab.url()!==target)await tab.goto(target);
+ await ready(tab,tab.playwright.locator('#file-view .code-line').first());
+ const result=await tab.playwright.evaluate(()=>({
+  duplicate:document.querySelectorAll('.repository-context').length,
+  owner:document.querySelector('#repo-owner').getAttribute('href'),
+  repo:document.querySelector('#repo-name a').getAttribute('href'),
+  path:[...document.querySelectorAll('#repo-breadcrumbs a')].map(a=>a.textContent),
+  visibility:document.querySelectorAll('#repo-visibility').length
+ }));
+ if(result.duplicate||result.owner!=='/'+encodeURIComponent(owner)||result.repo!==new URL(base).pathname||result.path.join('/')!==ref+'/'+path||result.visibility!==1)throw Error('Duplicate or incorrect repository heading: '+JSON.stringify(result));
+ return result;
+}
