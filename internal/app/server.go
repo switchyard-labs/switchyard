@@ -23,6 +23,7 @@ import (
 	"switchyard/internal/refs"
 	"switchyard/internal/telemetry"
 	"switchyard/internal/trestle"
+	webassets "switchyard/public"
 )
 
 type App struct {
@@ -281,79 +282,89 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.URL.Path == "/organizations" || r.URL.Path == "/organizations/" {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "organizations.html"))
+		a.serveAsset(w, r, "organizations.html")
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/organizations/") && strings.Contains(r.URL.Path, "/settings") {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "org-settings.html"))
+		a.serveAsset(w, r, "org-settings.html")
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/work/") && r.URL.Path != "/work/" {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "work-detail.html"))
+		a.serveAsset(w, r, "work-detail.html")
 		return
 	}
 	if r.URL.Path == "/operations" || r.URL.Path == "/operations.html" {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "operations.html"))
+		a.serveAsset(w, r, "operations.html")
 		return
 	}
 	if r.URL.Path == "/settings" || strings.HasPrefix(r.URL.Path, "/settings/") {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "settings.html"))
+		a.serveAsset(w, r, "settings.html")
 		return
 	}
 	if page, ok := map[string]string{"/work": "work.html", "/pulls": "pulls.html", "/signin": "signin.html"}[strings.TrimSuffix(r.URL.Path, "/")]; ok {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, page))
+		a.serveAsset(w, r, page)
 		return
 	}
 	parts0 := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	if (len(parts0) == 3 || len(parts0) == 4) && parts0[2] == "actions" {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "actions.html"))
+		a.serveAsset(w, r, "actions.html")
 		return
 	}
 	if len(parts0) == 3 && parts0[2] == "settings" {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "repo-settings.html"))
+		a.serveAsset(w, r, "repo-settings.html")
 		return
 	}
 	if len(parts0) == 3 && parts0[2] == "pulls" {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "pulls.html"))
+		a.serveAsset(w, r, "pulls.html")
 		return
 	}
 	if len(parts0) == 4 && parts0[2] == "pull" {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "pull.html"))
+		a.serveAsset(w, r, "pull.html")
 		return
 	}
 	if len(strings.Split(strings.Trim(r.URL.Path, "/"), "/")) >= 3 {
 		parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(parts) >= 3 && parts[2] == "commits" {
-			http.ServeFile(w, r, filepath.Join(a.StaticDir, "history.html"))
+			a.serveAsset(w, r, "history.html")
 			return
 		}
 	}
 	// Root-level product pages that must not be captured by the owner-slug
 	// profile route.
 	if r.URL.Path == "/repositories" || r.URL.Path == "/repositories.html" {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "repositories.html"))
+		a.serveAsset(w, r, "repositories.html")
 		return
 	}
 	// Owner profile URLs use /{owner}. Reserved/static paths are filtered by
 	// validOwnerSlug; repository routes below take precedence for two segments.
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	if len(parts) == 1 && validOwnerSlug(parts[0]) {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "profile.html"))
+		a.serveAsset(w, r, "profile.html")
 		return
 	}
 	// Canonical Git-host repository URLs use /{owner}/{repo}[/(blob|tree)/{ref}/...].
 	// They render the existing repository shell; the browser resolves the canonical
 	// metadata/API path. Physical Artifacts names never appear in the public URL.
 	if _, ok := parseRepositoryRoute(r.URL.Path); ok {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, "repo.html"))
+		a.serveAsset(w, r, "repo.html")
 		return
 	}
-	p := filepath.Join(a.StaticDir, filepath.Clean("/"+r.URL.Path))
-	if info, err := os.Stat(p); err == nil && !info.IsDir() {
-		http.ServeFile(w, r, p)
-		return
+	asset := strings.TrimPrefix(filepath.ToSlash(filepath.Clean("/"+r.URL.Path)), "/")
+	if a.StaticDir != "" {
+		p := filepath.Join(a.StaticDir, asset)
+		if info, err := os.Stat(p); err == nil && !info.IsDir() {
+			a.serveAsset(w, r, asset)
+			return
+		}
+	} else if info, err := webassets.Files.Open(asset); err == nil {
+		stat, statErr := info.Stat()
+		info.Close()
+		if statErr == nil && !stat.IsDir() {
+			a.serveAsset(w, r, asset)
+			return
+		}
 	}
-	http.ServeFile(w, r, filepath.Join(a.StaticDir, "index.html"))
+	a.serveAsset(w, r, "index.html")
 }
 
 // ---- session middleware ----
@@ -439,4 +450,30 @@ func readJSON(r *http.Request, out any) error {
 		return fmt.Errorf("request must contain one JSON value")
 	}
 	return nil
+}
+
+// serveAsset renders embedded release assets unless an explicit development
+// directory is configured. Canonical route identity is preserved in the URL.
+func (a *App) serveAsset(w http.ResponseWriter, r *http.Request, name string) {
+	if a.StaticDir != "" {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, name))
+		return
+	}
+	file, err := webassets.Files.Open(name)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil || info.IsDir() {
+		http.NotFound(w, r)
+		return
+	}
+	seeker, ok := file.(io.ReadSeeker)
+	if !ok {
+		http.Error(w, "asset unavailable", 500)
+		return
+	}
+	http.ServeContent(w, r, name, info.ModTime(), seeker)
 }

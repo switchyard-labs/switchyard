@@ -1,0 +1,39 @@
+{
+  "timestamp_utc": "2026-10-03T16:57:31.198627+00:00",
+  "binary_bytes": 25521581,
+  "cwd": "/tmp",
+  "static_dir_override": false,
+  "results": [
+    {
+      "path": "/signin",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 2649
+    },
+    {
+      "path": "/alice",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 5989
+    },
+    {
+      "path": "/alice/railway",
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 7233
+    },
+    {
+      "path": "/assets/js/app.js",
+      "status": 200,
+      "content_type": "text/javascript; charset=utf-8",
+      "bytes": 19233
+    },
+    {
+      "path": "/assets/css/components.css",
+      "status": 200,
+      "content_type": "text/css; charset=utf-8",
+      "bytes": 11732
+    }
+  ],
+  "limits": "Read-only UI proof; uses existing isolated Trestle and Cloudflare configuration. Full clean runtime certification remains C43."
+}

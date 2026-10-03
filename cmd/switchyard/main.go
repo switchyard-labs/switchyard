@@ -42,7 +42,7 @@ func main() {
 	acc := flag.String("artifacts-account", envOr("SWITCHYARD_ARTIFACTS_ACCOUNT", ""), "Cloudflare account id")
 	ns := flag.String("artifacts-namespace", envOr("SWITCHYARD_ARTIFACTS_NAMESPACE", "switchyard-cp0"), "Artifacts namespace")
 	tokCmd := flag.String("artifacts-token-cmd", envOr("SWITCHYARD_ARTIFACTS_TOKEN_CMD", "/opt/cp0/switchyard/token.sh"), "token helper")
-	static := flag.String("static", envOr("SWITCHYARD_STATIC_DIR", "./public"), "Nift build output directory")
+	static := flag.String("static", envOr("SWITCHYARD_STATIC_DIR", ""), "optional development UI directory; default embedded Nift build")
 	data := flag.String("data", envOr("SWITCHYARD_DATA_DIR", "./data"), "control-plane data dir")
 	// Strut worker is no longer required: the deterministic adapter is
 	// in-process Go. SWITCHYARD_STRUT_BIN is accepted for compatibility but
