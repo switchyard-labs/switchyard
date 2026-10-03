@@ -200,7 +200,7 @@
 .profile-pane { flex: 1; }
 #overview { display: flex; flex-direction: column; overflow: hidden; }
 #overview>.section-head, #overview>.profile-readme { flex-shrink: 0; }
-#pinned-repos { flex-shrink: 0; max-height: 38dvh; overflow: auto; }
+#pinned-repos { flex-shrink: 0; overflow: visible; }
 .profile-overview-activity { min-height: 0; display: flex; flex-direction: column; flex: 1; max-height: 36dvh; }
 .profile-overview-activity h2, .profile-overview-activity .pagination { flex-shrink: 0; }
 #profile-recent-activity { flex: 1; max-height: none; }

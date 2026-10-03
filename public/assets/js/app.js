@@ -135,7 +135,7 @@
     const state = document.getElementById("auth-state");
     const mAuth = document.getElementById("mobile-auth");
     if (state) {
-      state.innerHTML = user ? '<a class="account-chip" href="/'+encodeURIComponent(user)+'"><img src="/api/avatars/user/'+encodeURIComponent(user)+'" alt=""><span>'+esc(user)+'</span></a>' : '<a class="btn header-signin" href="/signin.html">Sign in</a>';
+      state.innerHTML = user ? '<a class="account-chip" href="/'+encodeURIComponent(user)+'" aria-label="View profile for '+esc(user)+'" title="'+esc(user)+'"><img src="/api/avatars/user/'+encodeURIComponent(user)+'" alt=""></a>' : '<a class="btn header-signin" href="/signin.html">Sign in</a>';
     }
     if (mAuth) mAuth.innerHTML = user ? '<a href="/'+encodeURIComponent(user)+'">Profile</a>' : '';
     const session = document.getElementById("menu-session-actions");

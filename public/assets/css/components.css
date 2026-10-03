@@ -44,7 +44,7 @@ input[type="checkbox"], input[type="radio"] { min-height: 0; accent-color: var(-
 .data-table th { padding: 10px 14px; font-weight: 600; color: var(--text-dim); background: var(--panel); }
 .data-table td { padding: 11px 14px; border-top: 1px solid var(--border-subtle); }
 .data-table tbody tr:hover { background: var(--panel-hover); }
-.account-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px 5px 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); text-decoration: none; background: var(--panel-soft); font-size: 12px; }
+.account-chip { display: inline-flex; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); padding: 0; flex-shrink: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); text-decoration: none; background: var(--panel-soft); font-size: 12px; }
 .account-chip:hover { background: var(--panel-hover); }
 .avatar, .account-chip img { width: 27px; height: 27px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); }
 .muted { color: var(--text-dim); }

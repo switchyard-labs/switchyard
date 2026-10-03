@@ -214,11 +214,16 @@ func fallbackAvatar(label string) string {
 func (a *App) handleAvatar(w http.ResponseWriter, r *http.Request) {
 	kind, id := r.PathValue("kind"), r.PathValue("id")
 	var name string
+	label := id
 	if kind == "user" {
 		if p := a.userProfile(id); p != nil {
 			name, _ = p["avatar_file"].(string)
 		}
 	} else if kind == "org" {
+		if org := a.orgBySlugOrID(id); org != nil {
+			label = strOr(org["name"])
+			id = strOr(org["id"])
+		}
 		if it, e := a.Trestle.ListRecords("org_profiles", `org_id = "`+id+`"`); e == nil && len(it) > 0 {
 			name, _ = it[0]["avatar_file"].(string)
 		}
@@ -233,7 +238,7 @@ func (a *App) handleAvatar(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "image/svg+xml")
-	_, _ = w.Write([]byte(fallbackAvatar(id)))
+	_, _ = w.Write([]byte(fallbackAvatar(label)))
 }
 
 func (a *App) handleUserRepositories(w http.ResponseWriter, r *http.Request) {
