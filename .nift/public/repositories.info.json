@@ -1,9 +1,9 @@
 {
-  "name": "repo",
-  "title": "Repository",
+  "name": "repositories",
+  "title": "Repositories",
   "template": "templates/template.html",
-  "content": "content/repo.html",
-  "output": "public/repo.html",
+  "content": "content/repositories.html",
+  "output": "public/repositories.html",
   "minify": false,
   "minify-version": 0,
   "pagination": false,
@@ -14,7 +14,7 @@
   "project-fingerprint": "",
   "hierarchy-fingerprint": "",
   "dependencies": [
-    "content/repo.html",
+    "content/repositories.html",
     "templates/head.html",
     "templates/template.html"
   ],

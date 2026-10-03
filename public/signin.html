@@ -2,11 +2,11 @@
 <html lang="en" data-theme="dark">
 	<head>
 		<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Switchyard</title>
-<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
-<link rel="stylesheet" href="assets/css/theme.css">
-<link rel="stylesheet" href="assets/css/app.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Switchyard</title>
+		<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
+		<link rel="stylesheet" href="assets/css/theme.css">
+		<link rel="stylesheet" href="assets/css/app.css">
 	</head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
@@ -24,7 +24,7 @@
 			<div class="menu-groups">
 				<details class="menu-group" open><summary>Git</summary><div class="menu-links">
 					<a href="./">Dashboard</a>
-					<a href="./repositories.html">Repositories</a>
+					<a href="repositories.html">Repositories</a>
 					<a href="./work.html">Work</a>
 				</div></details>
 				<details class="menu-group" open><summary>Agent-native</summary><div class="menu-links">
@@ -42,21 +42,20 @@
 		</nav>
 		<main class="site-main" id="main-content">
 			<div class="auth-page">
-  <section class="auth-card" aria-labelledby="auth-title">
-    <div class="auth-brand"><img src="assets/images/favicon.webp" alt="" width="34" height="34"><span>Switchyard</span></div>
-    <h1 id="auth-title">Sign in to Switchyard</h1>
-    <p class="muted auth-copy">Access repositories, Work, Pull Requests, organizations and the editor.</p>
-    <form id="signin-form" class="auth-form">
-      <label>Username<input name="username" autocomplete="username" required></label>
-      <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
-      <button class="btn primary auth-submit" type="submit">Sign in</button>
-    </form>
-    <div class="auth-divider"><span>or</span></div>
-    <button class="btn auth-toggle" type="button" id="toggle-mode">Create an account</button>
-    <p class="error" id="auth-error" hidden></p>
-  </section>
-</div>
-
+			  <section class="auth-card" aria-labelledby="auth-title">
+			    <div class="auth-brand"><img src="assets/images/favicon.webp" alt="" width="34" height="34"><span>Switchyard</span></div>
+			    <h1 id="auth-title">Sign in to Switchyard</h1>
+			    <p class="muted auth-copy">Access repositories, Work, Pull Requests, organizations and the editor.</p>
+			    <form id="signin-form" class="auth-form">
+			      <label>Username<input name="username" autocomplete="username" required></label>
+			      <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+			      <button class="btn primary auth-submit" type="submit">Sign in</button>
+			    </form>
+			    <div class="auth-divider"><span>or</span></div>
+			    <button class="btn auth-toggle" type="button" id="toggle-mode">Create an account</button>
+			    <p class="error" id="auth-error" hidden></p>
+			  </section>
+			</div>
 		</main>
 		<script src="assets/js/code-surface.js"></script>
 		<script src="assets/js/markdown.js"></script>
