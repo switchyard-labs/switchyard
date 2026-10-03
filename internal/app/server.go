@@ -25,7 +25,6 @@ type App struct {
 	Trestle   *trestle.Client
 	Artifacts *artifacts.Client
 	Refs      *refs.Service
-	StrutBin  string
 	StaticDir string
 	DataDir   string
 	Hub       *Hub
@@ -292,6 +291,12 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, filepath.Join(a.StaticDir, "history.html"))
 			return
 		}
+	}
+	// Root-level product pages that must not be captured by the owner-slug
+	// profile route.
+	if r.URL.Path == "/repositories" || r.URL.Path == "/repositories.html" {
+		http.ServeFile(w, r, filepath.Join(a.StaticDir, "repositories.html"))
+		return
 	}
 	// Owner profile URLs use /{owner}. Reserved/static paths are filtered by
 	// validOwnerSlug; repository routes below take precedence for two segments.
