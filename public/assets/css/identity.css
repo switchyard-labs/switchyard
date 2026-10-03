@@ -240,12 +240,19 @@
 #followers-list, #following-list, #profile-stars { min-height: 0; overflow: auto; flex: 1; }
 /* Each profile panel owns its scrolling; overview itself never nests a scrollbar. */
 #overview { overflow: hidden; }
-#pinned-repos { max-height: 28dvh; align-content: start; }
+#pinned-repos { max-height: none; align-content: start; }
 #overview .contribution-card { margin-top: 14px; }
 #overview .profile-overview-activity { flex: 1; min-height: 100px; max-height: none; }
 #profile-stars { align-content: start; }
 @media(min-width:1101px) { .profile-layout { grid-template-columns: 250px minmax(0,1fr); } }
-@media(max-width:768px) { #pinned-repos { max-height: 22dvh; } .contribution-card { padding: 10px; } }
+@media(max-width:768px) {
+ .contribution-card { padding: 10px; }
+ /* A narrow overview scrolls as one panel; its cards never overlap or nest
+    another vertical scroll region inside it. The document stays fixed. */
+ #overview { overflow-y: auto; }
+ #overview .profile-overview-activity { flex: none; min-height: 0; }
+ #overview #profile-recent-activity { flex: none; overflow: visible; }
+}
 
 /* Calendar weeks share one responsive column geometry. */
 .contribution-grid { grid-auto-columns: auto; grid-template-columns: repeat(var(--contribution-weeks,53),minmax(10px,1fr)); width: 100%; min-width: calc(var(--contribution-weeks,53)*13px - 3px); }
