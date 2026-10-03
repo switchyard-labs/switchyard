@@ -161,7 +161,11 @@ func (a *App) handleUserContributions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	seen := map[string]bool{}
-	for _, record := range a.visibleRecords("ref_updates", records, a.currentUser(r)) {
+	// Request-local memoization keeps permission checks fresh across requests.
+	// Reject unrelated/out-of-window events before remote metadata reads.
+	metadata := map[string]map[string]any{}
+	allowed := map[string]bool{}
+	for _, record := range records {
 		if !attributedRef(strOf(record["provenance"]), target) {
 			continue
 		}
@@ -170,11 +174,22 @@ func (a *App) handleUserContributions(w http.ResponseWriter, r *http.Request) {
 		if sha == "" || strings.Trim(sha, "0") == "" || seen[identity] {
 			continue
 		}
-		seen[identity] = true
-		meta := a.repositoryMetaByArtifact(strOf(record["repo"]))
-		if meta == nil {
+
+		stamp, parseErr := time.Parse(time.RFC3339, strOf(record["occurred_at"]))
+		if parseErr != nil || stamp.Before(start) || !stamp.Before(today.Add(24*time.Hour)) {
 			continue
 		}
+		repo := strOf(record["repo"])
+		meta, loaded := metadata[repo]
+		if !loaded {
+			meta = a.repositoryMetaByArtifact(repo)
+			metadata[repo] = meta
+			allowed[repo] = a.CanRepository(meta, a.currentUser(r), ReadRepo)
+		}
+		if !allowed[repo] {
+			continue
+		}
+		seen[identity] = true
 		add(strOf(record["occurred_at"]), "commit", "Committed to "+strOf(meta["full_name"]), "/"+strOf(meta["owner_slug"])+"/"+strOf(meta["slug"]))
 	}
 	work, err := a.Trestle.ListRecords("work", filterEq("owner", target))

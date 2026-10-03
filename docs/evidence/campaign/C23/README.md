@@ -1,0 +1,9 @@
+# C23 performance work in progress
+
+The contribution endpoint made 160 metadata reads for 40 attributed and 80 unrelated updates in the isolated HTTP fixture. Filtering actor/date first and memoizing repository metadata/permission decisions for one request reduces that to one. A second request after changing the repository to private returns zero contributions: permission decisions never survive requests. Exact actor, private-data and race checks pass. This is measured query reduction, not a claim about Trestle database speed.
+
+`local-git-workspaces.json` compares scratch clones with one refreshed bare mirror and isolated detached worktrees at 1/3/10/25 concurrent tasks. Exact base and resulting trees/text agree, and the source branch is unchanged. The four probes cover Git browse, merge preview, diff comparison and integration candidate creation. They do not measure the semantic engine, remote provider, publication fences or complete queue latency. Those end-to-end gates remain outstanding.
+
+For this small local fixture, mirrors improve single-task setup but serialized worktree creation/removal makes 25-way batches slower (browse 233ms versus 64ms; preview 240ms versus 79ms). Do not replace production scratch clones from these results. A remote fixture and workload history are needed before deciding whether network savings justify a mirror design.
+
+The script creates only its own temporary repositories, pins detached workspace bases, compares candidate results and makes no remote push. It removes its owned temporary directory on exit. C23 is not complete.
