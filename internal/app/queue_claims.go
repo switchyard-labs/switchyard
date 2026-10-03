@@ -20,8 +20,9 @@ type queueEffect struct {
 }
 
 type queueClaim struct {
-	a      *App
-	effect queueEffect
+	a          *App
+	effect     queueEffect
+	collection string
 }
 
 func decodeQueueEffect(values map[string]any) (queueEffect, error) {
@@ -35,17 +36,21 @@ func decodeQueueEffect(values map[string]any) (queueEffect, error) {
 }
 
 func (a *App) claimQueue(id string) (*queueClaim, error) {
-	rid, _, values, err := a.Trestle.FindRecord("integration_effects", filterEq("queue_id", id))
+	return a.claimExecution("integration_effects", id)
+}
+
+func (a *App) claimExecution(collection, id string) (*queueClaim, error) {
+	rid, _, values, err := a.Trestle.FindRecord(collection, filterEq("queue_id", id))
 	if err != nil {
 		return nil, err
 	}
 	if rid == "" {
-		_, _, err = a.Trestle.CreateRecord("integration_effects", map[string]any{"queue_id": id, "state": queueEffect{QueueID: id, Phase: "queued"}}, "integration-effect-"+id)
+		_, _, err = a.Trestle.CreateRecord(collection, map[string]any{"queue_id": id, "state": queueEffect{QueueID: id, Phase: "queued"}}, "integration-effect-"+id)
 		if err != nil {
 			return nil, err
 		}
 	}
-	rid, ver, values, err := a.Trestle.FindRecord("integration_effects", filterEq("queue_id", id))
+	rid, ver, values, err := a.Trestle.FindRecord(collection, filterEq("queue_id", id))
 	if err != nil || rid == "" {
 		return nil, fmt.Errorf("integration effect unavailable: %v", err)
 	}
@@ -65,14 +70,14 @@ func (a *App) claimQueue(id string) (*queueClaim, error) {
 	if effect.Phase == "queued" {
 		effect.Phase = "claimed"
 	}
-	if err = a.Trestle.PatchRecord("integration_effects", rid, ver, map[string]any{"state": effect}); err != nil {
+	if err = a.Trestle.PatchRecord(collection, rid, ver, map[string]any{"state": effect}); err != nil {
 		return nil, err
 	}
-	return &queueClaim{a: a, effect: effect}, nil
+	return &queueClaim{a: a, effect: effect, collection: collection}, nil
 }
 
 func (c *queueClaim) save(phase string) error {
-	rid, ver, values, err := c.a.Trestle.FindRecord("integration_effects", filterEq("queue_id", c.effect.QueueID))
+	rid, ver, values, err := c.a.Trestle.FindRecord(c.collection, filterEq("queue_id", c.effect.QueueID))
 	if err != nil || rid == "" {
 		return fmt.Errorf("read integration claim: %v", err)
 	}
@@ -86,11 +91,11 @@ func (c *queueClaim) save(phase string) error {
 	}
 	c.effect.Phase = phase
 	c.effect.LeaseUntil = time.Now().Add(queueLease).UTC().Format(time.RFC3339Nano)
-	return c.a.Trestle.PatchRecord("integration_effects", rid, ver, map[string]any{"state": c.effect})
+	return c.a.Trestle.PatchRecord(c.collection, rid, ver, map[string]any{"state": c.effect})
 }
 
 func (c *queueClaim) release() error {
-	rid, ver, values, err := c.a.Trestle.FindRecord("integration_effects", filterEq("queue_id", c.effect.QueueID))
+	rid, ver, values, err := c.a.Trestle.FindRecord(c.collection, filterEq("queue_id", c.effect.QueueID))
 	if err != nil || rid == "" {
 		return fmt.Errorf("read integration claim: %v", err)
 	}
@@ -103,5 +108,5 @@ func (c *queueClaim) release() error {
 	}
 	current.Owner = ""
 	current.LeaseUntil = ""
-	return c.a.Trestle.PatchRecord("integration_effects", rid, ver, map[string]any{"state": current})
+	return c.a.Trestle.PatchRecord(c.collection, rid, ver, map[string]any{"state": current})
 }

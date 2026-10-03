@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -35,6 +36,8 @@ type Workflow struct {
 
 func workflowCollections() [][2]any {
 	return [][2]any{
+		{"workflow_git_effects", []trestle.CollectionField{{Name: "effect_id", Type: "text", Unique: true}, {Name: "state", Type: "json"}}},
+		{"workflow_claims", []trestle.CollectionField{{Name: "queue_id", Type: "text", Unique: true}, {Name: "state", Type: "json"}}},
 		{"workflow_owners", []trestle.CollectionField{{Name: "workflow_id", Type: "text", Unique: true}, {Name: "username", Type: "text"}}},
 		{"workflows", []trestle.CollectionField{
 			{Name: "id", Type: "text", Unique: true}, {Name: "name", Type: "text"},
@@ -220,7 +223,31 @@ func (a *App) handleApproveRun(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "run_not_waiting_approval"})
 		return
 	}
-	a.patchRun(runID, map[string]any{"status": "running", "updated_at": nowStr()})
+	steps, err := a.Trestle.ListRecords("wf_steps", filterEq("run_id", runID))
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
+	approved := false
+	for _, step := range steps {
+		if step["op"] == "wait_approval" && step["status"] == "waiting" {
+			e := &wfExec{a: a}
+			if err := e.updateStep(strOf(step["step_id"]), map[string]any{"status": "completed", "result": map[string]any{"approved": true, "approved_by": user}, "updated_at": nowStr()}); err != nil {
+				writeJSON(w, 502, map[string]any{"error": err.Error()})
+				return
+			}
+			approved = true
+			break
+		}
+	}
+	if !approved {
+		writeJSON(w, 409, map[string]any{"error": "approval_effect_not_waiting"})
+		return
+	}
+	if err := a.patchRun(runID, map[string]any{"status": "running", "updated_at": nowStr()}); err != nil {
+		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
 	log.Printf("workflow run %s approved by %s", runID, user)
 	writeJSON(w, 200, map[string]any{"id": runID, "status": "running", "approved_by": user})
 }
@@ -256,10 +283,15 @@ func (a *App) runByID(id string) map[string]any {
 	return items[0]
 }
 
-func (a *App) patchRun(id string, values map[string]any) {
-	if rid, ver, _, err := a.Trestle.FindRecord("workflow_runs", `id = "`+id+`"`); err == nil && rid != "" {
-		_ = a.Trestle.PatchRecord("workflow_runs", rid, ver, values)
+func (a *App) patchRun(id string, values map[string]any) error {
+	rid, ver, _, err := a.Trestle.FindRecord("workflow_runs", filterEq("id", id))
+	if err != nil {
+		return err
 	}
+	if rid == "" {
+		return fmt.Errorf("workflow run missing")
+	}
+	return a.Trestle.PatchRecord("workflow_runs", rid, ver, values)
 }
 
 // ---- runner loop ----
@@ -333,24 +365,42 @@ func (a *App) promoteWaitingParents() {
 	if err != nil {
 		return
 	}
-	children := map[string]string{} // parent_run_id -> child terminal status
-	for _, it := range items {
-		status, _ := it["status"].(string)
-		pr, _ := it["parent_run_id"].(string)
-		if pr != "" && (status == "completed" || status == "failed" || status == "cancelled") {
-			children[pr] = status
-		}
-	}
-	for _, it := range items {
-		status, _ := it["status"].(string)
-		if status != "waiting_child" {
+	for _, run := range items {
+		status := strOf(run["status"])
+		if status != "waiting_child" && status != "waiting_approval" {
 			continue
 		}
-		parent, _ := it["id"].(string)
-		if cs, ok := children[parent]; ok && cs == "completed" {
-			a.patchRun(parent, map[string]any{"status": "running", "updated_at": nowStr()})
-		} else if cs, ok := children[parent]; ok && (cs == "failed" || cs == "cancelled") {
-			a.patchRun(parent, map[string]any{"status": "failed", "error": "child " + parent + " " + cs, "updated_at": nowStr()})
+		id := strOf(run["id"])
+		steps, err := a.Trestle.ListRecords("wf_steps", filterEq("run_id", id))
+		if err != nil {
+			continue
+		}
+		for _, step := range steps {
+			result, _ := step["result"].(map[string]any)
+			resume := status == "waiting_approval" && step["op"] == "wait_approval" && step["status"] == "completed" && result["approved"] == true
+			if status == "waiting_child" && step["op"] == "spawn" && step["status"] == "waiting" {
+				child := a.runByID(strOf(result["child_run_id"]))
+				if child == nil {
+					continue
+				}
+				switch child["status"] {
+				case "completed", "failed", "cancelled":
+					resume = true
+				}
+			}
+			if status == "waiting_child" && step["op"] == "integrate" && step["status"] == "waiting" {
+				_, _, item, err := a.Trestle.FindRecord("iq", filterEq("id", strOf(result["queue_id"])))
+				if err == nil && item != nil && (item["status"] == "done" || item["status"] == "failed") {
+					resume = true
+				}
+			}
+
+			if resume {
+				if err := a.patchRun(id, map[string]any{"status": "running", "updated_at": nowStr()}); err != nil {
+					log.Printf("resume workflow %s: %v", id, err)
+				}
+				break
+			}
 		}
 	}
 }

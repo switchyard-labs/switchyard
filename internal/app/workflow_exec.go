@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -20,7 +21,12 @@ const (
 
 // validateWorkflowScript ensures the JS compiles and exposes a callable `run`.
 func validateWorkflowScript(script string) error {
-	vm := goja.New()
+	if len(script) > 256*1024 {
+		return fmt.Errorf("workflow script exceeds 256 KiB")
+	}
+	vm := deterministicWorkflowVM()
+	timer := time.AfterFunc(time.Second, func() { vm.Interrupt("workflow validation timed out") })
+	defer timer.Stop()
 	if _, err := vm.RunString(script); err != nil {
 		return err
 	}
@@ -47,11 +53,23 @@ type wfExec struct {
 	execN      int    // newly executed steps this pass
 	currentKey string // step key of the step currently executing
 	park       string // set when the run parks (approval/child)
+	timeLimit  time.Duration
+	deadline   time.Time
 	status     string // run status observed at start
 }
 
 // executeRun runs (or replays) a workflow run. Called by the runner pump.
 func (a *App) executeRun(runID string) error {
+	claim, err := a.claimExecution("workflow_claims", runID)
+	if err != nil || claim == nil {
+		return err
+	}
+	defer func() {
+		if err := claim.release(); err != nil {
+			log.Printf("release workflow claim %s: %v", runID, err)
+		}
+	}()
+
 	run := a.runByID(runID)
 	if run == nil {
 		return fmt.Errorf("run not found")
@@ -78,7 +96,9 @@ func (a *App) executeRun(runID string) error {
 		fmt.Sscanf(sc, "%d", &baseN)
 	}
 	if d, _ := a.policyGateWorkflow(strOr(params["repo"]), budget); d == "deny" {
-		a.patchRun(runID, map[string]any{"status": "failed", "error": "policy denied workflow", "updated_at": nowStr()})
+		if persistErr := a.patchRun(runID, map[string]any{"status": "failed", "error": "policy denied workflow", "updated_at": nowStr()}); persistErr != nil {
+			return persistErr
+		}
 		return nil
 	}
 	e := &wfExec{
@@ -86,34 +106,52 @@ func (a *App) executeRun(runID string) error {
 		budget: budget, depth: depth, baseN: baseN, status: status,
 	}
 	// mark running (unless we are a fresh pending run; pending -> running)
-	a.patchRun(runID, map[string]any{"status": "running", "updated_at": nowStr()})
+	if persistErr := a.patchRun(runID, map[string]any{"status": "running", "updated_at": nowStr()}); persistErr != nil {
+		return persistErr
+	}
 
 	out, err := e.run()
 	if err != nil {
+		var durability *workflowDurabilityError
+		if errors.As(err, &durability) {
+			return err
+		}
 		if e.park != "" {
 			// park: set the appropriate waiting status and stop this pass.
 			switch e.park {
 			case "approval":
-				a.patchRun(runID, map[string]any{"status": "waiting_approval", "step_count": itoa(e.baseN + e.execN), "updated_at": nowStr()})
+				if persistErr := a.patchRun(runID, map[string]any{"status": "waiting_approval", "step_count": itoa(e.counter), "updated_at": nowStr()}); persistErr != nil {
+					return persistErr
+				}
 			default:
-				a.patchRun(runID, map[string]any{"status": "waiting_child", "step_count": itoa(e.baseN + e.execN), "updated_at": nowStr()})
+				if persistErr := a.patchRun(runID, map[string]any{"status": "waiting_child", "step_count": itoa(e.counter), "updated_at": nowStr()}); persistErr != nil {
+					return persistErr
+				}
 			}
 			return nil
 		}
 		msg := err.Error()
 		if strings.Contains(msg, "cancelled") {
-			a.patchRun(runID, map[string]any{"status": "cancelled", "error": "cancelled", "step_count": itoa(e.baseN + e.execN), "updated_at": nowStr()})
+			if persistErr := a.patchRun(runID, map[string]any{"status": "cancelled", "error": "cancelled", "step_count": itoa(e.counter), "updated_at": nowStr()}); persistErr != nil {
+				return persistErr
+			}
 			return nil
 		}
 		if strings.Contains(msg, "budget exceeded") {
-			a.patchRun(runID, map[string]any{"status": "failed", "error": "budget exceeded", "step_count": itoa(e.baseN + e.execN), "updated_at": nowStr()})
+			if persistErr := a.patchRun(runID, map[string]any{"status": "failed", "error": "budget exceeded", "step_count": itoa(e.counter), "updated_at": nowStr()}); persistErr != nil {
+				return persistErr
+			}
 			return nil
 		}
-		a.patchRun(runID, map[string]any{"status": "failed", "error": msg, "step_count": itoa(e.baseN + e.execN), "updated_at": nowStr()})
+		if persistErr := a.patchRun(runID, map[string]any{"status": "failed", "error": msg, "step_count": itoa(e.counter), "updated_at": nowStr()}); persistErr != nil {
+			return persistErr
+		}
 		log.Printf("workflow run %s failed: %v", runID, err)
 		return nil
 	}
-	a.patchRun(runID, map[string]any{"status": "completed", "output": out, "step_count": itoa(e.baseN + e.execN), "error": "", "updated_at": nowStr()})
+	if persistErr := a.patchRun(runID, map[string]any{"status": "completed", "output": out, "step_count": itoa(e.counter), "error": "", "updated_at": nowStr()}); persistErr != nil {
+		return persistErr
+	}
 	log.Printf("workflow run %s completed (%d executed steps, %d total)", runID, e.execN, e.baseN+e.execN)
 	return nil
 }
@@ -121,7 +159,33 @@ func (a *App) executeRun(runID string) error {
 // run executes the workflow script. It returns the JS `run` return value and
 // an error describing the control flow outcome (park/cancel/fail).
 func (e *wfExec) run() (map[string]any, error) {
-	vm := goja.New()
+	vm := deterministicWorkflowVM()
+	limit := e.timeLimit
+	if limit <= 0 {
+		limit = 2 * time.Minute
+	}
+	timer := time.AfterFunc(limit, func() { vm.Interrupt("workflow timed out") })
+	defer timer.Stop()
+	e.deadline = time.Now().Add(limit)
+	stop := make(chan struct{})
+	monitorDone := make(chan struct{})
+	defer func() { close(stop); <-monitorDone }()
+	go func() {
+		defer close(monitorDone)
+		ticker := time.NewTicker(250 * time.Millisecond)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-stop:
+				return
+			case <-ticker.C:
+				if err := e.checkCancel(); err != nil {
+					vm.Interrupt(err)
+					return
+				}
+			}
+		}
+	}()
 	ctx := vm.NewObject()
 	ctx.Set("agent", e.opAgent)
 	ctx.Set("check", e.opCheck)
@@ -166,6 +230,9 @@ func (e *wfExec) run() (map[string]any, error) {
 
 // checkCancel returns true if the run is being cancelled.
 func (e *wfExec) checkCancel() error {
+	if !e.deadline.IsZero() && time.Now().After(e.deadline) {
+		return fmt.Errorf("workflow timed out")
+	}
 	run := e.a.runByID(e.runID)
 	if run == nil {
 		return fmt.Errorf("cancelled")
@@ -193,19 +260,100 @@ func (e *wfExec) step(op string, args map[string]any, exec func() (any, error)) 
 	e.counter++
 	e.currentKey = key
 	ab, _ := json.Marshal(args)
-	hash := sha256Hex(ab)
+	hash := sha256Hex(append([]byte(op+"\x00"), ab...))
 	stepID := e.runID + "|" + key
 
-	existing := e.findStep(stepID)
+	_, _, existing, readErr := e.a.Trestle.FindRecord("wf_steps", filterEq("step_id", stepID))
+	if readErr != nil {
+		return nil, &workflowDurabilityError{readErr}
+	}
+	if e.counter > e.budget {
+		return nil, fmt.Errorf("budget exceeded (%d steps)", e.budget)
+	}
 	if existing != nil {
 		st, _ := existing["status"].(string)
 		ah, _ := existing["args_hash"].(string)
+		if existing["op"] != op || ah != hash {
+			return nil, fmt.Errorf("non-deterministic replay at %s (operation or args changed)", key)
+		}
 		if st == "completed" && ah == hash {
+			if op == "wait_approval" {
+				result, _ := existing["result"].(map[string]any)
+				if result["approved"] != true {
+					if err := e.updateStep(stepID, map[string]any{"status": "waiting", "updated_at": nowStr()}); err != nil {
+						return nil, err
+					}
+					e.park = "approval"
+					return existing["result"], nil
+				}
+			}
 			return existing["result"], nil // replay
 		}
 		if st == "completed" {
 			return nil, fmt.Errorf("non-deterministic replay at %s (args changed)", key)
 		}
+		if st == "waiting" {
+			if op == "wait_approval" {
+				e.park = "approval"
+				return existing["result"], nil
+			}
+			if op == "integrate" {
+				result, _ := existing["result"].(map[string]any)
+				queueID := strOf(result["queue_id"])
+				_, _, item, err := e.a.Trestle.FindRecord("iq", filterEq("id", queueID))
+				if err != nil {
+					return nil, &workflowDurabilityError{err}
+				}
+				if item == nil {
+					return nil, fmt.Errorf("integration queue effect missing")
+				}
+				if item["status"] == "done" {
+					_, _, values, err := e.a.Trestle.FindRecord("integration_effects", filterEq("queue_id", queueID))
+					if err != nil {
+						return nil, &workflowDurabilityError{err}
+					}
+					effect, err := decodeQueueEffect(values)
+					if err != nil || effect.PublishedSHA == "" {
+						return nil, fmt.Errorf("publication receipt missing")
+					}
+					result["status"] = "integrated"
+					result["new_base_sha"] = effect.PublishedSHA
+					if err := e.updateStep(stepID, map[string]any{"status": "completed", "result": result, "updated_at": nowStr()}); err != nil {
+						return nil, err
+					}
+					return result, nil
+				}
+				if item["status"] == "failed" {
+					return nil, fmt.Errorf("integration queue failed")
+				}
+				e.park = "queue"
+				return result, nil
+			}
+
+			if op == "spawn" {
+				result, ok := existing["result"].(map[string]any)
+				if !ok {
+					return nil, fmt.Errorf("invalid child effect")
+				}
+				child := e.a.runByID(strOf(result["child_run_id"]))
+				if child == nil {
+					return nil, fmt.Errorf("child unavailable")
+				}
+				switch child["status"] {
+				case "completed":
+					if err := e.updateStep(stepID, map[string]any{"status": "completed", "updated_at": nowStr()}); err != nil {
+						return nil, err
+					}
+					return result, nil
+				case "failed", "cancelled":
+					return nil, fmt.Errorf("child %s", child["status"])
+				default:
+					e.park = "child"
+					return result, nil
+				}
+			}
+		}
+
 		attempts := 0
 		fmt.Sscanf(stepStr(existing["attempts"]), "%d", &attempts)
 		if st == "failed" && attempts >= maxWfRetries {
@@ -228,32 +376,38 @@ func (e *wfExec) step(op string, args map[string]any, exec func() (any, error)) 
 			"executed_at": nowStr(), "updated_at": nowStr(),
 		}, "wfstep-"+stepID); cerr != nil {
 			log.Printf("workflow step create %s/%s: %v", e.runID, key, cerr)
-			return nil, fmt.Errorf("durable step record failed: %v", cerr)
+			return nil, &workflowDurabilityError{cerr}
 		}
 	} else {
-		e.updateStep(stepID, map[string]any{"status": "running", "attempts": itoa(attempts), "updated_at": nowStr()})
+		if err := e.updateStep(stepID, map[string]any{"status": "running", "attempts": itoa(attempts), "updated_at": nowStr()}); err != nil {
+			return nil, err
+		}
 	}
 
-	var result any
-	var err error
-	for attempt := attempts; attempt <= maxWfRetries; attempt++ {
-		result, err = exec()
-		if err == nil {
-			break
-		}
-		time.Sleep(time.Duration(attempt) * 250 * time.Millisecond) // backoff
+	if attempts > maxWfRetries {
+		return nil, fmt.Errorf("step retry limit exceeded")
 	}
+	e.a.workflowCheckpoint("after_intent")
+	result, err := exec()
+	e.a.workflowCheckpoint("after_effect")
 	if err != nil {
-		e.updateStep(stepID, map[string]any{"status": "failed", "result": err.Error(), "attempts": itoa(attempts), "updated_at": nowStr()})
-		return nil, fmt.Errorf("step %s (%s) failed: %v", key, op, err)
+		if persistErr := e.updateStep(stepID, map[string]any{"status": "failed", "result": err.Error(), "attempts": itoa(attempts), "updated_at": nowStr()}); persistErr != nil {
+			return nil, persistErr
+		}
+		return nil, fmt.Errorf("step %s (%s) failed: %w", key, op, err)
 	}
-	e.updateStep(stepID, map[string]any{"status": "completed", "result": result, "attempts": itoa(attempts), "updated_at": nowStr()})
+	status := "completed"
+	if e.park != "" {
+		status = "waiting"
+	}
+	if err := e.updateStep(stepID, map[string]any{"status": status, "result": result, "attempts": itoa(attempts), "updated_at": nowStr()}); err != nil {
+		return nil, err
+	}
+	e.a.workflowCheckpoint("after_completion")
 	if isNew {
 		e.execN++
-		if e.baseN+e.execN > e.budget {
-			return nil, fmt.Errorf("budget exceeded (%d steps)", e.budget)
-		}
 	}
+
 	return result, nil
 }
 
@@ -270,10 +424,26 @@ func (e *wfExec) findStep(stepID string) map[string]any {
 	return nil
 }
 
-func (e *wfExec) updateStep(stepID string, values map[string]any) {
-	if id, ver, _, err := e.a.Trestle.FindRecord("wf_steps", `step_id = "`+stepID+`"`); err == nil && id != "" {
-		_ = e.a.Trestle.PatchRecord("wf_steps", id, ver, values)
+func (e *wfExec) updateStep(stepID string, values map[string]any) error {
+	id, ver, _, err := e.a.Trestle.FindRecord("wf_steps", filterEq("step_id", stepID))
+	if err != nil {
+		return &workflowDurabilityError{err}
 	}
+	if id == "" {
+		return &workflowDurabilityError{fmt.Errorf("step missing")}
+	}
+	if err := e.a.Trestle.PatchRecord("wf_steps", id, ver, values); err != nil {
+		return &workflowDurabilityError{err}
+	}
+	return nil
+}
+
+func deterministicWorkflowVM() *goja.Runtime {
+	vm := goja.New()
+	vm.SetMaxCallStackSize(1000)
+	vm.SetTimeSource(func() time.Time { return time.Unix(0, 0).UTC() })
+	vm.SetRandSource(func() float64 { return 0.5 })
+	return vm
 }
 
 func sha256Hex(b []byte) string {
@@ -316,19 +486,8 @@ func (e *wfExec) opAgent(args map[string]any) (map[string]any, error) {
 		if err := e.a.policyGateAgent("implementer", repo, file); err != nil {
 			return nil, err
 		}
-		current := ""
-		if raw, err := e.a.Artifacts.RawFile(repo, branch, file); err == nil {
-			current = string(raw)
-		}
-		head, err := e.a.repoHead(repo, branch)
-		if err != nil {
-			return nil, err
-		}
-		ex, res, err := e.a.runAgentStep("implementer", "wf:"+e.runID, repo, branch, file, current, appendLine, head, "workflow:"+e.runID+":"+e.currentKey)
-		if err != nil {
-			return nil, err
-		}
-		return map[string]any{"execution": ex.ID, "new_sha": res.NewSHA, "status": res.Status, "output": ex.Output}, nil
+		return e.durableAgentUpdate(repo, branch, file, appendLine)
+
 	})
 	if err != nil {
 		return nil, err
@@ -393,20 +552,40 @@ func (e *wfExec) opIntegrate(args map[string]any) (map[string]any, error) {
 		// deterministic PR id so a crash between PR creation and step
 		// completion re-creates the SAME PR (idempotent).
 		prID := "pr_" + sha256Hex([]byte(e.runID + "|" + e.currentKey))[:10]
-		_, replayed, err := e.a.Trestle.CreateRecord("prs", map[string]any{
-			"id": prID, "attempt_id": "wf:" + e.runID, "work_id": "wf:" + e.runID,
-			"repo": repo, "branch": branch, "base": base, "title": "workflow integrate " + e.runID,
-			"status": "open", "check_status": "pending", "created_at": nowStr(), "integrated_at": "",
-		}, "pr-"+prID)
+		_, _, existingPR, err := e.a.Trestle.FindRecord("prs", filterEq("id", prID))
 		if err != nil {
-			return nil, err
+			return nil, &workflowDurabilityError{err}
 		}
-		if replayed {
-			// PR already exists from a prior attempt: if already integrated,
-			// return that result.
-			if items, _ := e.a.Trestle.ListRecords("prs", `id = "`+prID+`"`); len(items) > 0 && items[0]["status"] == "integrated" {
-				return map[string]any{"pr": prID, "status": "integrated", "new_base_sha": items[0]["integrated_at"]}, nil
+		replayed := existingPR != nil
+		if !replayed {
+			_, _, err = e.a.Trestle.CreateRecord("prs", map[string]any{
+				"id": prID, "attempt_id": "wf:" + e.runID, "work_id": "wf:" + e.runID,
+				"repo": repo, "branch": branch, "base": base, "title": "workflow integrate " + e.runID,
+				"status": "open", "check_status": "pending", "created_at": strOf(e.a.runByID(e.runID)["created_at"]), "integrated_at": "",
+			}, "pr-"+prID)
+			if err != nil {
+				return nil, err
 			}
+		}
+		if replayed && existingPR["status"] == "integrated" {
+			items, err := e.a.Trestle.ListRecords("iq", filterEq("pr_id", prID))
+			if err != nil {
+				return nil, &workflowDurabilityError{err}
+			}
+			for _, item := range items {
+				if item["status"] != "done" {
+					continue
+				}
+				_, _, values, err := e.a.Trestle.FindRecord("integration_effects", filterEq("queue_id", strOf(item["id"])))
+				if err != nil {
+					return nil, &workflowDurabilityError{err}
+				}
+				effect, err := decodeQueueEffect(values)
+				if err == nil && effect.PublishedSHA != "" {
+					return map[string]any{"pr": prID, "status": "integrated", "new_base_sha": effect.PublishedSHA}, nil
+				}
+			}
+			return nil, fmt.Errorf("integrated PR has no publication receipt")
 		}
 		_, sourceSHA, err := e.a.Refs.Snapshot(repo, base, branch)
 		if err != nil {
@@ -428,11 +607,15 @@ func (e *wfExec) opIntegrate(args map[string]any) (map[string]any, error) {
 		if err != nil {
 			return nil, err
 		}
+		e.park = "queue"
 		return map[string]any{"pr": prID, "status": "queued", "queue_id": qid}, nil
 
 	})
 	if err != nil {
 		return nil, err
+	}
+	if e.park == "queue" {
+		return nil, fmt.Errorf("park:queue")
 	}
 	m, _ := res.(map[string]any)
 	return m, nil
@@ -490,6 +673,10 @@ func (e *wfExec) opSpawn(args map[string]any) (map[string]any, error) {
 		// creation and step-completion re-creates the SAME child (idempotent).
 		childID := "wfr_" + sha256Hex([]byte(e.runID + "|" + e.currentKey))[:10]
 		script, _ := def["script"].(string)
+		if child := e.a.runByID(childID); child != nil {
+			e.park = "child"
+			return map[string]any{"child_run_id": childID, "parent_run_id": e.runID}, nil
+		}
 		_, replayed, err := e.a.Trestle.CreateRecord("workflow_runs", map[string]any{
 			"id": childID, "workflow_id": def["id"], "params": childParams, "script": script,
 			"status": "pending", "step_count": "0", "budget_steps": "25",
@@ -540,7 +727,7 @@ func (e *wfExec) opSleep(args map[string]any) (map[string]any, error) {
 				return nil, err
 			}
 		}
-		return map[string]any{"slept_ms": ms}, nil
+		return map[string]any{"slept_ms": args["ms"]}, nil
 	})
 	if err != nil {
 		return nil, err
@@ -590,4 +777,15 @@ func (e *wfExec) opParallel(vm *goja.Runtime, call goja.FunctionCall) goja.Value
 		results = append(results, v.Export())
 	}
 	return vm.ToValue(results)
+}
+
+type workflowDurabilityError struct{ cause error }
+
+func (e *workflowDurabilityError) Error() string { return "workflow persistence: " + e.cause.Error() }
+func (e *workflowDurabilityError) Unwrap() error { return e.cause }
+
+func (a *App) workflowCheckpoint(phase string) {
+	if a.workflowCrashHook != nil {
+		a.workflowCrashHook(phase)
+	}
 }

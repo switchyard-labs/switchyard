@@ -173,7 +173,13 @@ func (s *Service) PublishPrepared(p *PreparedMerge) (*Result, error) {
 	l := s.lock(p.Repo, p.Base)
 	l.Lock()
 	defer l.Unlock()
-	b, h, err := s.Snapshot(p.Repo, p.Base, p.Source)
+	var b, h string
+	var err error
+	if p.Source == "" {
+		b, err = s.currentSHA(p.Repo, p.remote, p.Base)
+	} else {
+		b, h, err = s.Snapshot(p.Repo, p.Base, p.Source)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -272,4 +278,43 @@ func (s *Service) CandidatePublished(p *PreparedMerge) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+// PrepareUpdate creates a private immutable update without publishing it.
+func (s *Service) PrepareUpdate(repo, branch, expected string, changes []Change, message string) (*PreparedMerge, error) {
+	if err := validateBranch(branch); err != nil {
+		return nil, err
+	}
+	if !shaRE.MatchString(expected) {
+		return nil, fmt.Errorf("expected SHA required")
+	}
+	remote, err := s.remote(repo)
+	if err != nil {
+		return nil, err
+	}
+	current, err := s.currentSHA(repo, remote, branch)
+	if err != nil {
+		return nil, err
+	}
+	if current != expected {
+		return nil, fmt.Errorf("branch moved before preparation")
+	}
+	dir, err := s.buildCommit(repo, remote, branch, expected, changes, message)
+	if err != nil {
+		return nil, err
+	}
+	p := &PreparedMerge{Repo: repo, Base: branch, BaseSHA: expected, Dir: dir, remote: remote}
+	head, err := gitOut(dir, "rev-parse", "HEAD")
+	if err != nil {
+		p.Close()
+		return nil, err
+	}
+	tree, err := gitOut(dir, "rev-parse", "HEAD^{tree}")
+	if err != nil {
+		p.Close()
+		return nil, err
+	}
+	p.CommitSHA = strings.TrimSpace(head)
+	p.TreeSHA = strings.TrimSpace(tree)
+	return p, nil
 }

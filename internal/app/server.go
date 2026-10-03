@@ -22,7 +22,8 @@ import (
 )
 
 type App struct {
-	queueCrashHook func(string) // test-only injection, unset by constructors
+	workflowCrashHook func(string)
+	queueCrashHook    func(string) // test-only injection, unset by constructors
 
 	Trestle   *trestle.Client
 	Artifacts *artifacts.Client

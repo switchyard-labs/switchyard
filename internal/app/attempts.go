@@ -1,6 +1,8 @@
 package app
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
@@ -203,10 +205,12 @@ func (a *App) commitHasMessage(repo, branch, head, want string) bool {
 }
 
 func randHex(n int) string {
-	const d = "0123456789abcdef"
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = d[(time.Now().UnixNano()>>uint(i*4))%16]
+	if n < 1 {
+		panic("invalid random ID length")
 	}
-	return string(b)
+	bytes := make([]byte, (n+1)/2)
+	if _, err := rand.Read(bytes); err != nil {
+		panic("secure random ID unavailable")
+	}
+	return hex.EncodeToString(bytes)[:n]
 }

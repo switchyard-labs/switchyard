@@ -25,9 +25,10 @@ type queueRecord struct {
 	values  map[string]any
 }
 type queueStore struct {
-	mu      sync.Mutex
-	records map[string][]*queueRecord
-	next    int
+	mu                 sync.Mutex
+	records            map[string][]*queueRecord
+	next               int
+	failStepCompletion bool
 }
 
 func (f *queueStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -86,6 +87,10 @@ func (f *queueStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == "PATCH" && len(parts) == 6 {
+		if f.failStepCompletion && collection == "wf_steps" && body.Values["status"] == "completed" {
+			w.WriteHeader(503)
+			return
+		}
 		for _, record := range f.records[collection] {
 			if record.id != parts[5] {
 				continue
