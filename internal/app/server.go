@@ -157,6 +157,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/tree", a.authorizeHandler(a.handleCanonicalRepoTree))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/content", a.authorizeHandler(a.handleCanonicalRepoContent))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/refs", a.authorizeHandler(a.handleCanonicalRepoRefs))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/archive/{archive...}", a.authorizeHandler(a.handleRepositoryArchive))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/overview", a.authorizeHandler(a.handleRepositoryOverview))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/commits", a.authorizeHandler(a.handleRepositoryCommits))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/commits/{sha}", a.authorizeHandler(a.handleRepositoryCommit))
@@ -364,6 +365,18 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 	// Owner profile URLs use /{owner}. Reserved/static paths are filtered by
 	// validOwnerSlug; repository routes below take precedence for two segments.
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts) >= 4 && parts[2] == "archive" && validOwnerSlug(parts[0]) && validRepoSlug(parts[1]) {
+		if r.Method != http.MethodGet {
+			w.Header().Set("Allow", "GET")
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		r.SetPathValue("owner", parts[0])
+		r.SetPathValue("repo", parts[1])
+		r.SetPathValue("archive", strings.Join(parts[3:], "/"))
+		a.handleRepositoryArchive(w, r)
+		return
+	}
 	if len(parts) == 1 && validOwnerSlug(parts[0]) {
 		a.serveAsset(w, r, "profile.html")
 		return
