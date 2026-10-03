@@ -1,0 +1,161 @@
+{
+  "scope": "read-only total HTTP response time from benchmark host; first request is not a guaranteed cold cache; no p95 for small sample",
+  "rows": [
+    {
+      "path": "/api/repositories/alice/railway/overview",
+      "samples": 7,
+      "first_request_ms": 9675.81,
+      "median_ms": 2613.55,
+      "min_ms": 2424.57,
+      "max_ms": 9675.81,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "timings_ms": [
+        9675.81,
+        4266.45,
+        3219.82,
+        2613.55,
+        2424.57,
+        2490.57,
+        2519.24
+      ]
+    },
+    {
+      "path": "/api/repositories/alice/railway/content?ref=main&path=src/routes.mjs",
+      "samples": 7,
+      "first_request_ms": 655.07,
+      "median_ms": 655.07,
+      "min_ms": 621.95,
+      "max_ms": 716.4,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "timings_ms": [
+        655.07,
+        624.86,
+        707.05,
+        716.4,
+        622.72,
+        621.95,
+        701.38
+      ]
+    },
+    {
+      "path": "/api/repositories/alice/railway/commits?ref=main",
+      "samples": 7,
+      "first_request_ms": 630.35,
+      "median_ms": 661.85,
+      "min_ms": 630.35,
+      "max_ms": 801.06,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "timings_ms": [
+        630.35,
+        718.55,
+        801.06,
+        644.99,
+        635.41,
+        693.88,
+        661.85
+      ]
+    },
+    {
+      "path": "/api/repositories/alice/railway/actions",
+      "samples": 7,
+      "first_request_ms": 6.17,
+      "median_ms": 5.95,
+      "min_ms": 4.4,
+      "max_ms": 7.22,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "timings_ms": [
+        6.17,
+        5.95,
+        7.22,
+        4.4,
+        5.13,
+        5.59,
+        6.29
+      ]
+    },
+    {
+      "path": "/api/users/alice/contributions",
+      "samples": 7,
+      "first_request_ms": 8.07,
+      "median_ms": 7.57,
+      "min_ms": 5.03,
+      "max_ms": 8.07,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "timings_ms": [
+        8.07,
+        7.68,
+        7.57,
+        6.62,
+        6.99,
+        7.73,
+        5.03
+      ]
+    },
+    {
+      "path": "/api/queue",
+      "samples": 7,
+      "first_request_ms": 1.91,
+      "median_ms": 1.82,
+      "min_ms": 1.17,
+      "max_ms": 2.38,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "timings_ms": [
+        1.91,
+        1.38,
+        1.82,
+        2.38,
+        1.84,
+        1.32,
+        1.17
+      ]
+    }
+  ]
+}

@@ -1,34 +1,44 @@
 package app
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
 	"switchyard/internal/artifacts"
+	"time"
 )
 
 // handleRepositoryOverview assembles familiar Git-host repository metadata from
 // the canonical Switchyard identity plus immutable Git truth in Artifacts.
 func (a *App) handleRepositoryOverview(w http.ResponseWriter, r *http.Request) {
+	started := time.Now()
 	meta, artifact, ok := a.resolveCanonicalRepository(w, r)
 	if !ok {
 		return
 	}
+	coordinationDuration := time.Since(started)
+	started = time.Now()
 	backend, err := a.Artifacts.GetRepo(artifact)
 	if err != nil {
 		writeArtifactsError(w, err)
 		return
 	}
+	metadataDuration := time.Since(started)
+	started = time.Now()
 	tok, err := a.Refs.GitToken(artifact)
 	if err != nil {
 		writeArtifactsError(w, err)
 		return
 	}
+	tokenDuration := time.Since(started)
+	started = time.Now()
 	refsMap, err := a.Artifacts.LsRemoteWithToken(backend.Remote, tok)
 	if err != nil {
 		writeArtifactsError(w, err)
 		return
 	}
+	gitDuration := time.Since(started)
 	branches, tags := []string{}, []string{}
 	for ref := range refsMap {
 		if strings.HasPrefix(ref, "refs/heads/") {
@@ -44,14 +54,17 @@ func (a *App) handleRepositoryOverview(w http.ResponseWriter, r *http.Request) {
 	if ref == "" {
 		ref = strOr(meta["default_branch"])
 	}
+	started = time.Now()
 	var commits []artifacts.Commit
 	if len(refsMap) > 0 {
 		commits, err = a.Artifacts.Log(artifact, ref, 50)
 	}
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": "commit_history_unavailable"})
+		writeArtifactsError(w, err)
 		return
 	}
+	historyDuration := time.Since(started)
+	w.Header().Set("Server-Timing", fmt.Sprintf("coordination;dur=%.2f, artifacts_metadata;dur=%.2f, git_token;dur=%.2f, git_refs;dur=%.2f, artifacts_history;dur=%.2f", float64(coordinationDuration)/float64(time.Millisecond), float64(metadataDuration)/float64(time.Millisecond), float64(tokenDuration)/float64(time.Millisecond), float64(gitDuration)/float64(time.Millisecond), float64(historyDuration)/float64(time.Millisecond)))
 	var latest any = nil
 	if len(commits) > 0 {
 		latest = commits[0]

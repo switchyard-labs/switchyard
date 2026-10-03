@@ -1,0 +1,40 @@
+{
+  "scope": "read-only total HTTP response time from benchmark host; first request is not a guaranteed cold cache; no p95 for small sample",
+  "rows": [
+    {
+      "path": "/api/repositories/alice/railway/overview",
+      "samples": 7,
+      "first_request_ms": 10049.81,
+      "median_ms": 2457.38,
+      "min_ms": 2307.65,
+      "max_ms": 10049.81,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "timings_ms": [
+        10049.81,
+        2590.85,
+        2307.65,
+        2373.1,
+        2565.7,
+        2457.38,
+        2424.27
+      ],
+      "server_timings": [
+        "coordination;dur=0.38, artifacts_metadata;dur=6747.70, git_token;dur=988.29, git_refs;dur=1618.83, artifacts_history;dur=690.31",
+        "coordination;dur=0.62, artifacts_metadata;dur=405.86, git_token;dur=0.00, git_refs;dur=1600.74, artifacts_history;dur=580.02",
+        "coordination;dur=0.62, artifacts_metadata;dur=351.08, git_token;dur=0.00, git_refs;dur=1372.30, artifacts_history;dur=580.33",
+        "coordination;dur=0.61, artifacts_metadata;dur=340.40, git_token;dur=0.00, git_refs;dur=1377.52, artifacts_history;dur=651.32",
+        "coordination;dur=0.66, artifacts_metadata;dur=389.21, git_token;dur=0.00, git_refs;dur=1597.81, artifacts_history;dur=574.22",
+        "coordination;dur=0.37, artifacts_metadata;dur=387.47, git_token;dur=0.00, git_refs;dur=1453.82, artifacts_history;dur=612.55",
+        "coordination;dur=0.83, artifacts_metadata;dur=399.49, git_token;dur=0.00, git_refs;dur=1438.25, artifacts_history;dur=581.26"
+      ]
+    }
+  ]
+}
