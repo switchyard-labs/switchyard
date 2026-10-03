@@ -184,3 +184,20 @@ func TestRequiredActionsReplaceDemoMarkerGate(t *testing.T) {
 		t.Fatal("stale Actions passed PR gate")
 	}
 }
+
+func TestActionsRepeatedPollingDoesNotRewriteViews(t *testing.T) {
+	a, store, s := actionFixture(t)
+	if err := a.syncActionSnapshot(s); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.syncActionSnapshot(s); err != nil {
+		t.Fatal(err)
+	}
+	for _, collection := range []string{"action_runs", "action_jobs", "action_steps", "action_checks", "external_executions"} {
+		for _, record := range store.records[collection] {
+			if record.version != 1 {
+				t.Fatalf("unchanged %s rewritten", collection)
+			}
+		}
+	}
+}

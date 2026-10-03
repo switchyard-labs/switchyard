@@ -23,6 +23,12 @@ func decodeAction(value any, out any) error {
 	}
 	return json.Unmarshal(data, out)
 }
+func sameActionJSON(left, right any) bool {
+	a, errA := json.Marshal(left)
+	b, errB := json.Marshal(right)
+	var normalizedA, normalizedB any
+	return errA == nil && errB == nil && json.Unmarshal(a, &normalizedA) == nil && json.Unmarshal(b, &normalizedB) == nil && reflect.DeepEqual(normalizedA, normalizedB)
+}
 func (a *App) actionRecord(collection, id string, values map[string]any) error {
 	rid, version, existing, err := a.Trestle.FindRecord(collection, filterEq("id", id))
 	if err != nil {
@@ -32,7 +38,7 @@ func (a *App) actionRecord(collection, id string, values map[string]any) error {
 		_, _, err = a.Trestle.CreateRecord(collection, values, collection+"-"+id)
 		return err
 	}
-	if reflect.DeepEqual(existing, values) {
+	if sameActionJSON(existing, values) {
 		return nil
 	}
 	// Every child identity is immutable; only its normalized state may advance.
@@ -92,8 +98,10 @@ func (a *App) syncActionSnapshot(snapshot actions.Snapshot) error {
 		if actions.Terminal(oldStatus) && oldStatus != status {
 			return fmt.Errorf("Actions terminal result cannot regress")
 		}
-		if err = a.Trestle.PatchRecord("action_runs", rid, version, map[string]any{"state": state}); err != nil {
-			return err
+		if !sameActionJSON(existing["state"], state) {
+			if err = a.Trestle.PatchRecord("action_runs", rid, version, map[string]any{"state": state}); err != nil {
+				return err
+			}
 		}
 	} else {
 		_, _, err = a.Trestle.CreateRecord("action_runs", map[string]any{"id": run.ID, "repo": run.Repo, "source_sha": run.SHA, "ref": run.Ref, "definition_revision": run.DefinitionRevision, "trigger": run.Trigger, "actor": run.Actor, "created_at": manifest.StartedAt, "state": state}, "action-run-"+run.ID)
