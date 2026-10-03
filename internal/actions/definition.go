@@ -52,9 +52,17 @@ func CompileDefinition(source string) (Definition, error) {
 	if len(body) > 128<<10 {
 		return result, fmt.Errorf("Actions definition exceeds 128 KiB")
 	}
-	if err = json.Unmarshal([]byte(body), &result); err != nil {
+	var exported struct {
+		Refs []string `json:"refs"`
+		Jobs []Job    `json:"jobs"`
+	}
+	decoder := json.NewDecoder(strings.NewReader(body))
+	decoder.DisallowUnknownFields()
+	if err = decoder.Decode(&exported); err != nil {
 		return result, fmt.Errorf("Actions default export must contain refs and jobs")
 	}
+	result.Refs = exported.Refs
+	result.Jobs = exported.Jobs
 	if err = result.Validate(); err != nil {
 		return result, err
 	}

@@ -47,3 +47,21 @@ export function validateRerunParent(run, previous) {
  if(JSON.stringify(failed)!==JSON.stringify(run.selected_jobs))throw new Error('invalid_failed_job_selection');
  return previous;
 }
+
+// Privileged binding values never enter runner configuration. These variants
+// also keep accidental provider diagnostics from copying them into captures.
+export function secretVariants(values) {
+ const variants=[];
+ for(const value of values)if(typeof value==='string'&&value.length>=12){
+  variants.push(value,encodeURIComponent(value),btoa(value),[...new TextEncoder().encode(value)].map(n=>n.toString(16).padStart(2,'0')).join(''));
+ }
+ return [...new Set(variants)].sort((a,b)=>b.length-a.length);
+}
+export function redactSecrets(text,values) {
+ for(const value of secretVariants(values)){
+  text=text.split(value).join('[redacted]');
+  // Avoid exposing the prefix of a value split by the capture byte limit.
+  for(let size=Math.min(value.length-1,text.length);size>=8;size--)if(text.endsWith(value.slice(0,size))){text=text.slice(0,-size)+'[redacted]';break;}
+ }
+ return text;
+}

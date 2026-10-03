@@ -1,0 +1,14 @@
+{
+  "complete": true,
+  "cursor": 1,
+  "kind": "captured",
+  "lines": [
+    {
+      "id": 1,
+      "stream": "stdout",
+      "text": "NO_PRIVILEGED_CREDENTIALS"
+    }
+  ],
+  "sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+  "truncated": false
+}

@@ -26,3 +26,10 @@ test('failed-job rerun rejects a different commit and successful-job substitutio
  assert.throws(()=>validateRerunParent({...run,selected_jobs:['passed']},previous));
  assert.throws(()=>validateRerunParent({...run,jobs:[{...jobs[0],steps:[{...jobs[0].steps[0],command:'different'}]},jobs[1]]},previous));
 });
+
+test('credential redaction covers encoded values and a truncated boundary',async()=>{
+ const {redactSecrets,secretVariants}=await import('../src/protocol.mjs');const secret='fixture-control-secret-123456789';
+ for(const variant of secretVariants([secret]))assert.equal(redactSecrets('before '+variant+' after',[secret]),'before [redacted] after');
+ assert.equal(redactSecrets('before '+secret.slice(0,18),[secret]),'before [redacted]');
+ assert.equal(redactSecrets('ordinary diagnostic',[secret]),'ordinary diagnostic');
+});

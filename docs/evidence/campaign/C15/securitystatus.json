@@ -1,0 +1,105 @@
+{
+  "can_admin": true,
+  "can_run": true,
+  "checks": [
+    {
+      "definition_revision": "5487813e7aba2cf24378c4f56ddc6b87e61f959200417ffb9739d932d6463343",
+      "id": "manual-cca4c60c18c68f6104e1c0f85c427112633844c473bff283b9f12c4054f58be6-security",
+      "job_id": "security",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-cca4c60c18c68f6104e1c0f85c427112633844c473bff283b9f12c4054f58be6",
+      "source_sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+      "status": "success"
+    }
+  ],
+  "deployments_enabled": false,
+  "enabled": true,
+  "jobs": [
+    {
+      "id": "manual-cca4c60c18c68f6104e1c0f85c427112633844c473bff283b9f12c4054f58be6-security",
+      "repo": "codex-actions-probe-20261003",
+      "run_id": "manual-cca4c60c18c68f6104e1c0f85c427112633844c473bff283b9f12c4054f58be6",
+      "state": {
+        "id": "security",
+        "name": "security",
+        "status": "succeeded",
+        "steps": [
+          {
+            "finished_at": "2026-10-03T06:58:25.943Z",
+            "id": "boundary",
+            "log_key": "runs/manual-cca4c60c18c68f6104e1c0f85c427112633844c473bff283b9f12c4054f58be6/security-boundary.json",
+            "name": "boundary",
+            "started_at": "2026-10-03T06:58:17.936Z",
+            "status": "succeeded",
+            "truncated": false
+          }
+        ]
+      }
+    }
+  ],
+  "run": {
+    "actor": "alice",
+    "created_at": "2026-10-03T06:58:15.372875614Z",
+    "definition_revision": "5487813e7aba2cf24378c4f56ddc6b87e61f959200417ffb9739d932d6463343",
+    "id": "manual-cca4c60c18c68f6104e1c0f85c427112633844c473bff283b9f12c4054f58be6",
+    "ref": "refs/heads/main",
+    "repo": "codex-actions-probe-20261003",
+    "source_sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+    "state": {
+      "external_status": "complete",
+      "finished_at": "2026-10-03T06:58:26.320Z",
+      "manifest": {
+        "finished_at": "2026-10-03T06:58:26.320Z",
+        "jobs": [
+          {
+            "id": "security",
+            "name": "security",
+            "status": "succeeded",
+            "steps": [
+              {
+                "finished_at": "2026-10-03T06:58:25.943Z",
+                "id": "boundary",
+                "log_key": "runs/manual-cca4c60c18c68f6104e1c0f85c427112633844c473bff283b9f12c4054f58be6/security-boundary.json",
+                "name": "boundary",
+                "started_at": "2026-10-03T06:58:17.936Z",
+                "status": "succeeded",
+                "truncated": false
+              }
+            ]
+          }
+        ],
+        "run": {
+          "actor": "alice",
+          "definition_revision": "5487813e7aba2cf24378c4f56ddc6b87e61f959200417ffb9739d932d6463343",
+          "event": null,
+          "jobs": [
+            {
+              "id": "security",
+              "steps": [
+                {
+                  "command": "node -e 'const fs=require(\"node:fs\");const keys=[\"CF_TOKEN\",\"CLOUDFLARE_API_TOKEN\",\"R2_ACCESS_KEY_ID\",\"R2_SECRET_ACCESS_KEY\",\"CONTROL_SECRET\",\"SOURCE_CONTROL_TOKEN\"];if(keys.some(k=>process.env[k]))throw Error(\"privileged runner environment\");for(const pid of fs.readdirSync(\"/proc\").filter(p=>/^\\d+$/.test(p))){let data;try{data=fs.readFileSync(\"/proc/\"+pid+\"/environ\",\"utf8\")}catch{continue}if(data.split(\"\\0\").some(v=>keys.some(k=>v.startsWith(k+\"=\"))))throw Error(\"privileged process environment\")}console.log(\"NO_PRIVILEGED_CREDENTIALS\");' && if git -C /tmp/ci-source config --get-regexp 'http.*extraHeader' >/dev/null; then echo CHECKOUT_CREDENTIAL_PERSISTED; exit 1; fi",
+                  "id": "boundary",
+                  "timeout_ms": 30000
+                }
+              ]
+            }
+          ],
+          "owner": "switchyard-cp0",
+          "provider": "cloudflare-artifacts",
+          "providerData": {
+            "namespace": "switchyard-cp0"
+          },
+          "ref": "refs/heads/main",
+          "repo": "codex-actions-probe-20261003",
+          "run_id": "manual-cca4c60c18c68f6104e1c0f85c427112633844c473bff283b9f12c4054f58be6",
+          "sha": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+          "trigger": "manual"
+        },
+        "started_at": "2026-10-03T06:58:17.723Z",
+        "status": "succeeded"
+      },
+      "status": "success"
+    },
+    "trigger": "manual"
+  }
+}

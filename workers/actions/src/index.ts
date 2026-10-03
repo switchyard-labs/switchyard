@@ -1,19 +1,20 @@
 import { CIWorkflow, type CiContext, type CiParams, type CloudflareArtifacts, type CiRunnerResult, isCiRunnerFailure } from '@cloudflare/ci';
 import { type CiBindings, CiSandbox } from '@cloudflare/ci/worker';
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
-import { validateRun, signature, equalSignature, digest, boundedBody, validateRerunParent } from './protocol.mjs';
+import { validateRun, signature, equalSignature, digest, boundedBody, validateRerunParent, redactSecrets, secretVariants } from './protocol.mjs';
 export { CiSandbox };
 type Step = {id:string; name?:string; command:string; timeout_ms:number};
 type Run = CiParams<CloudflareArtifacts> & {run_id:string; definition_revision:string; jobs:{id:string; name?:string; steps:Step[]}[];rerun_of?:string;selected_jobs?:string[]};
 type Env = CiBindings & { CONTROL_SECRET:string; ARTIFACTS_NAMESPACE:string; ALLOWED_REPOS:string };
 const json = (value:unknown, status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
+const privilegedSecrets=(env:Env)=>[env.CONTROL_SECRET,env.CF_TOKEN,env.R2_ACCESS_KEY_ID,env.R2_SECRET_ACCESS_KEY];
 const key = (id:string)=>`runs/${id}/manifest.json`;
-async function logText(value:string|ReadableStream<Uint8Array>):Promise<{text:string;truncated:boolean}> {
+async function logText(value:string|ReadableStream<Uint8Array>,secrets:string[]):Promise<{text:string;truncated:boolean}> {
  const limit=1024*1024;
- if(typeof value==='string') return {text:value.slice(0,limit),truncated:value.length>limit};
+ if(typeof value==='string'){const safe=new TextEncoder().encode(redactSecrets(value,secrets));return {text:new TextDecoder().decode(safe.subarray(0,limit),{stream:true}),truncated:safe.byteLength>limit};}
  const reader=value.getReader(); let size=0, text=''; const decoder=new TextDecoder(); let truncated=false;
  try { for(;;) {const {value,done}=await reader.read(); if(done) break; const room=limit-size; text+=decoder.decode(value.subarray(0,Math.max(0,room)),{stream:true});size+=value.length; if(size>limit){truncated=true;await reader.cancel();break;}} text+=decoder.decode(); } finally {reader.releaseLock();}
- return {text,truncated};
+ const safe=new TextEncoder().encode(redactSecrets(text,secrets));return {text:new TextDecoder().decode(safe.subarray(0,limit),{stream:true}),truncated:truncated||safe.byteLength>limit};
 }
 export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
  protected async pipeline(event:WorkflowEvent<CiParams<CloudflareArtifacts>>, step:WorkflowStep, ci:CiContext):Promise<void> {
@@ -61,9 +62,9 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
      const label=`${job.id}-${command.id}`;
      const state={id:command.id,name:command.name||command.id,status:'running',started_at:await step.do(`start-${label}`,async()=>new Date().toISOString()),finished_at:'',log_key:`runs/${run.run_id}/${label}.json`,truncated:false};view.steps.push(state);
      const opts={name:label,command:command.command,config:{retries:{limit:0,delay:1000},timeout:command.timeout_ms+10000,commandTimeoutMs:command.timeout_ms,snapshotRetentionSeconds:3600},cloudflareCredentials:false,sourceControlCredentials:false};
-     try {prior=await (prior?prior.runner(opts):ci.runner(opts));const stdout=await logText(prior.logs.stdout),stderr=await logText(prior.logs.stderr);state.truncated=stdout.truncated||stderr.truncated;
+     try {prior=await (prior?prior.runner(opts):ci.runner(opts));const stdout=await logText(prior.logs.stdout,privilegedSecrets(this.env)),stderr=await logText(prior.logs.stderr,privilegedSecrets(this.env));state.truncated=stdout.truncated||stderr.truncated;
       await step.do(`logs-${label}`,async()=>{await this.env.BACKUP_BUCKET.put(state.log_key,JSON.stringify({stdout,stderr,kind:'captured',sha:run.sha}));});state.status='succeeded';
-     } catch(error) {state.status='failed';view.status='failed';const diagnostic=isCiRunnerFailure(error)?error.output:'Runner failed; inspect Cloudflare execution';state.truncated=diagnostic.length>=20000;
+     } catch(error) {state.status='failed';view.status='failed';const diagnostic=redactSecrets(isCiRunnerFailure(error)?error.output:'Runner failed; inspect Cloudflare execution',privilegedSecrets(this.env));state.truncated=diagnostic.length>=20000;
       await step.do(`failure-${label}`,async()=>{await this.env.BACKUP_BUCKET.put(state.log_key,JSON.stringify({stdout:{text:'',truncated:false},stderr:{text:diagnostic,truncated:state.truncated},kind:'diagnostic',sha:run.sha}));});throw error;
      } finally {state.finished_at=await step.do(`finish-${label}`,async()=>new Date().toISOString());await save();}
     }
@@ -85,6 +86,7 @@ export default {
    const definitionMatch=url.pathname.match(/^\/definitions\/([a-zA-Z0-9_-]{1,90})$/);
    if(definitionMatch && request.method==='PUT') {
     const repo=definitionMatch[1],definition=JSON.parse(body);
+    if(typeof definition.source==='string'&&secretVariants(privilegedSecrets(env)).some(value=>definition.source.includes(value)))return json({error:'credential_values_not_allowed'},422);
     if(typeof definition.source!=='string' || definition.source.length>65536 || definition.revision!==await digest(definition.source) || !Array.isArray(definition.refs) || definition.refs.length>16 || !definition.refs.every((ref:unknown)=>typeof ref==='string' && /^refs\/(heads|tags)\/[a-zA-Z0-9_./-]{1,250}$/.test(ref) && !ref.includes('..')))return json({error:'invalid_definition'},400);
     validateRun({provider:'cloudflare-artifacts',providerData:{namespace:env.ARTIFACTS_NAMESPACE},owner:env.ARTIFACTS_NAMESPACE,repo,sha:'a'.repeat(40),ref:'refs/heads/main',run_id:'definition-validation',definition_revision:definition.revision,jobs:definition.jobs},env.ARTIFACTS_NAMESPACE,env.ALLOWED_REPOS.split(','));
     await env.BACKUP_BUCKET.put(`definitions/${repo}.json`,JSON.stringify(definition));return json({repo,revision:definition.revision});

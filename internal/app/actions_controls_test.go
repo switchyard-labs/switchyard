@@ -12,9 +12,10 @@ import (
 
 type controlTestProvider struct {
 	actions.Provider
-	calls     []actions.Run
-	fail      bool
-	cancelled []string
+	calls       []actions.Run
+	fail        bool
+	cancelled   []string
+	definitions int
 }
 
 func (p *controlTestProvider) Dispatch(_ context.Context, run actions.Run) error {
@@ -119,5 +120,47 @@ func TestCancelledActionBeforeManifestRecovers(t *testing.T) {
 	before := len(a.Actions.(*controlTestProvider).calls)
 	if err = a.recoverActionIntents(context.Background()); err != nil || len(a.Actions.(*controlTestProvider).calls) != before {
 		t.Fatal("terminal workflow redispatched")
+	}
+}
+
+func (p *controlTestProvider) PutDefinition(_ context.Context, _ string, _ actions.Definition) error {
+	p.definitions++
+	if p.fail {
+		return errors.New("credential rejected")
+	}
+	return nil
+}
+func TestActionApprovalRequiresAdminAndProviderAcceptsBeforePersistence(t *testing.T) {
+	a, store, _ := actionFixture(t)
+	provider := &controlTestProvider{fail: true}
+	a.Actions = provider
+	_, _, err := a.Trestle.CreateRecord("repository_meta", map[string]any{"id": "meta", "artifact_name": "repo", "full_name": "alice/rail", "owner_type": "user", "owner_id": "alice", "visibility": "public"}, "meta")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _, err = a.Trestle.CreateRecord("repo_collaborators", map[string]any{"repo_id": "meta", "username": "bob", "permission": "write"}, "grant")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _, settings, err := a.Trestle.FindRecord("action_settings", filterEq("repo", "repo"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, _ := json.Marshal(map[string]any{"source": `export default {refs:['refs/heads/main'],jobs:[{id:'test',steps:[{id:'test',command:'echo fixture-secret-value',timeout_ms:1000}]}]};`, "expected_revision": settings["revision"], "required_jobs": []string{"test"}})
+	invoke := func(user string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("PUT", "/api/repositories/alice/rail/settings/actions", strings.NewReader(string(body)))
+		r = r.WithContext(contextWithUser(r.Context(), user))
+		r.SetPathValue("owner", "alice")
+		r.SetPathValue("repo", "rail")
+		w := httptest.NewRecorder()
+		a.authorizeHandler(a.handleActionDefinition)(w, r)
+		return w
+	}
+	before := len(store.records["action_definitions"])
+	if w := invoke("bob"); w.Code != 403 || provider.definitions != 0 {
+		t.Fatal("writer approved privileged Action configuration")
+	}
+	if w := invoke("alice"); w.Code != 502 || provider.definitions != 1 || len(store.records["action_definitions"]) != before {
+		t.Fatal("provider-rejected credential source persisted")
 	}
 }

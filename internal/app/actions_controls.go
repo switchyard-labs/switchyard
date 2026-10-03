@@ -71,6 +71,10 @@ func (a *App) handleActionDefinition(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "definition_changed"})
 		return
 	}
+	if err = a.Actions.PutDefinition(r.Context(), repo, definition); err != nil {
+		writeJSON(w, 502, map[string]any{"error": "definition_not_published"})
+		return
+	}
 	id := actionDefinitionID(repo, definition.Revision)
 	_, _, existing, err := a.Trestle.FindRecord("action_definitions", filterEq("id", id))
 	if err == nil && existing == nil {
@@ -78,10 +82,6 @@ func (a *App) handleActionDefinition(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": "definition_not_saved"})
-		return
-	}
-	if err = a.Actions.PutDefinition(r.Context(), repo, definition); err != nil {
-		writeJSON(w, 502, map[string]any{"error": "definition_not_published"})
 		return
 	}
 	values := map[string]any{"repo": repo, "revision": definition.Revision, "required_jobs": input.Required}
@@ -311,5 +311,5 @@ func (a *App) handleActionConfiguration(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
-	writeJSON(w, 200, map[string]any{"settings": settings, "definition": definition, "enabled": a.Actions != nil, "deployment_setup": "A verified Cloudflare Workers Builds connection and build token are required for preview and deployment links."})
+	writeJSON(w, 200, map[string]any{"settings": settings, "definition": definition, "enabled": a.Actions != nil, "secret_references": actions.WorkerSecretReferences(), "deployment_setup": "A verified Cloudflare Workers Builds connection and build token are required for preview and deployment links."})
 }

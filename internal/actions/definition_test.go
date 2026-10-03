@@ -48,3 +48,15 @@ func TestDefinitionRejectsAmbiguousLogIdentity(t *testing.T) {
 		t.Fatal("colliding log/step keys accepted")
 	}
 }
+
+func TestDefinitionCannotConfigurePrivilegedRunnerInputs(t *testing.T) {
+	for _, source := range []string{
+		`export default {refs:['refs/heads/main'],env:{CF_TOKEN:'value'},jobs:[{id:'test',steps:[{id:'test',command:'true',timeout_ms:1000}]}]}`,
+		`export default {refs:['refs/heads/main'],jobs:[{id:'test',steps:[{id:'test',command:'true',timeout_ms:1000,cloudflareCredentials:true}]}]}`,
+		`export default {refs:['refs/heads/main'],jobs:[{id:'test',secrets:['org-token'],steps:[{id:'test',command:'true',timeout_ms:1000}]}]}`,
+	} {
+		if _, err := CompileDefinition(source); err == nil {
+			t.Fatal("privileged configuration accepted")
+		}
+	}
+}
