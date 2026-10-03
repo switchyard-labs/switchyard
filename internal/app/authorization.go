@@ -236,6 +236,11 @@ func (a *App) authorizeHandler(next http.HandlerFunc) http.HandlerFunc {
 			if strings.HasSuffix(path, "/stars") {
 				cap = ReadRepo
 			}
+			if strings.HasSuffix(path, "/git-credential") {
+				// The handler validates the requested scope before minting. A POST
+				// for a read credential must not require repository write access.
+				cap = ReadRepo
+			}
 			if strings.Contains(path, "/settings") || strings.Contains(path, "/collaborators") || strings.Contains(path, "/protected-refs") {
 				cap = AdminRepo
 			}

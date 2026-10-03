@@ -142,6 +142,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("PUT /api/repositories/{owner}/{repo}/stars", a.authorizeHandler(a.handleRepositoryStars))
 	mux.HandleFunc("DELETE /api/repositories/{owner}/{repo}/stars", a.authorizeHandler(a.handleRepositoryStars))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}", a.authorizeHandler(a.handleGetRepositoryMeta))
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/git-credential", a.authorizeHandler(a.handleGitCredential))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions", a.authorizeHandler(a.handleActions))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions/{id}", a.authorizeHandler(a.handleActionRun))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions/{id}/logs", a.authorizeHandler(a.handleActionLogs))

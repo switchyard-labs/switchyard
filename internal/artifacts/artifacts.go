@@ -10,7 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os/exec"
+	"os"
 	"strings"
 	"switchyard/internal/process"
 	"switchyard/internal/telemetry"
@@ -62,12 +62,20 @@ func (c *Client) token() (string, error) {
 	if c.tokenCache != "" && time.Since(c.tokenAt) < 2*time.Minute {
 		return c.tokenCache, nil
 	}
-	cmd := exec.Command(c.TokenCmd)
-	out, err := cmd.Output()
+	cmd, cancel := process.Command(20*time.Second, c.TokenCmd)
+	defer cancel()
+	cmd.Env = os.Environ() // the operator helper may require its configured home
+	var output process.Output
+	output.Limit = 64 << 10
+	cmd.Stdout, cmd.Stderr = &output, io.Discard
+	err := cmd.Run()
 	if err != nil {
 		return "", &Error{Code: "artifacts_auth_failed", Status: 502}
 	}
-	t := strings.TrimSpace(string(out))
+	if output.Truncated {
+		return "", &Error{Code: "artifacts_auth_failed", Status: 502}
+	}
+	t := strings.TrimSpace(output.String())
 	if t == "" {
 		return "", &Error{Code: "artifacts_auth_failed", Status: 502}
 	}
@@ -88,9 +96,12 @@ func (c *Client) get(path string, out any) error {
 		return transportError(err)
 	}
 	defer resp.Body.Close()
-	b, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		return responseError(resp)
+	}
+	b, readErr := io.ReadAll(io.LimitReader(resp.Body, (16<<20)+1))
+	if readErr != nil || len(b) > 16<<20 {
+		return &Error{Code: "artifacts_unavailable", Status: 502}
 	}
 	var env struct {
 		Result json.RawMessage `json:"result"`
@@ -222,9 +233,12 @@ func (c *Client) MintToken(repo, scope string, ttlSeconds int) (string, error) {
 		return "", transportError(err)
 	}
 	defer resp.Body.Close()
-	b, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		return "", responseError(resp)
+	}
+	b, readErr := io.ReadAll(io.LimitReader(resp.Body, (64<<10)+1))
+	if readErr != nil || len(b) > 64<<10 {
+		return "", &Error{Code: "artifacts_unavailable", Status: 502}
 	}
 	var env struct {
 		Result struct {

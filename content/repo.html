@@ -38,7 +38,7 @@
     </div>
     </div>
     <div id="clone-sy" role="tabpanel" aria-labelledby="clone-mode-sy" hidden><div class="clone-commands"><div><code id="sy-clone-command">sy repo clone …</code><button class="copy-command" type="button" data-copy-target="sy-clone-command">Copy</button></div></div></div>
-    <div class="clone-note"><strong>Authentication</strong><span>Switchyard uses short-lived, repository-scoped Artifacts credentials. Secrets are not embedded in the clone URL.</span></div>
+    <div class="clone-note"><strong>Authentication</strong><div><p>Use a read-only credential as the password when Git prompts. It expires in ten minutes.</p><button class="btn mini" id="clone-credential" type="button">Generate read credential</button><button class="btn mini" id="clone-credential-copy" type="button" hidden>Copy credential</button><p id="clone-credential-status" class="muted" role="status"></p></div></div>
   </dialog>
 </section>
 <script defer src="/assets/js/repository-tree.js?v=c18"></script>
