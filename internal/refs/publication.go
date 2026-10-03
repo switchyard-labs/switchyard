@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 	"switchyard/internal/artifacts"
+	"switchyard/internal/process"
+	"time"
 )
 
 var shaRE = regexp.MustCompile(`^[0-9a-f]{40}$`)
@@ -63,11 +65,12 @@ test "$count" = 1 || { echo 'no exact ref update was offered' >&2; exit 1; }
 	}
 	args := append([]string{}, auth...)
 	args = append(args, "-c", "core.hooksPath="+hooks, "push", "--quiet", remote, "HEAD:refs/heads/"+branch)
-	cmd := exec.Command("git", args...)
+	cmd, cancel := process.Command(2*time.Minute, "git", args...)
+	defer cancel()
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0", "SWITCHYARD_EXPECTED_REF=refs/heads/"+branch, "SWITCHYARD_EXPECTED_SHA="+old)
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("exact-SHA push rejected: %s", strings.TrimSpace(string(out)))
+	cmd.Env = append(cmd.Env, "SWITCHYARD_EXPECTED_REF=refs/heads/"+branch, "SWITCHYARD_EXPECTED_SHA="+old)
+	if out, err := process.Capture(cmd, true); err != nil {
+		return "", fmt.Errorf("exact-SHA push rejected: %s", strings.TrimSpace(out))
 	}
 	return head, nil
 }
@@ -269,7 +272,8 @@ func (s *Service) CandidatePublished(p *PreparedMerge) (bool, error) {
 	if err = git(p.Dir, "", args...); err != nil {
 		return false, err
 	}
-	cmd := exec.Command("git", "merge-base", "--is-ancestor", p.CommitSHA, current)
+	cmd, cancel := process.Command(2*time.Minute, "git", "merge-base", "--is-ancestor", p.CommitSHA, current)
+	defer cancel()
 	cmd.Dir = p.Dir
 	if err = cmd.Run(); err != nil {
 		if e, ok := err.(*exec.ExitError); ok && e.ExitCode() == 1 {

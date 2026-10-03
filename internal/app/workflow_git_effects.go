@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"switchyard/internal/refs"
@@ -42,7 +43,11 @@ func (e *wfExec) durableAgentUpdate(repo, branch, file, prompt string) (any, err
 		if err != nil {
 			return nil, err
 		}
-		execution, err := e.a.runViaSubstrate("implementer", "wf:"+e.runID, repo, branch, file, string(content), prompt)
+		ctx := e.context
+		if ctx == nil {
+			ctx = context.Background()
+		}
+		execution, err := e.a.runViaSubstrateContext(ctx, "implementer", "wf:"+e.runID, repo, branch, file, string(content), prompt)
 		if err != nil {
 			return nil, err
 		}
@@ -64,6 +69,9 @@ func (e *wfExec) durableAgentUpdate(repo, branch, file, prompt string) (any, err
 		return nil, err
 	}
 	if !published {
+		if err := e.checkCancel(); err != nil {
+			return nil, err
+		}
 		e.a.workflowCheckpoint("before_git_publication")
 		result, err := e.a.Refs.PublishPrepared(effect.Candidate)
 		if err != nil {

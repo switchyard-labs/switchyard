@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os/exec"
 	"strings"
+	"switchyard/internal/process"
 	"sync"
 	"time"
 )
@@ -234,16 +235,16 @@ func (c *Client) MintToken(repo, scope string, ttlSeconds int) (string, error) {
 
 // LsRemote returns the ref->sha map for a git remote (read path for CAS).
 func LsRemote(remote, token string) (map[string]string, error) {
-	cmd := exec.Command("git", "ls-remote", remote)
-	cmd.Env = append(cmd.Environ(), "GIT_TERMINAL_PROMPT=0")
+	cmd, cancel := process.Command(2*time.Minute, "git", "ls-remote", remote)
+	defer cancel()
 	// pass the token as an extra header
 	cmd.Args = append(cmd.Args[:0:0], "git", "-c", "http.extraHeader=Authorization: Bearer "+token, "ls-remote", remote)
-	out, err := cmd.Output()
+	out, err := process.Capture(cmd, false)
 	if err != nil {
 		return nil, fmt.Errorf("ls-remote: %v", err)
 	}
 	refs := map[string]string{}
-	for _, line := range strings.Split(string(out), "\n") {
+	for _, line := range strings.Split(out, "\n") {
 		parts := strings.Fields(line)
 		if len(parts) == 2 {
 			refs[parts[1]] = parts[0]

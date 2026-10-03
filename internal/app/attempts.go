@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -85,7 +86,7 @@ func (a *App) handleRunAttempt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ex, res, err := a.runAgentStep("implementer", attemptID, repo, branch, file, string(cur),
+	ex, res, err := a.runAgentStepContext(r.Context(), "implementer", attemptID, repo, branch, file, string(cur),
 		"\n// run by "+user+" at "+time.Now().UTC().Format(time.RFC3339)+"\n", head, "user:"+user)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
@@ -130,20 +131,40 @@ func (a *App) repoRefs(repo string) (map[string]string, error) {
 // runViaSubstrate runs an Agent execution through the runner adapter and
 // records it durably.
 func (a *App) runViaSubstrate(role, attemptID, repo, branch, file, currentContent, appendLine string) (*agent.Execution, error) {
+	return a.runViaSubstrateContext(context.Background(), role, attemptID, repo, branch, file, currentContent, appendLine)
+}
+
+func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, repo, branch, file, currentContent, appendLine string) (*agent.Execution, error) {
 	now := time.Now().UTC()
 	ex := &agent.Execution{ID: "exe_" + randHex(8), Role: role, AttemptID: attemptID, Adapter: "deterministic", Status: "running", Started: now}
-	task := map[string]any{"file": file, "append": appendLine, "current": currentContent}
-	err := a.Runner.Run(ex, task)
+	task := agent.Task{Repo: repo, Branch: branch, File: file, Current: currentContent, Prompt: appendLine}
+	ctx, cancel := context.WithTimeout(parent, 2*time.Minute)
+	defer cancel()
+	if a.Runner == nil {
+		return nil, fmt.Errorf("Agent runner unavailable")
+	}
+	err := a.Runner.Run(ctx, ex, task)
 	ex.Finished = time.Now().UTC()
-	status := "succeeded"
-	if err != nil {
+	status := ex.Status
+	if status == "" || status == "running" {
+		status = "succeeded"
+	}
+	if err != nil && status == "succeeded" {
 		status = "failed"
 	}
-	_, _, _ = a.Trestle.CreateRecord("executions", map[string]any{
+	ex.Status = status
+	_, _, persistErr := a.Trestle.CreateRecord("executions", map[string]any{
 		"id": ex.ID, "role": ex.Role, "attempt_id": ex.AttemptID, "adapter": ex.Adapter,
 		"status": status, "output": ex.Output, "started_at": ex.Started.Format(time.RFC3339),
 		"finished_at": ex.Finished.Format(time.RFC3339),
 	}, "exec-"+ex.ID)
+	if persistErr == nil {
+		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"branch": branch, "file": file, "status": ex.Status, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": ex.Adapter == "cli-sandbox"}}, "execution-meta-"+ex.ID)
+	}
+
+	if persistErr != nil {
+		return nil, fmt.Errorf("execution persistence: %w", persistErr)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -156,16 +177,20 @@ func (a *App) runViaSubstrate(role, attemptID, repo, branch, file, currentConten
 // expectedHead is non-empty the commit is CAS-guarded; an already-applied
 // identical commit (same message) is treated as idempotent success.
 func (a *App) runAgentStep(role, attemptID, repo, branch, file, currentContent, appendLine, expectedHead, provenance string) (*agent.Execution, *refs.Result, error) {
-	ex, err := a.runViaSubstrate(role, attemptID, repo, branch, file, currentContent, appendLine)
+	return a.runAgentStepContext(context.Background(), role, attemptID, repo, branch, file, currentContent, appendLine, expectedHead, provenance)
+}
+
+func (a *App) runAgentStepContext(ctx context.Context, role, attemptID, repo, branch, file, currentContent, appendLine, expectedHead, provenance string) (*agent.Execution, *refs.Result, error) {
+	ex, err := a.runViaSubstrateContext(ctx, role, attemptID, repo, branch, file, currentContent, appendLine)
 	if err != nil {
 		return nil, nil, err
 	}
-	newContent := ""
-	if ex.Result != nil {
-		newContent = ex.Result[file]
+	newContent, ok := ex.Result[file]
+	if !ok {
+		return nil, nil, fmt.Errorf("agent produced no file result")
 	}
-	if newContent == "" {
-		return nil, nil, fmt.Errorf("agent produced no change")
+	if err := ctx.Err(); err != nil {
+		return nil, nil, err
 	}
 	msg := "attempt " + attemptID + " run (" + ex.Adapter + ")"
 	res, err := a.Refs.Update(repo, branch, expectedHead, []refs.Change{{Path: file, Content: newContent}}, msg, provenance)

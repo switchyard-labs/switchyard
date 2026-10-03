@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -53,6 +54,7 @@ type wfExec struct {
 	execN      int    // newly executed steps this pass
 	currentKey string // step key of the step currently executing
 	park       string // set when the run parks (approval/child)
+	context    context.Context
 	timeLimit  time.Duration
 	deadline   time.Time
 	status     string // run status observed at start
@@ -164,6 +166,9 @@ func (e *wfExec) run() (map[string]any, error) {
 	if limit <= 0 {
 		limit = 2 * time.Minute
 	}
+	runContext, cancel := context.WithTimeout(context.Background(), limit)
+	defer cancel()
+	e.context = runContext
 	timer := time.AfterFunc(limit, func() { vm.Interrupt("workflow timed out") })
 	defer timer.Stop()
 	e.deadline = time.Now().Add(limit)
@@ -180,6 +185,7 @@ func (e *wfExec) run() (map[string]any, error) {
 				return
 			case <-ticker.C:
 				if err := e.checkCancel(); err != nil {
+					cancel()
 					vm.Interrupt(err)
 					return
 				}

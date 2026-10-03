@@ -8,12 +8,11 @@
 package refs
 
 import (
-	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
+	"switchyard/internal/process"
 	"sync"
 	"time"
 
@@ -228,11 +227,11 @@ func (s *Service) buildCommit(repo, remote, branch, expected string, changes []C
 	// an Artifacts 400) on later ops. Remove it so only the explicitly passed
 	// -c header is sent.
 	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
-	head, err := exec.Command("git", "-C", dir, "rev-parse", "HEAD").Output()
+	head, err := gitOut(dir, "rev-parse", "HEAD")
 	if err != nil {
 		return "", err
 	}
-	if strings.TrimSpace(string(head)) != expected {
+	if strings.TrimSpace(head) != expected {
 		return "", fmt.Errorf("branch moved before draft clone; reload and retry")
 	}
 	for _, c := range changes {
@@ -503,26 +502,23 @@ func (s *Service) push(repo, remote, branch, dir, expected string) (string, erro
 }
 
 func git(dir, stdin string, args ...string) error {
-	cmd := exec.Command("git", args...)
+	cmd, cancel := process.Command(2*time.Minute, "git", args...)
+	defer cancel()
 	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 	if stdin != "" {
 		cmd.Stdin = strings.NewReader(stdin)
 	}
-	if out, err := cmd.CombinedOutput(); err != nil {
-		return errors.New(strings.TrimSpace(string(out)))
+	out, err := process.Capture(cmd, true)
+	if err != nil {
+		return fmt.Errorf("git: %w: %s", err, strings.TrimSpace(out))
 	}
 	return nil
 }
-
 func gitOut(dir string, args ...string) (string, error) {
-	cmd := exec.Command("git", args...)
+	cmd, cancel := process.Command(2*time.Minute, "git", args...)
+	defer cancel()
 	cmd.Dir = dir
-	out, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
+	return process.Capture(cmd, false)
 }
 
 // DiffRefs returns a unified diff and changed-file list between two refs without

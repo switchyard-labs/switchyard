@@ -295,16 +295,13 @@ func (a *App) handleAgentProposeDraft(w http.ResponseWriter, r *http.Request) {
 	path, _ := d["path"].(string)
 	cur, _ := d["content"].(string)
 	appendLine := "\n// Agent proposal: " + strings.TrimSpace(in.Prompt) + "\n"
-	ex, err := a.runViaSubstrate("implementer", "draft:"+draftID, strOr(d["repo"]), strOr(d["branch"]), path, cur, appendLine)
+	ex, err := a.runViaSubstrateContext(r.Context(), "implementer", "draft:"+draftID, strOr(d["repo"]), strOr(d["branch"]), path, cur, appendLine)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
-	proposed := ""
-	if ex.Result != nil {
-		proposed = ex.Result[path]
-	}
-	if proposed == "" {
+	proposed, hasResult := ex.Result[path]
+	if !hasResult {
 		writeJSON(w, 502, map[string]any{"error": "agent_produced_no_change"})
 		return
 	}
