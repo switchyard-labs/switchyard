@@ -7,7 +7,7 @@
   <div class="repository-toolbar">
     <label class="repository-ref"><span class="sr-only">Branch or tag</span><select id="repo-ref-select" aria-label="Branch or tag"><option>main</option></select></label>
     <button class="btn repository-ref-count" id="repo-branches-button"><span id="repo-branches">—</span> branches</button><button class="btn repository-ref-count" id="repo-tags-button"><span id="repo-tags">—</span> tags</button>
-    <div class="repository-toolbar-actions"><button class="btn" id="repo-go-file">Go to file <kbd>T</kbd></button><a class="btn" id="repo-add-file">Add file</a><button class="btn code-button" id="clone-toggle" type="button" aria-haspopup="dialog" aria-controls="clone-dialog"><span aria-hidden="true">&lt;/&gt;</span> Code <span class="code-caret" aria-hidden="true">▾</span></button></div>
+    <div class="repository-toolbar-actions"><button class="btn" id="repo-go-file">Go to file <kbd>T</kbd></button><a class="btn" id="repo-add-file">Add file</a><button class="btn code-button" id="clone-toggle" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="clone-dialog"><span aria-hidden="true">&lt;/&gt;</span> Code <span class="code-caret" aria-hidden="true">▾</span></button></div>
   </div>
   <div id="repo-notice" class="error-state" role="alert" hidden></div>
   <div class="repository-layout" id="repository-layout">
@@ -24,17 +24,20 @@
     </div>
     <aside class="repository-about" id="repository-about"><h2>About</h2><p id="repository-about-description" class="muted"></p><a id="repository-readme-link" hidden>Readme</a><dl><div><dt>Visibility</dt><dd id="repository-about-visibility"></dd></div><div><dt>Default branch</dt><dd id="repository-about-branch"></dd></div></dl><div class="repository-about-links"><a id="repository-about-actions">Actions</a><a id="repository-about-history">Commit history</a></div></aside>
   </div>
-  <dialog class="clone-dialog code-dialog" id="clone-dialog">
+  <dialog class="clone-dialog code-dialog" id="clone-dialog" aria-labelledby="clone-title">
     <form method="dialog"><button class="dialog-close" aria-label="Close Code menu">×</button></form>
-    <div class="code-dialog-head"><div><span class="code-dialog-kicker">Cloudflare Artifacts remote</span><h2>Clone with Git</h2></div></div>
-    <p class="muted code-dialog-intro">This repository lives in Cloudflare Artifacts. <strong>Git</strong> performs clone, fetch and push; <strong>Artifacts</strong> is the authoritative remote Git server.</p>
-    <div class="clone-method"><span class="clone-method-label">HTTPS</span></div>
+    <div class="code-dialog-head"><div><span class="code-dialog-kicker">Cloudflare Artifacts remote</span><h2 id="clone-title">Clone repository</h2></div></div>
+    <p class="muted code-dialog-intro">Copy a clone URL or use the Switchyard CLI.</p>
+    <div class="clone-method" role="tablist" aria-label="Clone method"><button class="btn mini" id="clone-mode-https" role="tab" aria-selected="true" aria-controls="clone-https">HTTPS</button><button class="btn mini" id="clone-mode-sy" role="tab" aria-selected="false" aria-controls="clone-sy" tabindex="-1">Switchyard CLI</button></div>
+    <div id="clone-https" role="tabpanel" aria-labelledby="clone-mode-https">
     <div class="clone-url-row"><input id="clone-url" aria-label="HTTPS clone URL" readonly><button class="btn mini" id="clone-copy" type="button">Copy</button></div>
     <div class="clone-commands">
       <div><span>Clone</span><code id="clone-command">git clone …</code><button class="copy-command" type="button" data-copy-target="clone-command">Copy</button></div>
       <div><span>Fetch</span><code id="fetch-command">git fetch origin</code><button class="copy-command" type="button" data-copy-target="fetch-command">Copy</button></div>
       <div><span>Push branch</span><code id="push-command">git push origin HEAD</code><button class="copy-command" type="button" data-copy-target="push-command">Copy</button></div>
     </div>
+    </div>
+    <div id="clone-sy" role="tabpanel" aria-labelledby="clone-mode-sy" hidden><div class="clone-commands"><div><code id="sy-clone-command">sy repo clone …</code><button class="copy-command" type="button" data-copy-target="sy-clone-command">Copy</button></div></div></div>
     <div class="clone-note"><strong>Authentication</strong><span>Switchyard uses short-lived, repository-scoped Artifacts credentials. Secrets are not embedded in the clone URL.</span></div>
   </dialog>
 </section>
