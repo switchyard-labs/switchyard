@@ -233,6 +233,8 @@ func (a *App) handleGetRepositoryMeta(w http.ResponseWriter, r *http.Request) {
 	}
 	out["read_only"] = backend.ReadOnly
 	out["source"] = backend.Source
+	out["can_write"] = !backend.ReadOnly && a.CanRepository(meta, a.currentUser(r), WriteRepo)
+	out["can_admin"] = a.CanRepository(meta, a.currentUser(r), AdminRepo)
 	writeJSON(w, 200, out)
 }
 

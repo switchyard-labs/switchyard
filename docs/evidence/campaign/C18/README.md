@@ -1,0 +1,7 @@
+# Repository browser evidence
+
+Actual disposable Artifacts repository `codex-actions-probe-20261003` is registered locally as `alice/railway`. The bounded nested fixture commit is `e2a22198d24faa843975adef7fe7ffde1b997aa5`; its source, docs and README were pushed with ordinary Git. No Switchyard project code was pushed. The real empty Artifacts repository is registered as `alice/empty`.
+
+Browser checks through cua verified folder browsing (`docs` contains `guides` and `architecture.md`, with a parent link), path search filtered to `src/routes.mjs` and keyboard selection opened its canonical source route. The permanent staged smoke recorded seven source checks (selected path, immutable SHA in raw URL, actual code, no document overflow and keyboard collapse/expand/child focus) and four actual empty-state checks at 390px. Two Node hierarchy tests passed with real test isolation. Full Go race suite, vet and static product checks passed.
+
+The commit header uses actual message, author, SHA and timestamp. It reports a bounded recent-history sample, not a fabricated total. Per-file commit metadata is not invented. Root README and source screenshots show the current redesign; full surface/width certification remains C22. The current read path made an observed 18.5-second overview request; C23/C24 own performance measurement and optimization. On an unborn branch the editor action is disabled with a Git first-commit explanation.

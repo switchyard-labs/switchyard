@@ -1,0 +1,19 @@
+{
+  "source": {
+    "stage": "source",
+    "checks": 7,
+    "raw": "/api/repositories/alice/railway/content?ref=e2a22198d24faa843975adef7fe7ffde1b997aa5&path=src%2Froutes.mjs",
+    "scroll": 1265,
+    "selected": "src/routes.mjs",
+    "source": "1// A connection is traversable only when both stations are available.2export function connected(route, stations) {3  return route.every(station => stations.includes(station));4}5 ",
+    "width": 1280
+  },
+  "empty": {
+    "stage": "empty",
+    "checks": 4,
+    "latest": "No commits yet",
+    "notice": "",
+    "scroll": 375,
+    "width": 390
+  }
+}

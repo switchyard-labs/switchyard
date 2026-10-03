@@ -137,6 +137,9 @@ type Commit struct {
 	TreeHash  string `json:"treeHash"`
 	Message   string `json:"message"`
 	Timestamp int64  `json:"committedAt"`
+	Author    struct {
+		Name string `json:"name"`
+	} `json:"author"`
 }
 
 type TreeEntry struct {

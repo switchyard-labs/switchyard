@@ -50,7 +50,8 @@
     return byExt[ext] || "text";
   }
 
-  function labelFor(id) { return (byId[id] || byId.text).label; }
+  const aliases={sh:"shell",bash:"shell",js:"javascript",ts:"typescript",py:"python",md:"markdown",yml:"yaml",c:"cpp",cxx:"cpp"};
+  function labelFor(id) { return (byId[aliases[id]||id] || byId.text).label; }
 
   function keywordSet(id) {
     const src = (byId[id] && byId[id].keywords) || (id === "jsx" ? byId.javascript.keywords : id === "tsx" ? byId.typescript.keywords : "");
@@ -83,7 +84,7 @@
 
   function highlight(source, id) {
     source = String(source == null ? "" : source);
-    id = id || "text";
+    id = aliases[id] || id || "text";
     if (id === "text" || source.length > 800000) return escapeHTML(source);
     if (id === "json") {
       return escapeHTML(source)

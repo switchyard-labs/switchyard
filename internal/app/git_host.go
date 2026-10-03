@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"switchyard/internal/artifacts"
 )
 
 // handleRepositoryOverview assembles familiar Git-host repository metadata from
@@ -39,13 +40,25 @@ func (a *App) handleRepositoryOverview(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Strings(branches)
 	sort.Strings(tags)
-	commits, _ := a.Artifacts.Log(artifact, strOr(meta["default_branch"]), 50)
+	ref := r.URL.Query().Get("ref")
+	if ref == "" {
+		ref = strOr(meta["default_branch"])
+	}
+	var commits []artifacts.Commit
+	if len(refsMap) > 0 {
+		commits, err = a.Artifacts.Log(artifact, ref, 50)
+	}
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "commit_history_unavailable"})
+		return
+	}
 	var latest any = nil
 	if len(commits) > 0 {
 		latest = commits[0]
 	}
 	out := map[string]any{
 		"repository":          meta,
+		"ref":                 ref,
 		"clone_https":         backend.Remote,
 		"default_branch":      meta["default_branch"],
 		"branch_count":        len(branches),

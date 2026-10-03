@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18 repository redesign verified; C19–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -177,3 +177,11 @@ Read the current challenge, announcement, submission form, rules, Artifacts/cust
 Replaced the accumulated shared CSS overrides with one components stylesheet and consolidated page layout declarations. Buttons, icon controls, forms, tabs, badges, tables, panels, dialogs, tooltips, status/empty/loading states, avatars and code surfaces use shared graphite/amber tokens. Removed the undefined page token and hard-coded Actions panel/dialog chrome. One navigation renderer now serves both Nift and hand-written pages, with desktop links, SVG controls, focus trapping, inert background and Escape/focus restoration. Header/menu padding and dimensions share a single rule. Versioned asset references prevent stale token files being combined with new layouts; this failure was observed and corrected in the real browser.
 
 Validation: Nift rebuilt all six generated pages; JavaScript syntax, static accessibility across 17 pages, formatting and whitespace gates passed. Permanent browser shell checks ran on an actual Actions run at 1280px and the actual Alice profile at 390px: 14 checks, exact matching open/close rectangles, no document overflow, background isolation and focus restoration. Evidence is in docs/evidence/campaign/C17. Mobile overlay scrolling initially introduced a second gutter; scroll now belongs to menu content. These are foundation checks, not a claim of product-wide GitHub parity or the C22 matrix.
+
+## C18 — repository browsing and source hierarchy
+
+Replaced the flat source prototype with a directory table, real parent/folder navigation, a collapsible keyboard tree beside files, path search with keyboard selection, canonical breadcrumbs and coherent source controls. The root view presents identity/visibility/description, branch/tag selection, actual latest commit author/message/SHA/time, recent-history link, README and About sidebar. Branch/tag dialogs use real refs. Markdown files offer Preview/Code; source lines have anchors, raster previews are limited to safe MIME types and binary/large previews explain their limits. Content/tree reads use the exact commit displayed in the overview. The overview respects the selected ref, propagates history failures and treats genuinely empty refs as empty; capabilities determine write controls. An unborn branch requires a first Git push before editing.
+
+Validation: actual disposable Artifacts nested fixture pushed with ordinary Git; browser folder/parent navigation and keyboard path search opened actual `src/routes.mjs`. Permanent staged browser checks passed seven source and four 390px empty-state assertions. Two Node hierarchy tests, full Go race suite, vet, Nift and static gates passed. Evidence: docs/evidence/campaign/C18. Per-file commit history and a total commit count are not fabricated; the sample is labeled recent. The slow current overview read is recorded for C23/C24. These layouts establish the repository foundation; C22 owns the broader matrix.
+
+C17 commit: `af3886f`.

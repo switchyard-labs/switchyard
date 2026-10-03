@@ -200,95 +200,6 @@
     } catch (e) { list.innerHTML = "<p class='error'>" + esc(e.message) + "</p>"; }
   }
 
-  /* repo browser */
-  function canonicalRepoContext() {
-    const params = new URLSearchParams(location.search), legacy=params.get("name");
-    if (legacy) return {legacy:true,artifact:legacy,owner:"",repo:"",ref:params.get("ref")||"main",path:params.get("path")||""};
-    const parts=location.pathname.split("/").filter(Boolean).map(decodeURIComponent);
-    if(parts.length<2) return {legacy:true,artifact:"",owner:"",repo:"",ref:"main",path:""};
-    const out={legacy:false,owner:parts[0],repo:parts[1],artifact:"",ref:"main",path:""};
-    if(parts.length>=4&&(parts[2]==="blob"||parts[2]==="tree")){out.kind=parts[2];out.ref=parts[3];out.path=parts.slice(4).join("/");}
-    return out;
-  }
-  function canonicalRepoURL(ctx,kind,ref,path){const base="/"+encodeURIComponent(ctx.owner)+"/"+encodeURIComponent(ctx.repo); if(!kind)return base; const tail=path?"/"+path.split("/").map(encodeURIComponent).join("/"):""; return base+"/"+kind+"/"+encodeURIComponent(ref||"main")+tail;}
-  function repoRoot(ctx){return ctx.legacy?"/api/repos/"+encodeURIComponent(ctx.artifact):"/api/repositories/"+encodeURIComponent(ctx.owner)+"/"+encodeURIComponent(ctx.repo);}
-  function rawURL(ctx,path){return repoRoot(ctx)+"/content?ref="+encodeURIComponent(ctx.ref)+"&path="+encodeURIComponent(path);}
-  function setupCloneDialog(remote){
-    const dlg=document.getElementById("clone-dialog"), input=document.getElementById("clone-url"), toggle=document.getElementById("clone-toggle");
-    if(!dlg||!input||!toggle)return;
-    input.value=remote||"";
-    const cloneCmd=document.getElementById("clone-command"); if(cloneCmd)cloneCmd.textContent="git clone "+input.value;
-    const fetchCmd=document.getElementById("fetch-command"); if(fetchCmd)fetchCmd.textContent="git fetch origin";
-    const pushCmd=document.getElementById("push-command"); if(pushCmd)pushCmd.textContent="git push origin HEAD";
-    toggle.onclick=()=>dlg.showModal();
-    const cp=document.getElementById("clone-copy"); if(cp)cp.onclick=async()=>{await navigator.clipboard.writeText(input.value);cp.textContent="Copied";setTimeout(()=>cp.textContent="Copy",1200);};
-    dlg.querySelectorAll("[data-copy-target]").forEach(btn=>btn.onclick=async()=>{const target=document.getElementById(btn.dataset.copyTarget);if(!target)return;await navigator.clipboard.writeText(target.textContent);const prev=btn.textContent;btn.textContent="Copied";setTimeout(()=>btn.textContent=prev,1200);});
-  }
-  function renderBreadcrumbs(ctx){const el=document.getElementById("repo-breadcrumbs"); if(!el)return; const ps=(ctx.path||"").split("/").filter(Boolean); let cur=""; el.innerHTML='<a href="'+(ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact):canonicalRepoURL(ctx))+ '">'+esc(ctx.repo||ctx.artifact)+'</a>'+ps.map((p,i)=>{cur+=(cur?"/":"")+p; return '<span>/</span><a href="'+(i===ps.length-1?'#':(ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(ctx.ref)+'&path='+encodeURIComponent(cur):canonicalRepoURL(ctx,'tree',ctx.ref,cur)))+'">'+esc(p)+'</a>';}).join('');}
-  async function renderRepo(){
-    const nameEl=document.getElementById("repo-name"),treeEl=document.getElementById("file-tree"),viewEl=document.getElementById("file-view"); if(!nameEl)return;
-    const ctx=canonicalRepoContext();
-    if(!ctx.legacy){
-      const meta=await api(repoRoot(ctx));ctx.artifact=meta.artifact_name;nameEl.textContent=meta.slug||meta.display_name;document.getElementById("repo-owner").textContent=meta.owner_slug||ctx.owner;document.getElementById("repo-description").textContent=meta.description||"";const vis=document.getElementById("repo-visibility");if(vis)vis.textContent=meta.visibility||"private";if(!ctx.ref||ctx.ref==="main")ctx.ref=meta.default_branch||ctx.ref;
-    } else {
-      nameEl.textContent=ctx.artifact||"Repository";
-      document.getElementById("repo-owner").textContent=ctx.artifact?"Cloudflare Artifacts":"";
-      const vis=document.getElementById("repo-visibility");if(vis)vis.textContent="demo";
-      if(ctx.artifact){try{const meta=await api("/api/repos/"+encodeURIComponent(ctx.artifact));ctx.ref=ctx.ref||meta.default_branch||"main";document.getElementById("repo-description").textContent="Curated demo repository backed by Cloudflare Artifacts.";setupCloneDialog(meta.remote||"");}catch(e){document.getElementById("repo-description").textContent=e.message;}}
-    }
-    const sel=document.getElementById("repo-ref-select"); if(sel){try{const rr=await api(repoRoot(ctx)+"/refs"); const branches=Object.keys(rr.refs||{}).filter(x=>x.startsWith('refs/heads/')).map(x=>x.slice(11)); sel.innerHTML=branches.map(x=>'<option '+(x===ctx.ref?'selected':'')+'>'+esc(x)+'</option>').join('')||'<option>'+esc(ctx.ref)+'</option>'; sel.onchange=()=>{location.href=ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(sel.value):(canonicalRepoURL(ctx,'tree',sel.value,''));};}catch(e){}}
-    if(!ctx.legacy){
-      try{
-        const ov=await api(repoRoot(ctx)+"/overview");
-        const latest=ov.latest_commit||{};
-        const msg=(latest.Message||latest.message||"No commits yet").split("\n")[0];
-        document.getElementById("repo-latest").textContent=msg;
-        const hash=latest.Hash||latest.hash||"";
-        const ts=latest.Timestamp||latest.committedAt||latest.timestamp||0;
-        document.getElementById("repo-latest-meta").textContent=(hash?hash.slice(0,7)+" · ":"")+(ts?new Date(Number(ts)*1000).toLocaleString():"");
-        document.getElementById("repo-branches").textContent=ov.branch_count||0;
-        document.getElementById("repo-tags").textContent=ov.tag_count||0;
-        document.getElementById("repo-commits").textContent=ov.commit_count_sample||0;
-        setupCloneDialog(ov.clone_https||"");
-        document.getElementById("tab-code").href=canonicalRepoURL(ctx);
-        document.getElementById("tab-commits").href=canonicalRepoURL(ctx)+"/commits/"+encodeURIComponent(ctx.ref);
-        document.getElementById("tab-prs").href=canonicalRepoURL(ctx)+"/pulls";
-        document.getElementById("tab-settings").href=canonicalRepoURL(ctx)+"/settings";
-        document.getElementById("tab-actions").href=canonicalRepoURL(ctx)+"/actions";
-      }catch(e){ const strip=document.getElementById("repo-overview-strip"); if(strip)strip.innerHTML='<p class="error">'+esc(e.message)+'</p>'; }
-    } else { const strip=document.getElementById("repo-overview-strip"); if(strip)strip.hidden=true; }
-    renderBreadcrumbs(ctx); loadTree(ctx,treeEl,viewEl);
-  }
-  async function loadTree(ctx,treeEl,viewEl){
-    try{
-      const root=repoRoot(ctx),t=await api(root+"/tree?ref="+encodeURIComponent(ctx.ref)),files=t.tree.map(it=>it.path).sort(); treeEl.innerHTML="";
-      for(const f of files){const row=el("<div class='file' data-path='"+esc(f)+"'><span class='file-icon'>·</span>"+esc(f)+"</div>"); row.onclick=()=>location.href=ctx.legacy?"/repo.html?name="+encodeURIComponent(ctx.artifact)+"&ref="+encodeURIComponent(ctx.ref)+"&path="+encodeURIComponent(f):canonicalRepoURL(ctx,"blob",ctx.ref,f); treeEl.appendChild(row);}
-      if(!ctx.path){
-        const candidates=['README.md','README.markdown','README','docs/README.md'];
-        const found=candidates.find(x=>files.includes(x));
-        if(found){
-          const rr=await fetch(rawURL(ctx,found),{credentials:'same-origin'});
-          if(rr.ok){const md=await rr.text(), readme=document.getElementById('readme-view'); if(readme){
-            const base=found.includes('/')?found.slice(0,found.lastIndexOf('/')+1):'';
-            const resolver=(u,kind)=>{ if(/^https?:\/\//i.test(u)||u.startsWith('#')||u.startsWith('mailto:'))return u; let path=(base+u).split('/').reduce((a,x)=>{if(x==='..')a.pop();else if(x&&x!=='.')a.push(x);return a;},[]).join('/'); return kind==='image'?rawURL(ctx,path):(ctx.legacy?'/repo.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(ctx.ref)+'&path='+encodeURIComponent(path):canonicalRepoURL(ctx,'blob',ctx.ref,path)); };
-            readme.hidden=false; readme.innerHTML='<div class="readme-head">README</div>'+SwitchyardMarkdown.render(md,{resolve:resolver});
-          }}
-        }
-      }
-      if(ctx.path){
-        const edit=document.getElementById('edit-link'); if(edit)edit.href='/edit.html?name='+encodeURIComponent(ctx.artifact)+'&ref='+encodeURIComponent(ctx.ref)+'&path='+encodeURIComponent(ctx.path);
-        document.getElementById('file-view-title').textContent=ctx.path; const raw=await fetch(rawURL(ctx,ctx.path),{credentials:'same-origin'}); if(!raw.ok)throw new Error('content request failed: '+raw.status); const ct=raw.headers.get('content-type')||''; const blob=await raw.blob(); const size=blob.size; document.getElementById('file-meta').textContent=size<1024?size+' B':(size/1024).toFixed(1)+' KB';
-        document.getElementById('raw-link').href=rawURL(ctx,ctx.path); document.getElementById('copy-path').onclick=()=>navigator.clipboard&&navigator.clipboard.writeText(ctx.path);
-        const lang=window.SwitchyardCode?SwitchyardCode.detectLanguage(ctx.path):'text'; document.getElementById('file-language').textContent=window.SwitchyardCode?SwitchyardCode.labelFor(lang):lang;
-        const image=/^image\//.test(ct)||/\.(png|jpe?g|gif|webp|svg)$/i.test(ctx.path);
-        const text=!image?await blob.text():'';
-        if(image){viewEl.innerHTML='<div class="image-preview"><img alt="'+esc(ctx.path)+'" src="'+rawURL(ctx,ctx.path)+'"></div>';}
-        else {viewEl.innerHTML=SwitchyardCode.lines(text,lang); document.getElementById('copy-file').onclick=()=>navigator.clipboard&&navigator.clipboard.writeText(text);}
-        renderBreadcrumbs(ctx);
-      }
-    }catch(e){treeEl.innerHTML="<p class='error'>"+esc(e.message)+"</p>";}
-  }
-
   async function startLive() {
     const liveEl = document.getElementById("live");
     if (!liveEl) return;
@@ -318,7 +229,6 @@
     if (document.getElementById("repos") || document.getElementById("work")) await renderDashboard();
     if (document.getElementById("signin-form")) renderSignin();
     if (document.getElementById("work-form")) renderWork();
-    if (document.getElementById("repo-name")) renderRepo();
     if (!document.getElementById("repos") && !document.getElementById("work")) await refreshAuth();
   });
 })();

@@ -24,7 +24,7 @@
     for(let i=0;i<lines.length;i++){
       const line=lines[i];
       let m;
-      if((m=line.match(/^```\s*([\w+-]*)/))){ if(!inCode){closeList();inCode=true;lang=m[1]||'text';code=[];} else {const id=(SwitchyardCode.languages.find(x=>x.id===lang)||{}).id||({js:'javascript',ts:'typescript',sh:'shell',py:'python'}[lang]||'text'); out.push('<pre class="md-code code-surface"><code>'+SwitchyardCode.highlight(code.join('\n'),id)+'</code></pre>');inCode=false;} continue; }
+      if((m=line.match(/^```\s*([\w+-]*)/))){ if(!inCode){closeList();inCode=true;lang=m[1]||'text';code=[];} else {const id=(SwitchyardCode.languages.find(x=>x.id===lang)||{}).id||({js:'javascript',ts:'typescript',sh:'shell',py:'python'}[lang]||'text'); out.push('<pre class="md-code code-surface"><code class="language-'+id+'">'+SwitchyardCode.highlight(code.join('\n'),id)+'</code></pre>');inCode=false;} continue; }
       if(inCode){code.push(line);continue;}
       if(!line.trim()){closeList();out.push('');continue;}
       if((m=line.match(/^(#{1,6})\s+(.+)/))){closeList();const lvl=m[1].length,txt=inline(m[2],resolve),id=slug(m[2]);out.push(`<h${lvl} id="${id}"><a class="heading-anchor" href="#${id}">#</a>${txt}</h${lvl}>`);continue;}
