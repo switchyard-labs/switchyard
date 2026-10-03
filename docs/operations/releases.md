@@ -57,8 +57,10 @@ disabled by default; if enabled, bind only to loopback.
 Packaging requires Go and Nift at build time. Serving the UI needs neither
 Nift nor Node nor templates/public files. **Git is currently still required
 for repository operations**, although version reporting does not use Git.
-Removing Git from all runtime operations remains open; the C27 brief's broader
-“Do not require Git at runtime” requirement is not satisfied by embedding UI.
+The adopted October 4 clarification permits Git as an external system dependency.
+C26/C27 require one Switchyard application binary with embedded UI and version
+metadata, deployed by copying that binary and restarting the service; they do
+not require embedding or replacing Git. These packaging requirements are met.
 Trestle, Artifacts access, and the configured token helper remain required.
 
 This document describes the new deployment procedure. It does not certify a

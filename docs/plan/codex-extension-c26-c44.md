@@ -189,7 +189,8 @@ If useful, support:
 switchyard --version
 ```
 
-Do not require Git at runtime.
+Superseded by Nick’s October 4 continuation: Git is an allowed external runtime
+dependency. Do not embed or replace Git; deploy one Switchyard application binary.
 
 Commit C27.
 
