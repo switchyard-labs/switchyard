@@ -2,11 +2,11 @@
 <html lang="en" data-theme="dark">
 	<head>
 		<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Switchyard</title>
-<link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
-<link rel="stylesheet" href="assets/css/theme.css">
-<link rel="stylesheet" href="assets/css/app.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Switchyard</title>
+		<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
+		<link rel="stylesheet" href="assets/css/theme.css">
+		<link rel="stylesheet" href="assets/css/app.css">
 	</head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
@@ -24,8 +24,8 @@
 			<div class="menu-groups">
 				<details class="menu-group" open><summary>Git</summary><div class="menu-links">
 					<a href="./">Dashboard</a>
-					<a href="repo.html">Repositories</a>
-					<a href="work.html">Work</a>
+					<a href="./repo.html">Repositories</a>
+					<a href="./work.html">Work</a>
 				</div></details>
 				<details class="menu-group" open><summary>Agent-native</summary><div class="menu-links">
 					<a href="/operations#attention">Needs Attention</a>
@@ -42,20 +42,21 @@
 		</nav>
 		<main class="site-main" id="main-content">
 			<main>
-	<section class="panel narrow">
-		<h1>Sign in</h1>
-		<form id="signin-form">
-			<label>Username<input name="username" autocomplete="username" required></label>
-			<label>Password<input name="password" type="password" autocomplete="current-password" required></label>
-			<button type="submit">Sign in</button>
-		</form>
-		<p class="muted">No account? <a href="#" id="toggle-mode">Register</a></p>
-		<p class="error" id="auth-error" hidden></p>
-	</section>
-</main>
+				<section class="panel narrow">
+					<h1>Sign in</h1>
+					<form id="signin-form">
+						<label>Username<input name="username" autocomplete="username" required></label>
+						<label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+						<button type="submit">Sign in</button>
+					</form>
+					<p class="muted">No account? <a href="#" id="toggle-mode">Register</a></p>
+					<p class="error" id="auth-error" hidden></p>
+				</section>
+			</main>
 		</main>
 		<script src="assets/js/code-surface.js"></script>
 		<script src="assets/js/markdown.js"></script>
+		<script src="assets/js/code-blocks.js"></script>
 		<script src="assets/js/app.js"></script>
-	<script src="/assets/js/code-blocks.js"></script></body>
+	</body>
 </html>

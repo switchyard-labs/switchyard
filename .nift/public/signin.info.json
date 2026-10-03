@@ -21,8 +21,12 @@
   "reqs": [
     "public/assets/css/app.css",
     "public/assets/css/theme.css",
+    "public/assets/images/favicon.svg",
     "public/assets/images/favicon.webp",
     "public/assets/js/app.js",
+    "public/assets/js/code-blocks.js",
+    "public/assets/js/code-surface.js",
+    "public/assets/js/markdown.js",
     "public/index.html",
     "public/repo.html",
     "public/work.html"

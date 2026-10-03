@@ -2,11 +2,11 @@
 <html lang="en" data-theme="dark">
 	<head>
 		<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Switchyard</title>
-<link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
-<link rel="stylesheet" href="assets/css/theme.css">
-<link rel="stylesheet" href="assets/css/app.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Switchyard</title>
+		<link rel="icon" type="image/webp" href="assets/images/favicon.webp">
+		<link rel="stylesheet" href="assets/css/theme.css">
+		<link rel="stylesheet" href="assets/css/app.css">
 	</head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
@@ -24,8 +24,8 @@
 			<div class="menu-groups">
 				<details class="menu-group" open><summary>Git</summary><div class="menu-links">
 					<a href="./">Dashboard</a>
-					<a href="repo.html">Repositories</a>
-					<a href="work.html">Work</a>
+					<a href="./repo.html">Repositories</a>
+					<a href="./work.html">Work</a>
 				</div></details>
 				<details class="menu-group" open><summary>Agent-native</summary><div class="menu-links">
 					<a href="/operations#attention">Needs Attention</a>
@@ -42,44 +42,45 @@
 		</nav>
 		<main class="site-main" id="main-content">
 			<main>
-<section class="panel repo-shell">
-  <div class="repo-head">
-    <div><div class="repo-owner muted" id="repo-owner"></div><h1 id="repo-name">Repository</h1><p class="muted" id="repo-description"></p></div>
-    <div class="repo-actions"><span class="language-badge" id="repo-visibility">private</span><button class="btn code-button" id="clone-toggle" type="button" aria-haspopup="dialog" aria-controls="clone-dialog"><span aria-hidden="true">&lt;/&gt;</span> Code <span class="code-caret" aria-hidden="true">▾</span></button></div>
-  </div>
-  <nav class="repo-tabs" aria-label="Repository"><a class="active" id="tab-code" href="#">Code</a><a id="tab-commits" href="#">Commits</a><a id="tab-work" href="/work.html">Work</a><a id="tab-prs" href="/pulls.html">Pull Requests</a><a id="tab-workflows" href="/operations.html#workflows">Workflows</a><a id="tab-settings" href="#">Settings</a></nav>
-  <section class="repo-overview-strip" id="repo-overview-strip"><div><strong id="repo-latest">Loading latest commit…</strong><span class="muted" id="repo-latest-meta"></span></div><div class="repo-stats"><span><strong id="repo-branches">—</strong> branches</span><span><strong id="repo-tags">—</strong> tags</span><span><strong id="repo-commits">—</strong> recent commits</span></div></section>
-  <dialog class="clone-dialog code-dialog" id="clone-dialog">
-    <form method="dialog"><button class="dialog-close" aria-label="Close Code menu">×</button></form>
-    <div class="code-dialog-head"><div><span class="code-dialog-kicker">Cloudflare Artifacts remote</span><h2>Clone with Git</h2></div></div>
-    <p class="muted code-dialog-intro">This repository lives in Cloudflare Artifacts. <strong>Git</strong> performs clone, fetch and push; <strong>Artifacts</strong> is the authoritative remote Git server.</p>
-    <div class="clone-method"><span class="clone-method-label">HTTPS</span></div>
-    <div class="clone-url-row"><input id="clone-url" aria-label="HTTPS clone URL" readonly><button class="btn mini" id="clone-copy" type="button">Copy</button></div>
-    <div class="clone-commands">
-      <div><span>Clone</span><code id="clone-command">git clone …</code><button class="copy-command" type="button" data-copy-target="clone-command">Copy</button></div>
-      <div><span>Fetch</span><code id="fetch-command">git fetch origin</code><button class="copy-command" type="button" data-copy-target="fetch-command">Copy</button></div>
-      <div><span>Push branch</span><code id="push-command">git push origin HEAD</code><button class="copy-command" type="button" data-copy-target="push-command">Copy</button></div>
-    </div>
-    <div class="clone-note"><strong>Authentication</strong><span>Switchyard uses short-lived, repository-scoped Artifacts credentials. Secrets are not embedded in the clone URL.</span></div>
-  </dialog>
-  <div class="repo-toolbar">
-    <label>Branch <select id="repo-ref-select"><option>main</option></select></label>
-    <div class="breadcrumbs" id="repo-breadcrumbs"></div>
-    <span class="spacer"></span><span class="language-badge" id="file-language">Plain text</span>
-  </div>
-  <div class="repo-browse">
-    <aside class="file-tree" id="file-tree"><p class="muted">Loading files…</p></aside>
-    <section class="file-view-wrap">
-      <div class="file-view-toolbar"><strong id="file-view-title">Select a file</strong><span id="file-meta" class="muted"></span><span class="spacer"></span><button class="btn mini" id="copy-path" type="button">Copy path</button><button class="btn mini" id="copy-file" type="button">Copy file</button><a class="btn mini" id="raw-link" target="_blank">Raw</a><a class="btn mini" id="edit-link">Edit</a></div>
-      <div class="file-view code-surface" id="file-view"><p class="muted">Select a file.</p></div>
-      <article class="readme markdown-body" id="readme-view" hidden></article>
-    </section>
-  </div>
-</section>
-</main>
+			<section class="panel repo-shell">
+			  <div class="repo-head">
+			    <div><div class="repo-owner muted" id="repo-owner"></div><h1 id="repo-name">Repository</h1><p class="muted" id="repo-description"></p></div>
+			    <div class="repo-actions"><span class="language-badge" id="repo-visibility">private</span><button class="btn code-button" id="clone-toggle" type="button" aria-haspopup="dialog" aria-controls="clone-dialog"><span aria-hidden="true">&lt;/&gt;</span> Code <span class="code-caret" aria-hidden="true">▾</span></button></div>
+			  </div>
+			  <nav class="repo-tabs" aria-label="Repository"><a class="active" id="tab-code" href="#">Code</a><a id="tab-commits" href="#">Commits</a><a id="tab-work" href="/work.html">Work</a><a id="tab-prs" href="/pulls.html">Pull Requests</a><a id="tab-workflows" href="/operations.html#workflows">Workflows</a><a id="tab-settings" href="#">Settings</a></nav>
+			  <section class="repo-overview-strip" id="repo-overview-strip"><div><strong id="repo-latest">Loading latest commit…</strong><span class="muted" id="repo-latest-meta"></span></div><div class="repo-stats"><span><strong id="repo-branches">—</strong> branches</span><span><strong id="repo-tags">—</strong> tags</span><span><strong id="repo-commits">—</strong> recent commits</span></div></section>
+			  <dialog class="clone-dialog code-dialog" id="clone-dialog">
+			    <form method="dialog"><button class="dialog-close" aria-label="Close Code menu">×</button></form>
+			    <div class="code-dialog-head"><div><span class="code-dialog-kicker">Cloudflare Artifacts remote</span><h2>Clone with Git</h2></div></div>
+			    <p class="muted code-dialog-intro">This repository lives in Cloudflare Artifacts. <strong>Git</strong> performs clone, fetch and push; <strong>Artifacts</strong> is the authoritative remote Git server.</p>
+			    <div class="clone-method"><span class="clone-method-label">HTTPS</span></div>
+			    <div class="clone-url-row"><input id="clone-url" aria-label="HTTPS clone URL" readonly><button class="btn mini" id="clone-copy" type="button">Copy</button></div>
+			    <div class="clone-commands">
+			      <div><span>Clone</span><code id="clone-command">git clone …</code><button class="copy-command" type="button" data-copy-target="clone-command">Copy</button></div>
+			      <div><span>Fetch</span><code id="fetch-command">git fetch origin</code><button class="copy-command" type="button" data-copy-target="fetch-command">Copy</button></div>
+			      <div><span>Push branch</span><code id="push-command">git push origin HEAD</code><button class="copy-command" type="button" data-copy-target="push-command">Copy</button></div>
+			    </div>
+			    <div class="clone-note"><strong>Authentication</strong><span>Switchyard uses short-lived, repository-scoped Artifacts credentials. Secrets are not embedded in the clone URL.</span></div>
+			  </dialog>
+			  <div class="repo-toolbar">
+			    <label>Branch <select id="repo-ref-select"><option>main</option></select></label>
+			    <div class="breadcrumbs" id="repo-breadcrumbs"></div>
+			    <span class="spacer"></span><span class="language-badge" id="file-language">Plain text</span>
+			  </div>
+			  <div class="repo-browse">
+			    <aside class="file-tree" id="file-tree"><p class="muted">Loading files…</p></aside>
+			    <section class="file-view-wrap">
+			      <div class="file-view-toolbar"><strong id="file-view-title">Select a file</strong><span id="file-meta" class="muted"></span><span class="spacer"></span><button class="btn mini" id="copy-path" type="button">Copy path</button><button class="btn mini" id="copy-file" type="button">Copy file</button><a class="btn mini" id="raw-link" target="_blank">Raw</a><a class="btn mini" id="edit-link">Edit</a></div>
+			      <div class="file-view code-surface" id="file-view"><p class="muted">Select a file.</p></div>
+			      <article class="readme markdown-body" id="readme-view" hidden></article>
+			    </section>
+			  </div>
+			</section>
+			</main>
 		</main>
 		<script src="assets/js/code-surface.js"></script>
 		<script src="assets/js/markdown.js"></script>
+		<script src="assets/js/code-blocks.js"></script>
 		<script src="assets/js/app.js"></script>
-	<script src="/assets/js/code-blocks.js"></script></body>
+	</body>
 </html>
