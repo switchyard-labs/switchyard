@@ -33,3 +33,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 ## Checkpoint ledger
 
 C0 complete: this checkpoint commit records baseline and repairs formatting detection. C1–C4 in progress. C5–C25 pending.
+
+## C1 — contained repository filesystem
+
+Repository paths now reject traversal, absolute/noncanonical paths, encoded aliases, Git metadata, Windows separators/drive syntax and symlink components. Applied at the ref mutation substrate, draft creation, conflict-resolution writes and semantic contract reads. Mutation scratch clones use unique temporary directories; failed commit builds clean up their clones. Raw repository responses are inert text with nosniff and sandbox CSP, including HTML/SVG. Adversarial traversal and symlink tests pass with the full Go suite. No live writes or deployment. Existing generated trailing whitespace from the C0 Nift build was normalized. C5 still owns Git expected-SHA publication semantics.

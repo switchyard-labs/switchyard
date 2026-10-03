@@ -32,6 +32,10 @@ func (a *App) handleSaveDraft(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "repo_branch_path_required"})
 		return
 	}
+	if err := refs.ValidatePath(in.Path); err != nil {
+		writeJSON(w, 400, map[string]any{"error": "invalid_repository_path"})
+		return
+	}
 	draftID := "draft_" + sha256Hex([]byte(user + "|" + in.Repo + "|" + in.Branch + "|" + in.Path))[:10]
 	at := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 

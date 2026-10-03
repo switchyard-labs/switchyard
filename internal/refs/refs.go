@@ -130,6 +130,11 @@ func (s *Service) currentSHA(repo, remote, branch string) (string, error) {
 // Update applies file changes to the current branch head and CAS-updates the
 // ref via a non-force push. Returns status "ok" or "stale".
 func (s *Service) Update(repo, branch, expected string, changes []Change, message, provenance string) (*Result, error) {
+	for _, c := range changes {
+		if err := ValidatePath(c.Path); err != nil {
+			return nil, err
+		}
+	}
 	l := s.lock(repo, branch)
 	l.Lock()
 	defer l.Unlock()
@@ -185,13 +190,16 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 }
 
 func (s *Service) buildCommit(repo, remote, branch string, changes []Change, message string) (string, error) {
-	dir := filepath.Join(s.ScratchDir, "scratch-"+strings.ReplaceAll(repo+branch, "/", "_"))
-	if err := os.RemoveAll(dir); err != nil {
+	dir, err := os.MkdirTemp(s.ScratchDir, "scratch-*")
+	if err != nil {
 		return "", err
 	}
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return "", err
-	}
+	success := false
+	defer func() {
+		if !success {
+			os.RemoveAll(dir)
+		}
+	}()
 	args, err := s.authArgs(repo)
 	if err != nil {
 		return "", err
@@ -217,7 +225,10 @@ func (s *Service) buildCommit(repo, remote, branch string, changes []Change, mes
 	// -c header is sent.
 	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
 	for _, c := range changes {
-		p := filepath.Join(dir, c.Path)
+		p, err := ContainedPath(dir, c.Path)
+		if err != nil {
+			return "", err
+		}
 		if c.Delete {
 			if err := os.Remove(p); err != nil && !os.IsNotExist(err) {
 				return "", err
@@ -237,6 +248,7 @@ func (s *Service) buildCommit(repo, remote, branch string, changes []Change, mes
 	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "commit", "--quiet", "-m", message); err != nil {
 		return "", fmt.Errorf("commit: %w", err)
 	}
+	success = true
 	return dir, nil
 }
 
@@ -267,9 +279,10 @@ func (s *Service) MergeBranch(repo, target, source, message, provenance string) 
 	if err != nil {
 		return nil, err
 	}
-	dir := filepath.Join(s.ScratchDir, "merge-"+strings.ReplaceAll(repo+target+source, "/", "_"))
-	os.RemoveAll(dir)
-	os.MkdirAll(dir, 0755)
+	dir, err := os.MkdirTemp(s.ScratchDir, "merge-*")
+	if err != nil {
+		return nil, err
+	}
 	args, err := s.authArgs(repo)
 	if err != nil {
 		return nil, err
@@ -323,9 +336,10 @@ func (s *Service) PreviewMerge(repo, target, source string) ([]string, error) {
 	} else if !ok {
 		return nil, fmt.Errorf("preview: source branch %s does not exist", source)
 	}
-	dir := filepath.Join(s.ScratchDir, "preview-"+strings.ReplaceAll(repo+target+source, "/", "_"))
-	os.RemoveAll(dir)
-	os.MkdirAll(dir, 0755)
+	dir, err := os.MkdirTemp(s.ScratchDir, "preview-*")
+	if err != nil {
+		return nil, err
+	}
 	args, err := s.authArgs(repo)
 	if err != nil {
 		return nil, err
@@ -374,9 +388,10 @@ func (s *Service) PreviewMergedTree(repo, target, source string) (string, error)
 	} else if !ok {
 		return "", fmt.Errorf("preview-tree: source branch %s does not exist", source)
 	}
-	dir := filepath.Join(s.ScratchDir, "ptree-"+strings.ReplaceAll(repo+target+source, "/", "_"))
-	os.RemoveAll(dir)
-	os.MkdirAll(dir, 0755)
+	dir, err := os.MkdirTemp(s.ScratchDir, "ptree-*")
+	if err != nil {
+		return "", err
+	}
 	args, err := s.authArgs(repo)
 	if err != nil {
 		return "", err
@@ -415,9 +430,10 @@ func (s *Service) ResolveIntoSource(repo, target, source, message, provenance st
 	if err != nil {
 		return nil, nil, err
 	}
-	dir := filepath.Join(s.ScratchDir, "resolve-"+strings.ReplaceAll(repo+target+source, "/", "_"))
-	os.RemoveAll(dir)
-	os.MkdirAll(dir, 0755)
+	dir, err := os.MkdirTemp(s.ScratchDir, "resolve-*")
+	if err != nil {
+		return nil, nil, err
+	}
 	args, err := s.authArgs(repo)
 	if err != nil {
 		return nil, nil, err
@@ -458,7 +474,13 @@ func (s *Service) ResolveIntoSource(repo, target, source, message, provenance st
 				_ = os.WriteFile(ot, []byte(theirs), 0644)
 			}
 			mergedBytes, _ := os.ReadFile(ot)
-			_ = os.WriteFile(filepath.Join(dir, name), mergedBytes, 0644)
+			p, e := ContainedPath(dir, name)
+			if e != nil {
+				return nil, nil, e
+			}
+			if e = os.WriteFile(p, mergedBytes, 0644); e != nil {
+				return nil, nil, e
+			}
 			_ = git(dir, "", "add", "--", name)
 			resolved = append(resolved, name)
 		}

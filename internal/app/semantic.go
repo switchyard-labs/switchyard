@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
+	"switchyard/internal/refs"
 )
 
 // Semantic-conflict detection (post-cp13 review experiment).
@@ -49,7 +49,10 @@ func (a *App) semanticFindings(repo, branch string) ([]map[string]any, error) {
 	}
 	defer removeAll(dir)
 
-	contractPath := filepath.Join(dir, "switchyard.contract.json")
+	contractPath, err := refs.ContainedPath(dir, "switchyard.contract.json")
+	if err != nil {
+		return nil, err
+	}
 	raw, err := os.ReadFile(contractPath)
 	if err != nil {
 		return nil, nil // no contract declared
@@ -103,7 +106,10 @@ func mergedJSONField(dir, selector string) (string, error) {
 	if len(parts) != 2 {
 		return "", fmt.Errorf("selector %q must be path:field", selector)
 	}
-	filePath := filepath.Join(dir, parts[0])
+	filePath, err := refs.ContainedPath(dir, parts[0])
+	if err != nil {
+		return "", err
+	}
 	b, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", err
