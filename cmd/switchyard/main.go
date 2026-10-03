@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/rand"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -58,9 +59,15 @@ func main() {
 	art := artifacts.New(*acc, *ns, *tokCmd)
 	a := app.New(tre, art, *static, *data)
 	// agent substrate: credential store keyed from env or a persisted data key
-	key := loadOrCreateKey(filepath.Join(*data, "secret.key"))
+	key, err := loadOrCreateKey(filepath.Join(*data, "secret.key"))
+	if err != nil {
+		log.Fatalf("credential key: %v", err)
+	}
 	a.Secrets = agent.NewCredentialStore(
-		func(v map[string]any, idem string) error { _, _, e := tre.CreateRecord("credentials", v, idem); return e },
+		func(v map[string]any, idem string) error {
+			_, _, e := tre.CreateRecord("credentials", v, idem)
+			return e
+		},
 		func() ([]map[string]any, error) { return tre.ListRecords("credentials", "") },
 		func(id string) error {
 			rid, ver, vals, e := tre.FindRecord("credentials", `id = "`+id+`"`)
@@ -73,6 +80,16 @@ func main() {
 			return tre.DeleteRecord("credentials", rid, ver)
 		},
 		key)
+	a.Secrets.SetUpdater(func(id, ct string) error {
+		rid, ver, _, err := tre.FindRecord("credentials", `id = "`+id+`"`)
+		if err != nil {
+			return err
+		}
+		if rid == "" {
+			return os.ErrNotExist
+		}
+		return tre.PatchRecord("credentials", rid, ver, map[string]any{"ciphertext": ct, "last_used": ""})
+	})
 	a.Roles = agent.BuiltinRoles
 	a.Runner = &agent.DeterministicRunner{
 		Apply: func(exec *agent.Execution, path, content string) (string, error) {
@@ -104,16 +121,48 @@ func main() {
 	log.Printf("switchyard control plane listening on %s (trestle=%s, namespace=%s)", *listen, *treBase, *ns)
 	log.Fatal(http.ListenAndServe(*listen, a.Handler()))
 }
+
 // loadOrCreateKey returns a 32-byte AES key from env or a persisted file.
-func loadOrCreateKey(path string) []byte {
-	if k := os.Getenv("SWITCHYARD_SECRET_KEY"); len(k) >= 32 {
-		return []byte(k)[:32]
+func loadOrCreateKey(path string) ([]byte, error) {
+	if k, ok := os.LookupEnv("SWITCHYARD_SECRET_KEY"); ok {
+		if len(k) != 32 {
+			return nil, fmt.Errorf("SWITCHYARD_SECRET_KEY must be exactly 32 bytes")
+		}
+		return []byte(k), nil
 	}
-	if b, err := os.ReadFile(path); err == nil && len(b) == 32 {
-		return b
+	if info, err := os.Lstat(path); err == nil {
+		if !info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0 {
+			return nil, fmt.Errorf("persisted credential key must be a private regular file")
+		}
+	} else if !os.IsNotExist(err) {
+		return nil, err
+	}
+	if b, err := os.ReadFile(path); err == nil {
+		if len(b) != 32 {
+			return nil, fmt.Errorf("persisted key must be exactly 32 bytes; restore key backup")
+		}
+		return b, nil
+	} else if !os.IsNotExist(err) {
+		return nil, err
 	}
 	k := make([]byte, 32)
-	_, _ = rand.Read(k)
-	_ = os.WriteFile(path, k, 0600)
-	return k
+	if _, err := rand.Read(k); err != nil {
+		return nil, err
+	}
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = f.Write(k); err != nil {
+		f.Close()
+		return nil, err
+	}
+	if err = f.Sync(); err != nil {
+		f.Close()
+		return nil, err
+	}
+	if err = f.Close(); err != nil {
+		return nil, err
+	}
+	return k, nil
 }

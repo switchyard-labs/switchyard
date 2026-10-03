@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"html"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -78,6 +79,16 @@ func (a *App) handleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	if rid, ver, _, e := a.Trestle.FindRecord("users", `username = "`+u+`"`); e == nil && rid != "" && strings.TrimSpace(in.DisplayName) != "" {
 		_ = a.Trestle.PatchRecord("users", rid, ver, map[string]any{"display_name": strings.TrimSpace(in.DisplayName)})
+	}
+	if !safeWebURL(strings.TrimSpace(in.Website)) {
+		writeJSON(w, 400, map[string]any{"error": "website_url_invalid"})
+		return
+	}
+	for _, link := range in.Social {
+		if !safeWebURL(link) {
+			writeJSON(w, 400, map[string]any{"error": "social_url_invalid"})
+			return
+		}
 	}
 	vals := map[string]any{"username": u, "bio": strings.TrimSpace(in.Bio), "location": strings.TrimSpace(in.Location), "website": strings.TrimSpace(in.Website), "social": in.Social, "pinned_repos": in.PinnedRepos, "updated_at": nowStr()}
 	if rid, ver, old, e := a.Trestle.FindRecord("user_profiles", `username = "`+u+`"`); e == nil && rid != "" {
@@ -175,7 +186,7 @@ func fallbackAvatar(label string) string {
 	if s := strings.TrimSpace(label); s != "" {
 		initial = strings.ToUpper(string([]rune(s)[0]))
 	}
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect width="256" height="256" rx="32" fill="#202226"/><circle cx="128" cy="128" r="104" fill="#292c31" stroke="#454a51" stroke-width="2"/><text x="128" y="153" text-anchor="middle" font-family="system-ui,sans-serif" font-size="88" font-weight="700" fill="#d9a45b">` + initial + `</text></svg>`
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect width="256" height="256" rx="32" fill="#202226"/><circle cx="128" cy="128" r="104" fill="#292c31" stroke="#454a51" stroke-width="2"/><text x="128" y="153" text-anchor="middle" font-family="system-ui,sans-serif" font-size="88" font-weight="700" fill="#d9a45b">` + html.EscapeString(initial) + `</text></svg>`
 }
 func (a *App) handleAvatar(w http.ResponseWriter, r *http.Request) {
 	kind, id := r.PathValue("kind"), r.PathValue("id")
@@ -230,11 +241,13 @@ func (a *App) handleUserActivity(w http.ResponseWriter, r *http.Request) {
 	}
 	out := []map[string]any{}
 	if work, e := a.Trestle.ListRecords("work", `owner = "`+u+`"`); e == nil {
+		work = a.visibleRecords("work", work, a.currentUser(r))
 		for _, x := range work {
 			out = append(out, map[string]any{"type": "work", "title": x["title"], "at": x["updated_at"], "id": x["id"]})
 		}
 	}
 	if refs, e := a.Trestle.ListRecords("ref_updates", ""); e == nil {
+		refs = a.visibleRecords("ref_updates", refs, a.currentUser(r))
 		for _, x := range refs {
 			if strings.Contains(strOr(x["provenance"]), u) {
 				out = append(out, map[string]any{"type": "git", "repo": x["repo"], "branch": x["branch"], "at": x["occurred_at"], "sha": x["new_sha"]})
@@ -425,6 +438,10 @@ func (a *App) handleUpdateOrgProfile(w http.ResponseWriter, r *http.Request) {
 	vis := in.Visibility
 	if vis == "" {
 		vis = "public"
+	}
+	if !safeWebURL(strings.TrimSpace(in.Website)) {
+		writeJSON(w, 400, map[string]any{"error": "website_url_invalid"})
+		return
 	}
 	vals := map[string]any{"org_id": id, "display_name": strings.TrimSpace(in.DisplayName), "description": strings.TrimSpace(in.Description), "location": strings.TrimSpace(in.Location), "website": strings.TrimSpace(in.Website), "contact": strings.TrimSpace(in.Contact), "visibility": vis, "updated_at": nowStr()}
 	if vals["display_name"] == "" {

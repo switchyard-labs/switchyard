@@ -179,6 +179,10 @@ func (a *App) visibleRecords(collection string, items []map[string]any, user str
 // effect. Every entity route resolves its own durable repository association.
 func (a *App) authorizeHandler(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" && r.Method != "HEAD" && !sameOrigin(r) {
+			writeJSON(w, 403, map[string]any{"error": "cross_origin_request_denied"})
+			return
+		}
 		user := a.currentUser(r)
 		path := r.URL.Path
 		write := r.Method != "GET" && r.Method != "HEAD"

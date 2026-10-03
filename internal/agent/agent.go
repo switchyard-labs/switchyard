@@ -6,6 +6,7 @@
 package agent
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -14,7 +15,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -52,6 +52,7 @@ type CredentialStore struct {
 	list       func() ([]map[string]any, error)
 	findAndDel func(id string) error
 	key        []byte
+	update     func(string, string) error
 }
 
 func NewCredentialStore(
@@ -62,6 +63,8 @@ func NewCredentialStore(
 ) *CredentialStore {
 	return &CredentialStore{put: put, list: list, findAndDel: findAndDel, key: key}
 }
+
+func (c *CredentialStore) SetUpdater(update func(string, string) error) { c.update = update }
 
 func (c *CredentialStore) encrypt(plain string) (string, error) {
 	block, err := aes.NewCipher(c.key)
@@ -91,6 +94,9 @@ func (c *CredentialStore) decrypt(ct string) (string, error) {
 	raw, err := base64.StdEncoding.DecodeString(ct)
 	if err != nil {
 		return "", err
+	}
+	if len(raw) < gcm.NonceSize()+gcm.Overhead() {
+		return "", errors.New("malformed credential ciphertext")
 	}
 	nonce, body := raw[:gcm.NonceSize()], raw[gcm.NonceSize():]
 	out, err := gcm.Open(nil, nonce, body, nil)
@@ -140,8 +146,18 @@ func (c *CredentialStore) ResolveForExecution(id, runDir string) (string, error)
 	if err := os.MkdirAll(runDir, 0700); err != nil {
 		return "", err
 	}
-	path := filepath.Join(runDir, "credential")
-	if err := os.WriteFile(path, []byte(plain), 0600); err != nil {
+	f, err := os.CreateTemp(runDir, "credential-*")
+	if err != nil {
+		return "", err
+	}
+	path := f.Name()
+	if _, err = f.Write([]byte(plain)); err != nil {
+		f.Close()
+		os.Remove(path)
+		return "", err
+	}
+	if err = f.Close(); err != nil {
+		os.Remove(path)
 		return "", err
 	}
 	return path, nil
@@ -163,13 +179,10 @@ func (c *CredentialStore) Rotate(id, newSecret string) error {
 			if err != nil {
 				return err
 			}
-			if err := c.findAndDel(id); err != nil {
-				return err
+			if c.update == nil {
+				return errors.New("atomic credential updater unavailable")
 			}
-			return c.put(map[string]any{
-				"id": it["id"], "name": it["name"], "provider": it["provider"], "scope": it["scope"],
-				"ciphertext": ct, "created_at": it["created_at"], "last_used": "",
-			}, "cred-"+id+"-"+randToken(6))
+			return c.update(id, ct)
 		}
 	}
 	return errors.New("credential not found")
@@ -183,10 +196,10 @@ func (c *CredentialStore) Metadata() ([]CredentialMetadata, error) {
 	out := []CredentialMetadata{}
 	for _, it := range items {
 		m := CredentialMetadata{
-			ID: it["id"].(string), Name: it["name"].(string),
-			Provider: it["provider"].(string), Scope: it["scope"].(string),
+			ID: textValue(it["id"]), Name: textValue(it["name"]),
+			Provider: textValue(it["provider"]), Scope: textValue(it["scope"]),
 		}
-		if t, err := time.Parse(time.RFC3339, it["created_at"].(string)); err == nil {
+		if t, err := time.Parse(time.RFC3339, textValue(it["created_at"])); err == nil {
 			m.CreatedAt = t
 		}
 		out = append(out, m)
@@ -269,13 +282,26 @@ func (r *CLIRunner) Run(ex *Execution, task map[string]any) error {
 			return err
 		}
 	}
-	cmd := exec.Command(r.Bin)
-	cmd.Env = append(os.Environ(), "SWITCHYARD_CREDENTIAL_FILE="+credPath, "SWITCHYARD_TASK=agent")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("agent cli: %s", strings.TrimSpace(string(out)))
+	if credPath != "" {
+		defer os.Remove(credPath)
 	}
-	ex.Output = string(out)
+	cmd := exec.Command(r.Bin)
+	cmd.Dir = r.WorkDir
+	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), "LANG=C.UTF-8", "SWITCHYARD_CREDENTIAL_FILE=" + credPath, "SWITCHYARD_TASK=agent"}
+	var output limitedOutput
+	cmd.Stdout = &output
+	cmd.Stderr = &output
+	err := cmd.Run()
+	out := output.String()
+	if credPath != "" {
+		if secret, e := os.ReadFile(credPath); e == nil && len(secret) > 0 {
+			out = strings.ReplaceAll(out, string(secret), "[REDACTED]")
+		}
+	}
+	ex.Output = out
+	if err != nil {
+		return fmt.Errorf("agent cli exited unsuccessfully: %w", err)
+	}
 	return nil
 }
 
@@ -283,4 +309,20 @@ func randToken(n int) string {
 	b := make([]byte, n)
 	_, _ = rand.Read(b)
 	return fmt.Sprintf("%x", b)
+}
+func textValue(v any) string { s, _ := v.(string); return s }
+
+// limitedOutput consumes all writes while retaining at most one MiB.
+type limitedOutput struct{ bytes.Buffer }
+
+func (b *limitedOutput) Write(p []byte) (int, error) {
+	n := len(p)
+	remaining := (1 << 20) - b.Len()
+	if remaining > 0 {
+		if len(p) > remaining {
+			p = p[:remaining]
+		}
+		_, _ = b.Buffer.Write(p)
+	}
+	return n, nil
 }

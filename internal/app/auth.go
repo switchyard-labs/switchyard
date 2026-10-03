@@ -2,8 +2,8 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -41,7 +41,7 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "bad_request"})
 		return
 	}
-	in.Username = strings.TrimSpace(in.Username)
+	in.Username = normalizeOwnerSlug(in.Username)
 	if len(in.Username) < 3 || len(in.Password) < 8 {
 		writeJSON(w, 400, map[string]any{"error": "username_or_password_too_short"})
 		return
@@ -81,7 +81,10 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "owner_namespace_conflict"})
 		return
 	}
-	a.startSession(w, in.Username)
+	if err := a.startSession(w, r, in.Username); err != nil {
+		writeJSON(w, 502, map[string]any{"error": "session_persistence_failed"})
+		return
+	}
 	writeJSON(w, 201, map[string]any{"ok": true, "user": in.Username})
 }
 
@@ -94,7 +97,16 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "bad_request"})
 		return
 	}
-	items, err := a.Trestle.ListRecords("users", `username = "`+strings.TrimSpace(in.Username)+`"`)
+	in.Username = normalizeOwnerSlug(in.Username)
+	if !validOwnerSlug(in.Username) {
+		writeJSON(w, 401, map[string]any{"error": "invalid_credentials"})
+		return
+	}
+	if !a.allowLogin(r.RemoteAddr) {
+		writeJSON(w, 429, map[string]any{"error": "login_rate_limited"})
+		return
+	}
+	items, err := a.Trestle.ListRecords("users", filterEq("username", in.Username))
 	if err != nil || len(items) == 0 {
 		_ = bcrypt.CompareHashAndPassword([]byte("$2a$10$7EqJtq98hPqEX7fNZaFWoOhi8nVZzQEjU1C5bG1fT3UJwWzM6bLfW"), []byte(in.Password))
 		writeJSON(w, 401, map[string]any{"error": "invalid_credentials"})
@@ -105,25 +117,50 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 401, map[string]any{"error": "invalid_credentials"})
 		return
 	}
-	a.startSession(w, in.Username)
+	if err := a.startSession(w, r, in.Username); err != nil {
+		writeJSON(w, 502, map[string]any{"error": "session_persistence_failed"})
+		return
+	}
 	writeJSON(w, 200, map[string]any{"ok": true, "user": in.Username})
 }
 
-func (a *App) startSession(w http.ResponseWriter, username string) {
-	token := newToken()
-	_, _, _ = a.Trestle.CreateRecord("sessions", map[string]any{
+func (a *App) startSession(w http.ResponseWriter, r *http.Request, username string) error {
+	record := a.userRecord(username)
+	if record == nil {
+		return fmt.Errorf("user not found")
+	}
+	token := newToken() + "_" + sha256Hex([]byte(strOr(record["password_hash"])))[:16]
+	_, _, err := a.Trestle.CreateRecord("sessions", map[string]any{
 		"token":      token,
 		"username":   username,
 		"expires_at": time.Now().Add(7 * 24 * time.Hour).UTC().Format(time.RFC3339),
 	}, "sess-"+token)
+	if err != nil {
+		return err
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name: "switchyard_session", Value: token, Path: "/",
-		HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: 7 * 24 * 3600,
+		HttpOnly: true, Secure: secureRequest(r), SameSite: http.SameSiteLaxMode, MaxAge: 7 * 24 * 3600,
 	})
+	return nil
 }
 
 func (a *App) handleLogout(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{Name: "switchyard_session", Value: "", Path: "/", MaxAge: -1})
+	if c, err := r.Cookie("switchyard_session"); err == nil {
+		rid, ver, _, e := a.Trestle.FindRecord("sessions", filterEq("token", c.Value))
+		if e != nil {
+			writeJSON(w, 502, map[string]any{"error": "logout_persistence_failed"})
+			return
+		}
+		if rid != "" {
+			if e = a.Trestle.DeleteRecord("sessions", rid, ver); e != nil {
+				writeJSON(w, 502, map[string]any{"error": "logout_persistence_failed"})
+				return
+			}
+		}
+	}
+
+	http.SetCookie(w, &http.Cookie{Name: "switchyard_session", Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: secureRequest(r), SameSite: http.SameSiteLaxMode})
 	writeJSON(w, 200, map[string]any{"ok": true})
 }
 

@@ -22,12 +22,18 @@ func (a *App) handleCreateCredential(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "name/provider/secret required"})
 		return
 	}
-	if in.Scope == "" {
-		in.Scope = "personal"
+	if in.Scope != "" && in.Scope != "personal" {
+		writeJSON(w, 400, map[string]any{"error": "organization_credential_delegation_not_configured"})
+		return
 	}
+	in.Scope = "personal"
 	id, err := a.Secrets.Create(in.Name, in.Provider, in.Scope, in.Secret)
 	if err != nil {
 		writeJSON(w, 500, map[string]any{"error": err.Error()})
+		return
+	}
+	if _, _, err := a.Trestle.CreateRecord("credential_owners", map[string]any{"credential_id": id, "username": user}, "credential-owner-"+id); err != nil {
+		writeJSON(w, 502, map[string]any{"error": "credential_owner_persistence_failed"})
 		return
 	}
 	writeJSON(w, 201, map[string]any{"id": id, "name": in.Name, "provider": in.Provider, "scope": in.Scope, "notice": "credential stored securely; the secret cannot be viewed again"})
@@ -43,7 +49,13 @@ func (a *App) handleListCredentials(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
-	writeJSON(w, 200, map[string]any{"items": meta})
+	out := meta[:0]
+	for _, m := range meta {
+		if a.ownsCredential(m.ID, a.currentUser(r)) {
+			out = append(out, m)
+		}
+	}
+	writeJSON(w, 200, map[string]any{"items": out})
 }
 
 func (a *App) handleRotateCredential(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +64,10 @@ func (a *App) handleRotateCredential(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := r.PathValue("id")
+	if !a.ownsCredential(id, a.currentUser(r)) {
+		writeJSON(w, 403, map[string]any{"error": "credential_owner_required"})
+		return
+	}
 	var in struct {
 		Secret string `json:"secret"`
 	}
@@ -69,6 +85,10 @@ func (a *App) handleRotateCredential(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleDeleteCredential(w http.ResponseWriter, r *http.Request) {
 	if a.currentUser(r) == "" {
 		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
+		return
+	}
+	if !a.ownsCredential(r.PathValue("id"), a.currentUser(r)) {
+		writeJSON(w, 403, map[string]any{"error": "credential_owner_required"})
 		return
 	}
 	if err := a.Secrets.Delete(r.PathValue("id")); err != nil {
@@ -98,4 +118,12 @@ func (a *App) handleListExecutions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]any{"items": items})
+}
+
+func (a *App) ownsCredential(id, user string) bool {
+	if user == "" {
+		return false
+	}
+	xs, err := a.Trestle.ListRecords("credential_owners", filterEq("credential_id", id))
+	return err == nil && len(xs) == 1 && strOr(xs[0]["username"]) == user
 }

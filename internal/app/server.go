@@ -34,9 +34,11 @@ type App struct {
 	Queue     *QueueConsumer
 	DemoMode  bool
 
-	wfMu       sync.Mutex
-	wfInFlight map[string]bool
-	iqBusy     bool
+	authMu        sync.Mutex
+	loginAttempts map[string]loginWindow
+	wfMu          sync.Mutex
+	wfInFlight    map[string]bool
+	iqBusy        bool
 }
 
 func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App {
@@ -63,6 +65,7 @@ func (a *App) Provision() error {
 		{"prs", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "attempt_id", Type: "text"}, {Name: "work_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "base", Type: "text"}, {Name: "title", Type: "text"}, {Name: "status", Type: "text"}, {Name: "check_status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "integrated_at", Type: "text"}}},
 		{"pr_checks", []trestle.CollectionField{{Name: "pr_id", Type: "text"}, {Name: "status", Type: "text"}, {Name: "detail", Type: "text"}, {Name: "created_at", Type: "text"}}},
 		{"ref_obs", []trestle.CollectionField{{Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "sha", Type: "text"}, {Name: "seen_at", Type: "text"}}},
+		{"credential_owners", []trestle.CollectionField{{Name: "credential_id", Type: "text", Unique: true}, {Name: "username", Type: "text"}}},
 		{"credentials", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "name", Type: "text"}, {Name: "provider", Type: "text"}, {Name: "scope", Type: "text"}, {Name: "ciphertext", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "last_used", Type: "text"}}},
 		{"executions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "role", Type: "text"}, {Name: "attempt_id", Type: "text"}, {Name: "adapter", Type: "text"}, {Name: "status", Type: "text"}, {Name: "output", Type: "text"}, {Name: "started_at", Type: "text"}, {Name: "finished_at", Type: "text"}}},
 		{"findings", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "target", Type: "text"}, {Name: "severity", Type: "text"}, {Name: "message", Type: "text"}, {Name: "file", Type: "text"}, {Name: "status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "resolved_at", Type: "text"}}},
@@ -360,7 +363,10 @@ func newToken() string {
 
 // auth helpers
 func (a *App) userForSession(r *http.Request, token string) (string, bool) {
-	items, err := a.Trestle.ListRecords("sessions", `token = "`+token+`"`)
+	if len(token) != 70 || !strings.HasPrefix(token, "sess_") {
+		return "", false
+	}
+	items, err := a.Trestle.ListRecords("sessions", filterEq("token", token))
 	if err != nil || len(items) == 0 {
 		return "", false
 	}
@@ -369,6 +375,10 @@ func (a *App) userForSession(r *http.Request, token string) (string, bool) {
 		return "", false
 	}
 	u, _ := items[0]["username"].(string)
+	record := a.userRecord(u)
+	if record == nil || !strings.HasSuffix(token, "_"+sha256Hex([]byte(strOr(record["password_hash"])))[:16]) {
+		return "", false
+	}
 	return u, true
 }
 
