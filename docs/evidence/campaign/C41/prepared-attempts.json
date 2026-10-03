@@ -1,0 +1,21 @@
+{
+  "repository": "alice/railway",
+  "artifact_name": "codex-actions-probe-20261003",
+  "base": "http://127.0.0.1:18127",
+  "run_id": "3cd04f1cf939",
+  "attempts": [
+    {
+      "lane": "a",
+      "id": "wk_650f6829a3ce1218",
+      "branch": "event-competition-3cd04f1cf939-a"
+    },
+    {
+      "lane": "b",
+      "id": "wk_1f21a799aaaa2b4e",
+      "branch": "event-competition-3cd04f1cf939-b"
+    }
+  ],
+  "phase": "prepared-awaiting-real-provider",
+  "real_provider_certified": false,
+  "work_id": "wk_e7c9b32c6a8ba8a6"
+}
