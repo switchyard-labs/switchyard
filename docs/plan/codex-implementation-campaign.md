@@ -207,3 +207,15 @@ C20 checkpoint identity: `8528adc`. Replaced fake Inspect links and operational 
 ## C22 — browser certification and demo polish
 
 Actual six-width Chromium product/menu matrix, genuine populated/empty fixtures and brochure verification completed; details and limits are in `docs/evidence/campaign/C22/README.md`. Fixed public canonical demo authorization/import, pagination and scrolling ownership, editor selection/shortcuts, persisted stars/follows and contribution profiles. Profile avatars are 250px with rounded square borders; neutral active navigation and primary action colors remain distinct. Linode assets and additive schema updates are synced under existing authorization. C23 performance remains next; architecture exploration is design-only in its separate commit.
+
+## Accepted extension — C45/C46 (October 4)
+
+After the current C22–C44 certification, implement C45 immutable repository ZIP
+and tar.gz downloads, then C46 first-class releases. Full accepted requirements:
+[codex-c45-c46-archives-releases.md](codex-c45-c46-archives-releases.md).
+C45 resolves branch/tag once to a SHA, streams bounded archives through canonical
+authorized routes and adds Download ZIP to Code. C46 keeps immutable target SHA,
+authorized draft/publish lifecycle and audited metadata in Trestle; binary assets
+are separate R2 objects with SHA256/size metadata. Actions integration and later
+sy archive/release commands use the same contracts. Neither checkpoint is yet
+implemented or certified. SSH remains deferred; no fake tab is added.
