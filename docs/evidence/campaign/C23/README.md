@@ -7,3 +7,5 @@ The contribution endpoint made 160 metadata reads for 40 attributed and 80 unrel
 For this small local fixture, mirrors improve single-task setup but serialized worktree creation/removal makes 25-way batches slower (browse 233ms versus 64ms; preview 240ms versus 79ms). Do not replace production scratch clones from these results. A remote fixture and workload history are needed before deciding whether network savings justify a mirror design.
 
 The script creates only its own temporary repositories, pins detached workspace bases, compares candidate results and makes no remote push. It removes its owned temporary directory on exit. C23 is not complete.
+
+Deployment sample: the real Linode contribution endpoint returned HTTP 200 in 0.048565s on loopback after the change, versus the earlier 0.320171s sample. These are individual observations, not latency percentiles or a controlled network benchmark. The update has an integrity-checked private SQLite/binary/environment/key backup at the existing host; no schema change was needed.
