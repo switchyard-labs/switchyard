@@ -1,0 +1,4 @@
+export async function verify(tab) {
+ const facts=await tab.playwright.evaluate(()=>({text:document.body.innerText,overflow:document.documentElement.scrollWidth>innerWidth,deadLinks:[...document.querySelectorAll('.operations-page a')].filter(a=>a.getAttribute('href')==='#').length,steps:document.querySelectorAll('.workflow-step').length}));
+ const result=[];for(const [name,passed]of [['No fake Inspect links',facts.deadLinks===0],['No document overflow',!facts.overflow],['Recorded step history',facts.steps>=2],['Consequence explained',facts.text.includes('completed effects')||facts.text.includes('Completed steps')],['Failure evidence visible',facts.text.includes('TypeError')],['Actual benign workflow visible',facts.text.includes('approve recorded route evidence')]]){if(!passed)throw Error(name);result.push(name)}return result;
+}

@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18 repository redesign verified; C19 workspace and identity redesign verified; C20 workbench verified; C21–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18 repository redesign verified; C19 workspace and identity redesign verified; C20 workbench verified; C21 decision surfaces verified; C22–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -199,3 +199,7 @@ C19 checkpoint identity: `adde19d`. Added full-height Files/Search/Editor/Agent 
 Backend immutable tree/content/search reads are bounded; file moves validate containment, modes, collisions, active drafts and expected branch SHA. Browser direct-write routes enforce protected-ref policy. Committed draft reload retains CAS revision metadata; delayed Agent proposal against an older human revision is rejected without overwriting the newer save. Executable mode survives a real Git move regression.
 
 Full Go race suite and vet, three Node hierarchy/diff checks, 17-page static gates and eight permanent workbench browser assertions passed. Actual disposable editor branch browser proof covers explicit draft commit, real drag/drop commit `49f8e2f`, file creation/undo/redo/save/commit `ebb73e5`; server probes cover stale SHA and active-draft blocking. Desktop/390px evidence and adaptation/limits are in `docs/evidence/campaign/C20`. External intelligent Agent execution, full responsive matrix and production deployment remain later gates. C21–C25 pending.
+
+## C21 — human decision surfaces
+
+C20 checkpoint identity: `8528adc`. Replaced fake Inspect links and operational record rows with repository context, stop reasons, recorded evidence, inspection destinations and consequences. Workflow step history loads on demand; approval/retry/cancellation and queue revalidation use explicit consequence dialogs and existing backend authorization. Attention includes failed Actions and failed workflows; partial source reads remain visibly incomplete. The benign local workflow reached waiting approval, was inspected and approved through the browser, then completed with durable step replay. A real malformed-call failure remained inspectable. App race/static checks and permanent browser assertions passed; evidence is under `docs/evidence/campaign/C21`. C22–C25 pending.

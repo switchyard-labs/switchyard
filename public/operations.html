@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="/assets/css/theme.css?v=c18">
 <link rel="stylesheet" href="/assets/css/components.css?v=c17b">
 <link rel="stylesheet" href="/assets/css/app.css?v=c19">
-	<link rel="stylesheet" href="/assets/css/identity.css?v=c19"></head>
+	<link rel="stylesheet" href="/assets/css/identity.css?v=c19"><link rel="stylesheet" href="/assets/css/operations.css?v=c21"></head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
 		<header class="site-header">
@@ -42,7 +42,15 @@
 			<div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>
 		</nav>
 		<main class="site-main" id="main-content">
-			<main><section class="panel operations-page"><div class="repo-head"><div><p class="eyebrow">Advanced operations</p><h1>Workflows, Agents &amp; Attention</h1><p class="muted">Operational views stay out of the simple Git path until you need them.</p></div><button id="ops-refresh" type="button">Refresh</button></div><nav class="repo-tabs ops-tabs"><button class="active" data-ops="attention">Needs Attention</button><button data-ops="queue">Integration Queue</button><button data-ops="workflows">Workflows</button><button data-ops="agents">Agents</button></nav><section id="ops-attention" class="ops-pane"><div id="attention-list"></div></section><section id="ops-queue" class="ops-pane" hidden><div id="queue-list"></div></section><section id="ops-workflows" class="ops-pane" hidden><div class="ops-grid"><div><h2>Workflows</h2><div id="workflow-list"></div></div><div><h2>Recent runs</h2><div id="run-list"></div></div></div></section><section id="ops-agents" class="ops-pane" hidden><div class="ops-grid"><div><h2>Roles</h2><div id="role-list"></div></div><div><h2>Recent executions</h2><div id="execution-list"></div></div></div><p class="muted">Provider credentials are managed under Account Settings → Agent providers. Secrets are never shown here.</p></section><p id="ops-error" class="error" hidden></p></section></main><script src="/assets/js/app-operations.js"></script>
+			<section class="operations-page"><header class="page-heading"><div><p class="eyebrow">Coordination</p><h1>Needs Attention</h1><p class="muted" id="ops-description">Review what stopped, inspect the evidence and choose the next step.</p></div><button id="ops-refresh" class="btn" type="button">Refresh</button></header>
+<nav class="repo-tabs ops-tabs" aria-label="Operations"><button class="active" data-ops="attention">Needs Attention</button><button data-ops="queue">Integration Queue</button><button data-ops="workflows">Workflows</button><button data-ops="agents">Agents</button></nav>
+<p id="ops-error" class="error" role="alert" hidden></p>
+<section id="ops-attention" class="ops-pane"><div id="attention-list"><p class="muted">Loading decisions…</p></div></section>
+<section id="ops-queue" class="ops-pane" hidden><p class="muted">Changes wait here while current branch heads, review policy and required checks are validated. Only passing candidates can be published.</p><div id="queue-list"></div></section>
+<section id="ops-workflows" class="ops-pane" hidden><div class="operations-columns"><aside><h2>Workflow library</h2><div id="workflow-list"></div></aside><div><h2>Recent runs</h2><div id="run-list"></div></div></div></section>
+<section id="ops-agents" class="ops-pane" hidden><div class="operations-columns"><aside><h2>Agent roles</h2><div id="role-list"></div><a href="/settings#providers">Manage providers</a></aside><div><h2>Recorded executions</h2><div id="execution-list"></div></div></div></section>
+</section><script src="/assets/js/app-operations.js?v=c21"></script>
+
 
 		</main>
 		<script src="/assets/js/code-surface.js?v=c18"></script>

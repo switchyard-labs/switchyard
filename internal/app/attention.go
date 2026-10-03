@@ -28,52 +28,76 @@ func (a *App) handleNeedsAttention(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items := []map[string]any{}
+	warnings := []string{}
+	for _, collection := range []string{"attempts", "iq", "workflow_runs", "findings", "action_runs"} {
+		records, err := a.Trestle.ListRecords(collection, "")
+		if err != nil {
+			warnings = append(warnings, collection+" unavailable")
+			continue
+		}
+		for _, record := range a.visibleRecords(collection, records, user) {
+			item := attentionProjection(collection, record)
+			if item != nil {
+				items = append(items, item)
+			}
+		}
+	}
+	writeJSON(w, 200, map[string]any{"items": items, "count": len(items), "warnings": warnings, "complete": len(warnings) == 0})
+}
 
-	// attempts in conflict
-	if atts, err := a.Trestle.ListRecords("attempts", ""); err == nil {
-		for _, at := range atts {
-			if at["status"] == "conflict" {
-				items = append(items, map[string]any{
-					"kind": "attempt_conflict", "target_id": at["id"], "repo": at["repo"],
-					"branch": at["branch"], "summary": "attempt is in conflict; resolve to integrate", "created_at": at["updated_at"],
-				})
-			}
+// attentionProjection describes recorded outcomes without claiming unrecorded repair attempts.
+func attentionProjection(collection string, x map[string]any) map[string]any {
+	kind, title, reason, evidence := "", "", "", ""
+	status := strOr(x["status"])
+	repo, branch := strOr(x["repo"]), strOr(x["branch"])
+	switch collection {
+	case "attempts":
+		if status != "conflict" {
+			return nil
 		}
-	}
-	// blocked queue items
-	if q, err := a.Trestle.ListRecords("iq", ""); err == nil {
-		for _, it := range q {
-			if it["status"] == "blocked" {
-				items = append(items, map[string]any{
-					"kind": "queue_blocked", "target_id": it["id"], "repo": it["repo"],
-					"branch": it["branch"], "summary": "integration blocked: " + strOf(it["error"]), "created_at": it["updated_at"],
-				})
-			}
+		kind, title, reason = "attempt_conflict", "Attempt needs conflict resolution", "The Attempt is parked in conflict. Review the conflicting versions before changing its branch."
+		evidence = strOr(x["message"])
+	case "iq":
+		if status != "blocked" {
+			return nil
 		}
-	}
-	// workflow runs waiting for approval
-	if wr, err := a.Trestle.ListRecords("workflow_runs", ""); err == nil {
-		for _, run := range wr {
-			if run["status"] == "waiting_approval" {
-				items = append(items, map[string]any{
-					"kind": "workflow_approval", "target_id": run["id"], "summary": "workflow " + strOf(run["id"]) + " waits for approval", "created_at": run["updated_at"],
-				})
-			}
+		kind, title, reason = "queue_blocked", "Integration is blocked", "The queue stopped before publication. Requeue rechecks the current branches and required gates."
+		evidence = strOr(x["error"])
+	case "workflow_runs":
+		if status != "waiting_approval" && status != "failed" {
+			return nil
 		}
-	}
-	// open error findings
-	if f, err := a.Trestle.ListRecords("findings", ""); err == nil {
-		for _, x := range f {
-			if x["severity"] == "error" && x["status"] == "open" {
-				items = append(items, map[string]any{
-					"kind": "open_finding", "target_id": strOf(x["target"]), "repo": "",
-					"branch": "", "summary": "error finding: " + strOf(x["message"]) + " (" + strOf(x["file"]) + ")", "created_at": x["created_at"],
-				})
-			}
+		kind, title, reason = "workflow_approval", "Workflow awaits approval", "A durable approval step is waiting. Approval resumes from that step; completed effects are replayed."
+		if status == "failed" {
+			kind, title, reason = "workflow_failed", "Workflow stopped", "The recorded workflow failed. Retry replays completed steps and retries unfinished effects."
 		}
+		params, _ := x["params"].(map[string]any)
+		repo = strOr(params["repo"])
+		branch = strOr(params["branch"])
+		evidence = strOr(x["error"])
+	case "findings":
+		if x["severity"] != "error" || status != "open" {
+			return nil
+		}
+		kind, title, reason = "open_finding", "Validation finding needs review", "An error finding remains open. Inspect its file and linked Attempt before applying a repair."
+		evidence = strOr(x["message"]) + " · " + strOr(x["file"])
+	case "action_runs":
+		state, _ := x["state"].(map[string]any)
+		if state["status"] != "failed" {
+			return nil
+		}
+		kind, title, reason = "actions_failed", "Cloudflare Actions failed", "A CI run failed at its recorded commit. Inspect job output; a rerun uses the same source and approved definition."
+		status = strOr(state["status"])
+		branch = strOr(x["ref"])
+		evidence = "Commit " + strOr(x["source_sha"])
+	default:
+		return nil
 	}
-	items = a.visibleRecords("attention", items, user)
-	writeJSON(w, 200, map[string]any{"items": items, "count": len(items)})
+	target := strOr(x["id"])
+	if collection == "findings" {
+		target = strOr(x["target"])
+	}
+	return map[string]any{"kind": kind, "target_id": target, "repo": repo, "branch": branch, "summary": title, "reason": reason, "evidence": evidence, "status": status, "created_at": x["updated_at"], "pr_id": x["pr_id"]}
 }
 
 // assembleConflictPacket builds a self-contained decision packet for a
