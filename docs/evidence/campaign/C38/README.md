@@ -28,3 +28,11 @@ browser asset during upgrades.
 
 Worker Preview/Builds links remain explicitly unavailable until verified setup;
 this checkpoint does not certify deployment URLs or real external Agents.
+
+Continuation: real successful capture downloaded through Chromium to action.log.
+Read-back verified 114 bytes, exact source SHA 91c8376985668eb6e5bca932dfd0cb56160681eb
+and NO_PRIVILEGED_CREDENTIALS stdout. SHA256:
+74ac063e29c0c7df7d76c0d0b85ef299863b8605b051b4a3947936c74c232a56.
+Copy reported Output copied, but CUA clipboard read-back returned an empty string;
+clipboard contents remain UNVERIFIED, not PASS. Actions now also uses one owner/repo
+heading instead of adding the shared duplicate context row.

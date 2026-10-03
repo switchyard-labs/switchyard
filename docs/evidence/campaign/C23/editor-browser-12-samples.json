@@ -1,0 +1,22 @@
+{
+  "scope": "Chromium CUA reload-to-visible initialized CodeMirror; includes automation calls and observer overhead; not Nick network or browser performance API",
+  "n": 12,
+  "median_ms": 7341.5,
+  "p95_nearest_rank_ms": 11832,
+  "min_ms": 7117,
+  "max_ms": 11832,
+  "timings_ms": [
+    7894,
+    7247,
+    7542,
+    7457,
+    7219,
+    7223,
+    7125,
+    7436,
+    7648,
+    11832,
+    7117,
+    7239
+  ]
+}

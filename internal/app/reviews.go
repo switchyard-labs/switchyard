@@ -103,7 +103,9 @@ func (a *App) handlePreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	base := rr.DefaultBranch
+	previewStarted := time.Now()
 	mergedTree, conflicts, err := a.Refs.PreviewMergedTreeWithConflicts(repo, base, branch)
+	previewDuration := time.Since(previewStarted)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -127,7 +129,9 @@ func (a *App) handlePreview(w http.ResponseWriter, r *http.Request) {
 	}
 	// git merge is textually clean: validate repo contracts on the merged tree
 	// (semantic-conflict detection). A clean merge can still be incompatible.
+	semanticStarted := time.Now()
 	sem, err := semanticFindingsInTree(mergedTree)
+	w.Header().Set("Server-Timing", fmt.Sprintf("git_preview;dur=%.3f, semantic;dur=%.3f", float64(previewDuration.Microseconds())/1000, float64(time.Since(semanticStarted).Microseconds())/1000))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": "semantic check failed: " + err.Error()})
 		return

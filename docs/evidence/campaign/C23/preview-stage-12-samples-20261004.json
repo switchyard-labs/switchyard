@@ -1,0 +1,83 @@
+{
+  "scope": "remote merged checkout plus local semantic validation; preview may record findings but never publishes Git",
+  "attempt": "wk_650f6829a3ce1218",
+  "n": 12,
+  "median_ms": 6384.6720000000005,
+  "p95_nearest_rank_ms": 13147.953,
+  "min_ms": 6000.519,
+  "max_ms": 13147.953,
+  "rows": [
+    {
+      "ms": 13147.953,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=12482.017, semantic;dur=0.025"
+    },
+    {
+      "ms": 6000.519,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=5641.733, semantic;dur=0.023"
+    },
+    {
+      "ms": 6364.761,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6017.075, semantic;dur=0.024"
+    },
+    {
+      "ms": 6768.313,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6322.387, semantic;dur=0.023"
+    },
+    {
+      "ms": 6204.731,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=5820.232, semantic;dur=0.024"
+    },
+    {
+      "ms": 6035.445,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=5660.167, semantic;dur=0.044"
+    },
+    {
+      "ms": 6937.106,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6555.636, semantic;dur=0.022"
+    },
+    {
+      "ms": 6686.468,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6295.021, semantic;dur=0.029"
+    },
+    {
+      "ms": 6031.869,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=5594.721, semantic;dur=0.022"
+    },
+    {
+      "ms": 7716.882,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=5757.983, semantic;dur=0.034"
+    },
+    {
+      "ms": 6404.583,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6059.488, semantic;dur=0.024"
+    },
+    {
+      "ms": 6152.386,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=5809.488, semantic;dur=0.025"
+    }
+  ]
+}

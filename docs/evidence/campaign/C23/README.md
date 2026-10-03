@@ -49,3 +49,18 @@ median 6696.15 ms, nearest-rank p95 10446.97 ms, range 5979.85–10446.97 ms.
 That is a 49.1% lower observed median and 44.2% lower upper observation than the
 preceding run, not a controlled population estimate. Remote Git transport still
 dominates this path. Raw results: `preview-single-checkout-12-samples-20261004.json`.
+
+Continuation measurements: twelve authorized PR-list API requests all returned
+200 (median 2.92ms, upper observation 4.44ms). Embedded editor-shell requests
+returned 200 (median 0.32ms, upper observation 1.98ms). Twelve real Chromium
+reload-to-visible CodeMirror observations took median 7341.5ms, upper observation
+11832ms, minimum 7117ms. These include CUA observer/protocol overhead and remote
+Git work; they are not browser Performance API measurements or Nick's network.
+Raw data: pr-editor-http-12-samples-20261004.json and editor-browser-12-samples.json.
+
+Preview Server-Timing now separates remote Git merged-checkout and local semantic
+validation. Twelve prepared C41 Attempt previews all returned ok (median 6384.67ms,
+upper observation 13147.95ms). This fixture has no semantic contract: its tiny
+semantic-stage time measures the missing-contract fast path, not representative
+contract validation. Do not use that number to claim semantic performance complete.
+Queue publication timing and representative contract validation remain open.

@@ -1,0 +1,107 @@
+{
+  "scope": "read-only total HTTP response time from benchmark host; first request is not a guaranteed cold cache; nearest-rank p95 for 10+ samples (10 samples means maximum)",
+  "rows": [
+    {
+      "path": "/api/prs?repo=codex-actions-probe-20261003",
+      "samples": 12,
+      "first_request_ms": 4.32,
+      "median_ms": 2.915,
+      "p95_nearest_rank_ms": 4.44,
+      "min_ms": 2.32,
+      "max_ms": 4.44,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "timings_ms": [
+        4.32,
+        2.65,
+        3.07,
+        3.11,
+        2.84,
+        2.94,
+        2.89,
+        2.48,
+        2.32,
+        4.44,
+        3.24,
+        2.88
+      ],
+      "server_timings": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "path": "/alice/railway/edit/main/src/routes.mjs",
+      "samples": 12,
+      "first_request_ms": 1.98,
+      "median_ms": 0.315,
+      "p95_nearest_rank_ms": 1.98,
+      "min_ms": 0.2,
+      "max_ms": 1.98,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "timings_ms": [
+        1.98,
+        0.72,
+        1.15,
+        1.12,
+        0.51,
+        0.36,
+        0.27,
+        0.24,
+        0.2,
+        0.24,
+        0.23,
+        0.26
+      ],
+      "server_timings": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ]
+    }
+  ]
+}
