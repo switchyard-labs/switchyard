@@ -127,6 +127,8 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}", a.authorizeHandler(a.handleGetRepositoryMeta))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions", a.authorizeHandler(a.handleActions))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions/{id}", a.authorizeHandler(a.handleActionRun))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions/{id}/logs", a.authorizeHandler(a.handleActionLogs))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions/{id}/logs/stream", a.authorizeHandler(a.handleActionLogs))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/tree", a.authorizeHandler(a.handleCanonicalRepoTree))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/content", a.authorizeHandler(a.handleCanonicalRepoContent))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/refs", a.authorizeHandler(a.handleCanonicalRepoRefs))

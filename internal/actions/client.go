@@ -65,7 +65,14 @@ func Signature(secret, timestamp, method, path string, body []byte) string {
 	mac.Write(body)
 	return hex.EncodeToString(mac.Sum(nil))
 }
+
+type HTTPError struct{ Status int }
+
+func (e *HTTPError) Error() string { return fmt.Sprintf("Actions Worker returned HTTP %d", e.Status) }
 func (c *Client) Request(ctx context.Context, method, path string, payload, out any) error {
+	return c.requestBound(ctx, method, path, payload, out, 3<<20)
+}
+func (c *Client) requestBound(ctx context.Context, method, path string, payload, out any, bound int) error {
 	if !strings.HasPrefix(path, "/") || strings.HasPrefix(path, "//") {
 		return fmt.Errorf("invalid Actions path")
 	}
@@ -94,15 +101,15 @@ func (c *Client) Request(ctx context.Context, method, path string, payload, out 
 		return err
 	}
 	defer response.Body.Close()
-	data, err := io.ReadAll(io.LimitReader(response.Body, (3<<20)+1))
+	data, err := io.ReadAll(io.LimitReader(response.Body, int64(bound)+1))
 	if err != nil {
 		return err
 	}
-	if len(data) > 3<<20 {
+	if len(data) > bound {
 		return fmt.Errorf("Actions response exceeds bound")
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return fmt.Errorf("Actions Worker returned HTTP %d", response.StatusCode)
+		return &HTTPError{Status: response.StatusCode}
 	}
 	if out != nil {
 		return json.Unmarshal(data, out)
@@ -119,5 +126,5 @@ func (c *Client) Cancel(ctx context.Context, id string) error {
 	return c.Request(ctx, http.MethodPost, "/runs/"+url.PathEscape(id)+"/cancel", nil, nil)
 }
 func (c *Client) Logs(ctx context.Context, id, step string, out any) error {
-	return c.Request(ctx, http.MethodGet, "/runs/"+url.PathEscape(id)+"/logs?step="+url.QueryEscape(step), nil, out)
+	return c.requestBound(ctx, http.MethodGet, "/runs/"+url.PathEscape(id)+"/logs?step="+url.QueryEscape(step), nil, out, 16<<20)
 }

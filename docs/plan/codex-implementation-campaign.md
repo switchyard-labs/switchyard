@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C11 locally implemented and verified. C12–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C13 locally implemented and verified. C14–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -155,3 +155,7 @@ Real local Trestle polling exposed redundant writes: typed Go snapshots and deco
 C11 commit: `802a4c9`; polling follow-up: `bac3d6d`. Added a Nift-built Actions route/tab with a repository sidebar, run search/status/branch filters, status icons, exact commit links, actor/event/timing summary, selectable jobs, expandable steps and secondary provenance. Empty/error states are readable; provider JSON is not presented as product copy. Root-relative Nift asset/navigation paths fix canonical-route loading and are protected by an actual HTTP asset regression.
 
 Verification used the real Go application, an isolated local SQLite Trestle instance and signed Cloudflare provider; the actual native run was imported by the reconciler. Seven permanent staged browser assertions passed (populated list, status/reset, search/reset, run navigation, step disclosure, overflow and genuine empty state). Desktop and 390 px screenshots are under `docs/evidence/campaign/C12`; measured mobile document width 375 <= 390. App race tests, Nift build and JavaScript syntax checks passed. This is not the C22 six-width/full-product certification. Logs and operational buttons follow in C13/C14; no fabricated preview/deployment or build artifact is claimed.
+
+## C13 — bounded read-only Actions logs
+
+Implemented repository/step-authorized exact-SHA log pages, inert downloads and cursor-resumable SSE with disconnect and wait bounds. Warden-inspired ANSI text rendering provides follow/pause, search, copy, capture timing, download and reconnect without stdin or execution. Actual Cloudflare output passed browser search/reconnect checks; evidence and capture limitations are recorded in `docs/evidence/campaign/C13`. Actions/app race tests and ANSI security tests pass. C14–C25 remain pending.
