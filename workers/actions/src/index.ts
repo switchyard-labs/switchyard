@@ -2,6 +2,7 @@ import { CIWorkflow, type CiContext, type CiParams, type CloudflareArtifacts, ty
 import { type CiBindings, CiSandbox } from '@cloudflare/ci/worker';
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { validateRun, signature, equalSignature, digest, boundedBody, validateRerunParent, redactSecrets, secretVariants } from './protocol.mjs';
+import { inspectArtifactSource } from './artifacts-source.mjs';
 export { CiSandbox };
 type Step = {id:string; name?:string; command:string; timeout_ms:number};
 type Run = CiParams<CloudflareArtifacts> & {run_id:string; definition_revision:string; jobs:{id:string; name?:string; steps:Step[]}[];rerun_of?:string;selected_jobs?:string[]};
@@ -25,7 +26,6 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
    // evaluated inside the privileged Worker.
    const definition=await step.do('select-definition',async()=>{
     if(input.owner!==this.env.ARTIFACTS_NAMESPACE || !this.env.ALLOWED_REPOS.split(',').includes(input.repo)) throw new Error('Repository not enabled');
-    await this.env.ARTIFACTS.get(input.repo);
     const stored=await this.env.BACKUP_BUCKET.get(`definitions/${input.repo}.json`);
     return stored?await stored.json<{revision:string;jobs:Run['jobs'];refs:string[]}>():null;
    });
@@ -48,7 +48,8 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
  const stored=await this.env.BACKUP_BUCKET.get(key(run.rerun_of!));if(!stored)throw new Error('Parent unavailable');const previous=await stored.json<any>();
  return validateRerunParent(run,previous);
  }):null;
-  const manifest:{run:Run;status:string;started_at:string;finished_at?:string;jobs:any[]}={run,status:'running',started_at:await step.do('started-at',async()=>new Date().toISOString()),jobs:[]};
+  const source=await step.do('inspect-artifacts-source',()=>inspectArtifactSource(this.env.ARTIFACTS,run.repo,run.sha,this.env.ALLOWED_REPOS.split(',')));
+  const manifest:{run:Run;source:typeof source;status:string;started_at:string;finished_at?:string;jobs:any[]}={run,source,status:'running',started_at:await step.do('started-at',async()=>new Date().toISOString()),jobs:[]};
   // Workflow step results must be structured-cloneable; R2 HeadResult is not.
   const save=async()=>{await this.env.BACKUP_BUCKET.put(key(run.run_id),JSON.stringify(manifest));};
   await step.do('record-start',()=>save());
@@ -83,6 +84,8 @@ export default {
   const timestamp=request.headers.get('X-Switchyard-Time')||'',given=request.headers.get('X-Switchyard-Signature')||'';
   if(!env.CONTROL_SECRET||!/^\d{10}$/.test(timestamp)||Math.abs(Date.now()/1000-Number(timestamp))>300||!equalSignature(given,await signature(env.CONTROL_SECRET,timestamp,request.method,url.pathname+url.search,body)))return json({error:'unauthorized'},401);
   try {
+   const sourceMatch=url.pathname.match(/^\/source\/([a-zA-Z0-9_-]{1,90})\/([0-9a-f]{40})$/);
+   if(sourceMatch && request.method==='GET')return json(await inspectArtifactSource(env.ARTIFACTS,sourceMatch[1],sourceMatch[2],env.ALLOWED_REPOS.split(',')));
    const definitionMatch=url.pathname.match(/^\/definitions\/([a-zA-Z0-9_-]{1,90})$/);
    if(definitionMatch && request.method==='PUT') {
     const repo=definitionMatch[1],definition=JSON.parse(body);
