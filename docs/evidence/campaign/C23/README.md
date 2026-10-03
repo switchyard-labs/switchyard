@@ -15,3 +15,25 @@ Deployment sample: the real Linode contribution endpoint returned HTTP 200 in 0.
 Repeated real isolated-demo HTTP samples (7 per endpoint, all 200) are recorded in local-http-20261004.json. Median ms: overview 2613.55, source 655.07, history 661.85, Actions 5.95, contributions 7.57, queue listing 1.82. This is from the benchmark host, not Nick's browser/network. No p95 is claimed for seven samples. Queue listing is not queue integration.
 
 Overview stage samples in overview-stages-20261004.json: warm coordination 0.37–0.83ms, REST metadata 340–406ms, cached token 0ms, Git references 1372–1601ms, REST history 574–651ms. First sample had metadata 6748ms and token 988ms. Response Server-Timing exposes only these named durations. No evidence here establishes Trestle as the source of the remote delay. Preview/semantic/integration and whole-page load coverage remain outstanding.
+
+Twelve-sample follow-up (`http-12-samples-20261004.json`), all HTTP 200:
+
+| Surface | Median ms | Nearest-rank p95 ms |
+| --- | ---: | ---: |
+| Repository overview | 2845.98 | 4025.78 |
+| Source | 696.29 | 845.62 |
+| History | 601.01 | 5668.48 |
+| Actions list | 11.69 | 13.73 |
+| Action detail | 10.40 | 12.07 |
+| Profile | 4.18 | 5.35 |
+| Contributions | 12.38 | 19.54 |
+| Queue listing | 2.47 | 3.17 |
+
+For twelve samples nearest-rank p95 is the maximum; it is an honest small-sample
+upper observation, not a reliable population-tail estimate. All raw values and
+Server-Timing stages are retained. The benchmark includes response bodies but
+excludes browser rendering and Nick's network. C36 separately measured remote
+push→Go event 0.83s, push→captured SSE frame 1.11s, push→CI success 32.26s.
+The 75-repository reconciliation safety-net observation was 415.82s and is a
+known serial-scan scaling limitation. None of these results supports blaming
+Trestle for the remote repository browse delay or adopting a mirror prematurely.

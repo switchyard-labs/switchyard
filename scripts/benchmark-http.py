@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Read-only endpoint timings. Cookie jar optional; neither bodies nor cookies are emitted."""
-import argparse, http.cookiejar, json, statistics, time, urllib.request, urllib.error
+import argparse, http.cookiejar, json, math, statistics, time, urllib.request, urllib.error
 p=argparse.ArgumentParser();p.add_argument('--base',required=True);p.add_argument('--cookies');p.add_argument('--samples',type=int,default=7);p.add_argument('paths',nargs='+');a=p.parse_args()
 jar=http.cookiejar.MozillaCookieJar()
 if a.cookies:jar.load(a.cookies,ignore_discard=True,ignore_expires=True)
@@ -14,5 +14,5 @@ for path in a.paths:
   except urllib.error.HTTPError as error:status=error.code
   except (TimeoutError,urllib.error.URLError):status='transport_error'
   times.append(round((time.perf_counter()-start)*1000,2));statuses.append(status)
- rows.append({'path':path,'samples':len(times),'first_request_ms':times[0],'median_ms':statistics.median(times),'min_ms':min(times),'max_ms':max(times),'statuses':statuses,'timings_ms':times,'server_timings':server_timings})
-print(json.dumps({'scope':'read-only total HTTP response time from benchmark host; first request is not a guaranteed cold cache; no p95 for small sample','rows':rows},indent=2))
+ rows.append({'path':path,'samples':len(times),'first_request_ms':times[0],'median_ms':statistics.median(times),'p95_nearest_rank_ms':sorted(times)[math.ceil(.95*len(times))-1] if len(times)>=10 else None,'min_ms':min(times),'max_ms':max(times),'statuses':statuses,'timings_ms':times,'server_timings':server_timings})
+print(json.dumps({'scope':'read-only total HTTP response time from benchmark host; first request is not a guaranteed cold cache; nearest-rank p95 for 10+ samples (10 samples means maximum)','rows':rows},indent=2))
