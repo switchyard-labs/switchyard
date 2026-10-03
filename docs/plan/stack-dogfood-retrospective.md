@@ -185,11 +185,14 @@ protocol bridges. That is exactly the CP6-bounded real-LLM leg and any
 sophisticated runner. Until that lands, Strut is an incidental box in the
 diagram.
 
-### Improvement path
-Either (a) commit to running real agent executors through Strut and expand its
-responsibilities, or (b) collapse the deterministic adapter to a Go subprocess
-worker and drop the dependency, keeping the `agent.Runner` interface. Do not
-leave it as a load-bearing-looking box that only execs a toy worker.
+### Improvement path — DONE (option b, this review)
+Option (b) was implemented: the deterministic adapter is now an **in-process Go
+function** (`DeterministicRunner.Run` computes `current + append` directly),
+behind the unchanged `agent.Runner` interface. `SWITCHYARD_STRUT_BIN` is no
+longer required (accepted but unused for compatibility); the Strut dependency
+was dropped from the runtime path while the interface remains the slot for a
+real executor (CP6's real-LLM leg, or a future Strut/bounded-executor). Option
+(a) remains open for when real agent executors arrive.
 
 ### Verdict (Strut)
 - **Liked:** the language was pleasant for the one worker I wrote.
