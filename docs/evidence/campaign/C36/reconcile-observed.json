@@ -1,0 +1,1 @@
+[{"occurred_at": "2026-10-03T18:15:12.102517464Z", "payload": {"after": "f7770dc0f0a6dcb2915df26e36401feb2e13b14e", "before": "91c8376985668eb6e5bca932dfd0cb56160681eb", "ref": "refs/heads/event-c36", "seen_at": "2026-10-03T18:15:12.102517464Z", "source": "reconciliation"}, "repo_name": "codex-actions-probe-20261003", "type": "git.ref_changed"}]

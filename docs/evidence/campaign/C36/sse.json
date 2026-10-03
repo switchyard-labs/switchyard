@@ -1,0 +1,98 @@
+{
+  "sha": "74c746e6703a0094b0a9512ed948d2e58376e4de",
+  "ref": "refs/heads/event-c36",
+  "push_started_unix": 1791051680.043207,
+  "push_completed_unix": 1791051684.2227266,
+  "push_seconds": 4.1795196533203125,
+  "manual_ingest": false,
+  "events": [
+    {
+      "occurred_at": "2026-10-03T18:21:25.327150202Z",
+      "payload": {
+        "after": "74c746e6703a0094b0a9512ed948d2e58376e4de",
+        "before": "f7770dc0f0a6dcb2915df26e36401feb2e13b14e",
+        "ref": "refs/heads/event-c36",
+        "seen_at": "2026-10-03T18:21:25.327150202Z",
+        "source": "queue"
+      },
+      "repo_name": "codex-actions-probe-20261003",
+      "type": "git.ref_changed"
+    }
+  ],
+  "runs": [
+    {
+      "actor": "Alice",
+      "created_at": "2026-10-03T18:21:30.261Z",
+      "definition_revision": "35c1837e4fab348dedf382cbb55b6ea88d058c8f182306e85335fd12f502937e",
+      "id": "bdb7ed57-7dc8-470f-93fe-bb7cba9dc906",
+      "ref": "refs/heads/event-c36",
+      "repo": "codex-actions-probe-20261003",
+      "source_sha": "74c746e6703a0094b0a9512ed948d2e58376e4de",
+      "state": {
+        "external_status": "complete",
+        "finished_at": "2026-10-03T18:21:49.523Z",
+        "manifest": {
+          "finished_at": "2026-10-03T18:21:49.523Z",
+          "jobs": [
+            {
+              "id": "security",
+              "name": "security",
+              "status": "succeeded",
+              "steps": [
+                {
+                  "finished_at": "2026-10-03T18:21:46.409Z",
+                  "id": "boundary",
+                  "log_key": "runs/bdb7ed57-7dc8-470f-93fe-bb7cba9dc906/security-boundary.json",
+                  "name": "boundary",
+                  "started_at": "2026-10-03T18:21:32.428Z",
+                  "status": "succeeded",
+                  "truncated": false
+                }
+              ]
+            }
+          ],
+          "run": {
+            "actor": "Alice",
+            "definition_revision": "35c1837e4fab348dedf382cbb55b6ea88d058c8f182306e85335fd12f502937e",
+            "event": {
+              "type": "push"
+            },
+            "jobs": [
+              {
+                "id": "security",
+                "steps": [
+                  {
+                    "command": "node -e 'const fs=require(\"node:fs\");const keys=[\"CF_TOKEN\",\"CLOUDFLARE_API_TOKEN\",\"R2_ACCESS_KEY_ID\",\"R2_SECRET_ACCESS_KEY\",\"CONTROL_SECRET\",\"SOURCE_CONTROL_TOKEN\"];if(keys.some(k=>process.env[k]))throw Error(\"privileged runner environment\");for(const pid of fs.readdirSync(\"/proc\").filter(p=>/^\\d+$/.test(p))){let data;try{data=fs.readFileSync(\"/proc/\"+pid+\"/environ\",\"utf8\")}catch{continue}if(data.split(\"\\0\").some(v=>keys.some(k=>v.startsWith(k+\"=\"))))throw Error(\"privileged process environment\")}console.log(\"NO_PRIVILEGED_CREDENTIALS\");' && if git -C /tmp/ci-source config --get-regexp 'http.*extraHeader' >/dev/null; then echo CHECKOUT_CREDENTIAL_PERSISTED; exit 1; fi",
+                    "id": "boundary",
+                    "timeout_ms": 30000
+                  }
+                ]
+              }
+            ],
+            "owner": "switchyard-cp0",
+            "provider": "cloudflare-artifacts",
+            "providerData": {
+              "namespace": "switchyard-cp0"
+            },
+            "ref": "refs/heads/event-c36",
+            "repo": "codex-actions-probe-20261003",
+            "run_id": "bdb7ed57-7dc8-470f-93fe-bb7cba9dc906",
+            "sha": "74c746e6703a0094b0a9512ed948d2e58376e4de",
+            "trigger": "push"
+          },
+          "started_at": "2026-10-03T18:21:30.261Z",
+          "status": "succeeded"
+        },
+        "status": "success"
+      },
+      "trigger": "push"
+    }
+  ],
+  "sse": [
+    {
+      "received_unix": 1791051685.330386,
+      "frame": "event: event\ndata: {\"id\":\"rec_xWbkEqerFsavcB3iuBVe\",\"payload\":{\"after\":\"74c746e6703a0094b0a9512ed948d2e58376e4de\",\"before\":\"f7770dc0f0a6dcb2915df26e36401feb2e13b14e\",\"ref\":\"refs/heads/event-c36\",\"seen_at\":\"2026-10-03T18:21:25.327150202Z\",\"source\":\"queue\"},\"replayed\":false,\"repo\":\"codex-actions-probe-20261003\",\"type\":\"git.ref_changed\"}"
+    }
+  ],
+  "observed_unix": 1791051714.2415087
+}
