@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -145,6 +146,10 @@ func (a *App) handleEventStream(w http.ResponseWriter, r *http.Request) {
 		case <-r.Context().Done():
 			return
 		case b := <-ch:
+			var event map[string]any
+			if json.Unmarshal(b, &event) != nil || !a.recordAccess("events", event, a.currentUser(r), ReadRepo) {
+				continue
+			}
 			w.Write([]byte("event: event\ndata: "))
 			w.Write(b)
 			w.Write([]byte("\n\n"))

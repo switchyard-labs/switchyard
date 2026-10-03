@@ -68,11 +68,8 @@ func (a *App) repositoryMetaByArtifact(name string) map[string]any {
 }
 
 func (a *App) handleListRepositoryMeta(w http.ResponseWriter, r *http.Request) {
-	if a.currentUser(r) == "" {
-		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
-		return
-	}
 	items, err := a.Trestle.ListRecords("repository_meta", "")
+	items = a.visibleRecords("repository_meta", items, a.currentUser(r))
 	if a.isDemoGuest(r) {
 		filtered := []map[string]any{}
 		for _, it := range items {
@@ -202,10 +199,6 @@ func (a *App) handleRegisterRepositoryMeta(w http.ResponseWriter, r *http.Reques
 }
 
 func (a *App) resolveCanonicalRepository(w http.ResponseWriter, r *http.Request) (map[string]any, string, bool) {
-	if a.currentUser(r) == "" {
-		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
-		return nil, "", false
-	}
 	owner, slug := r.PathValue("owner"), r.PathValue("repo")
 	meta := a.repositoryMetaByOwner(owner, slug)
 	if meta == nil {

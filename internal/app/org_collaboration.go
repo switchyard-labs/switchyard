@@ -280,28 +280,11 @@ func (a *App) handleSetRepoAccess(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) canAccessRepository(meta map[string]any, username string, write bool) bool {
-	if meta == nil {
-		return false
+	cap := ReadRepo
+	if write {
+		cap = WriteRepo
 	}
-	if strOr(meta["visibility"]) == "public" && !write {
-		return true
-	}
-	typ, id := strOr(meta["owner_type"]), strOr(meta["owner_id"])
-	if typ == "user" {
-		return id == username
-	}
-	if typ != "org" {
-		return false
-	}
-	o := a.orgBySlugOrID(id)
-	role := a.orgRole(o, username)
-	if role == "owner" || role == "admin" {
-		return true
-	}
-	if role == "member" && !write {
-		return true
-	}
-	return false
+	return a.CanRepository(meta, username, cap)
 }
 
 func (a *App) handleMyOrgInvitations(w http.ResponseWriter, r *http.Request) {

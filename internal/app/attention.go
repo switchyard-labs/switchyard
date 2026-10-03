@@ -72,6 +72,7 @@ func (a *App) handleNeedsAttention(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	items = a.visibleRecords("attention", items, user)
 	writeJSON(w, 200, map[string]any{"items": items, "count": len(items)})
 }
 
@@ -162,6 +163,7 @@ func (a *App) handleListEscalations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("escalations", "")
+	items = a.visibleRecords("escalations", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -185,6 +187,7 @@ func (a *App) handleDecide(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("escalations", `id = "`+escID+`"`)
+	items = a.visibleRecords("escalations", items, a.currentUser(r))
 	if err != nil || len(items) == 0 {
 		writeJSON(w, 404, map[string]any{"error": "escalation_not_found"})
 		return

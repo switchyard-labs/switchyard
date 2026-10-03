@@ -177,6 +177,7 @@ func (a *App) handleListFindings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("findings", "")
+	items = a.visibleRecords("findings", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return

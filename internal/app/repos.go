@@ -3,7 +3,6 @@ package app
 import (
 	"net/http"
 	"strings"
-	"time"
 )
 
 func (a *App) handleListRepos(w http.ResponseWriter, r *http.Request) {
@@ -31,6 +30,9 @@ func (a *App) handleListRepos(w http.ResponseWriter, r *http.Request) {
 	}
 	out := []map[string]any{}
 	for _, repo := range repos {
+		if !a.repoAccess(repo.Name, a.currentUser(r), ReadRepo) {
+			continue
+		}
 		out = append(out, map[string]any{
 			"name": repo.Name, "default_branch": repo.DefaultBranch,
 			"remote": repo.Remote, "read_only": repo.ReadOnly,
@@ -54,13 +56,6 @@ func (a *App) handleGetRepo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeJSON(w, 404, map[string]any{"error": "repo_not_found"})
 		return
-	}
-	// auto-register (durable coordination registry record) if missing
-	if items, err := a.Trestle.ListRecords("repos", `name = "`+name+`"`); err == nil && len(items) == 0 {
-		_, _, _ = a.Trestle.CreateRecord("repos", map[string]any{
-			"name": name, "default_branch": repo.DefaultBranch, "remote": repo.Remote,
-			"registered_at": time.Now().UTC().Format(time.RFC3339),
-		}, "repo-"+name)
 	}
 	writeJSON(w, 200, map[string]any{
 		"name": repo.Name, "default_branch": repo.DefaultBranch, "remote": repo.Remote,

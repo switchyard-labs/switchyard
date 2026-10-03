@@ -209,6 +209,7 @@ func (a *App) handleUserRepositories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("repository_meta", `owner_type = "user"`)
+	items = a.visibleRecords("repository_meta", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -477,6 +478,7 @@ func (a *App) handleOrgRepositories(w http.ResponseWriter, r *http.Request) {
 	}
 	id := strOr(o["id"])
 	items, e := a.Trestle.ListRecords("repository_meta", `owner_type = "org"`)
+	items = a.visibleRecords("repository_meta", items, a.currentUser(r))
 	if e != nil {
 		writeJSON(w, 502, map[string]any{"error": e.Error()})
 		return

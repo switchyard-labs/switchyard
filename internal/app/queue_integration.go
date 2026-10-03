@@ -82,6 +82,7 @@ func (a *App) handleListQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("iq", "")
+	items = a.visibleRecords("iq", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -97,6 +98,7 @@ func (a *App) handleRequeueItem(w http.ResponseWriter, r *http.Request) {
 	}
 	qid := r.PathValue("id")
 	items, err := a.Trestle.ListRecords("iq", `id = "`+qid+`"`)
+	items = a.visibleRecords("iq", items, a.currentUser(r))
 	if err != nil || len(items) == 0 {
 		writeJSON(w, 404, map[string]any{"error": "item_not_found"})
 		return

@@ -121,6 +121,7 @@ func (a *App) handleListPRs(w http.ResponseWriter, r *http.Request) {
 		filter = `repo = "` + repo + `"`
 	}
 	items, err := a.Trestle.ListRecords("prs", filter)
+	items = a.visibleRecords("prs", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return

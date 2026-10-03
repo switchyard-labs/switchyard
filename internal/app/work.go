@@ -20,6 +20,7 @@ func (a *App) handleListWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("work", "")
+	items = a.visibleRecords("work", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -77,6 +78,7 @@ func (a *App) handleGetWork(w http.ResponseWriter, r *http.Request) {
 	}
 	id := r.PathValue("id")
 	items, err := a.Trestle.ListRecords("work", `id = "`+id+`"`)
+	items = a.visibleRecords("work", items, a.currentUser(r))
 	if err != nil || len(items) == 0 {
 		writeJSON(w, 404, map[string]any{"error": "work_not_found"})
 		return
@@ -91,11 +93,13 @@ func (a *App) handleGetWork(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if ats, _ := a.Trestle.ListRecords("attempts", `work_id = "`+id+`"`); len(ats) > 0 {
+		ats = a.visibleRecords("attempts", ats, a.currentUser(r))
 		out["attempts"] = ats
 	} else {
 		out["attempts"] = []map[string]any{}
 	}
 	if prs, _ := a.Trestle.ListRecords("prs", `work_id = "`+id+`"`); len(prs) > 0 {
+		prs = a.visibleRecords("prs", prs, a.currentUser(r))
 		out["pull_requests"] = prs
 	} else {
 		out["pull_requests"] = []map[string]any{}

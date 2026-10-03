@@ -15,18 +15,7 @@ func repositorySettingsCollections() [][2]any {
 }
 
 func (a *App) canAdminRepository(meta map[string]any, user string) bool {
-	if meta == nil || user == "" {
-		return false
-	}
-	switch strOr(meta["owner_type"]) {
-	case "user":
-		return strOr(meta["owner_id"]) == user
-	case "org":
-		o := a.orgBySlugOrID(strOr(meta["owner_id"]))
-		role := a.orgRole(o, user)
-		return role == "owner" || role == "admin"
-	}
-	return false
+	return a.CanRepository(meta, user, AdminRepo)
 }
 
 func (a *App) resolveRepositoryAdmin(w http.ResponseWriter, r *http.Request) (map[string]any, bool) {

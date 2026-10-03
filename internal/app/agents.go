@@ -92,6 +92,7 @@ func (a *App) handleListExecutions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("executions", "")
+	items = a.visibleRecords("executions", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return

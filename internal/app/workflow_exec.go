@@ -180,6 +180,11 @@ func (e *wfExec) checkCancel() error {
 // the recorded result is returned instead of re-executing. Re-execution is
 // bounded by maxWfRetries per step.
 func (e *wfExec) step(op string, args map[string]any, exec func() (any, error)) (any, error) {
+	repo, _ := e.defaultRepoBranch(args)
+	if !e.a.repoAccess(repo, strOr(e.params["_actor"]), RunAgent) {
+		return nil, fmt.Errorf("repository_access_denied")
+	}
+
 	if err := e.checkCancel(); err != nil {
 		return nil, err
 	}
@@ -460,13 +465,20 @@ func (e *wfExec) opSpawn(args map[string]any) (map[string]any, error) {
 			return nil, fmt.Errorf("spawn: max depth %d exceeded", maxWfDepth)
 		}
 		childParams, _ := args["params"].(map[string]any)
+		if childParams == nil {
+			childParams = map[string]any{}
+		}
+		childParams["_actor"] = e.params["_actor"]
+		if !e.a.repoAccess(strOr(childParams["repo"]), strOr(e.params["_actor"]), RunAgent) {
+			return nil, fmt.Errorf("repository_access_denied")
+		}
 		items, err := e.a.Trestle.ListRecords("workflows", "")
 		if err != nil {
 			return nil, err
 		}
 		var def map[string]any
 		for _, it := range items {
-			if it["name"] == wfName {
+			if it["name"] == wfName && e.a.workflowOwner(strOr(it["id"])) == strOr(e.params["_actor"]) {
 				def = it
 				break
 			}

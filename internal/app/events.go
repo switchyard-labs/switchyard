@@ -54,6 +54,7 @@ func (a *App) handleListEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("events", "")
+	items = a.visibleRecords("events", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return

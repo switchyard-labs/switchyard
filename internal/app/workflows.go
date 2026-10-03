@@ -35,6 +35,7 @@ type Workflow struct {
 
 func workflowCollections() [][2]any {
 	return [][2]any{
+		{"workflow_owners", []trestle.CollectionField{{Name: "workflow_id", Type: "text", Unique: true}, {Name: "username", Type: "text"}}},
 		{"workflows", []trestle.CollectionField{
 			{Name: "id", Type: "text", Unique: true}, {Name: "name", Type: "text"},
 			{Name: "script", Type: "text"}, {Name: "created_at", Type: "text"}}},
@@ -81,6 +82,10 @@ func (a *App) handleCreateWorkflow(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
+	if _, _, err := a.Trestle.CreateRecord("workflow_owners", map[string]any{"workflow_id": id, "username": user}, "workflow-owner-"+id); err != nil {
+		writeJSON(w, 502, map[string]any{"error": "workflow_owner_persistence_failed"})
+		return
+	}
 	writeJSON(w, 201, map[string]any{"id": id, "name": in.Name})
 }
 
@@ -94,7 +99,13 @@ func (a *App) handleListWorkflows(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
-	writeJSON(w, 200, map[string]any{"items": items})
+	out := []map[string]any{}
+	for _, it := range items {
+		if a.workflowOwner(strOr(it["id"])) == a.currentUser(r) {
+			out = append(out, it)
+		}
+	}
+	writeJSON(w, 200, map[string]any{"items": out})
 }
 
 func (a *App) handleStartRun(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +127,14 @@ func (a *App) handleStartRun(w http.ResponseWriter, r *http.Request) {
 	_ = readJSON(r, &in)
 	if in.BudgetSteps == 0 {
 		in.BudgetSteps = 25
+	}
+	if in.Params == nil {
+		in.Params = map[string]any{}
+	}
+	in.Params["_actor"] = user
+	if !a.repoAccess(strOr(in.Params["repo"]), user, RunAgent) {
+		writeJSON(w, 403, map[string]any{"error": "repository_access_denied"})
+		return
 	}
 	runID := "wfr_" + randHex(10)
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -140,6 +159,7 @@ func (a *App) handleListRuns(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("workflow_runs", "")
+	items = a.visibleRecords("workflow_runs", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
