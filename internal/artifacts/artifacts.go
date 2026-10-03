@@ -22,9 +22,9 @@ type Client struct {
 	TokenCmd  string // e.g. /opt/cp0/switchyard/token.sh
 	http      *http.Client
 
-	mu        sync.Mutex
+	mu         sync.Mutex
 	tokenCache string
-	tokenAt   time.Time
+	tokenAt    time.Time
 }
 
 func New(accountID, namespace, tokenCmd string) *Client {

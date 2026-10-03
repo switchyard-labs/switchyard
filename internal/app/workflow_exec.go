@@ -39,6 +39,7 @@ type wfExec struct {
 	runID      string
 	script     string
 	params     map[string]any
+	actor      string
 	budget     int
 	depth      int
 	counter    int    // deterministic step-key counter, reset per execution
@@ -81,7 +82,7 @@ func (a *App) executeRun(runID string) error {
 		return nil
 	}
 	e := &wfExec{
-		a: a, runID: runID, script: script, params: params,
+		a: a, runID: runID, script: script, params: params, actor: strOr(params["_actor"]),
 		budget: budget, depth: depth, baseN: baseN, status: status,
 	}
 	// mark running (unless we are a fresh pending run; pending -> running)
@@ -181,7 +182,7 @@ func (e *wfExec) checkCancel() error {
 // bounded by maxWfRetries per step.
 func (e *wfExec) step(op string, args map[string]any, exec func() (any, error)) (any, error) {
 	repo, _ := e.defaultRepoBranch(args)
-	if !e.a.repoAccess(repo, strOr(e.params["_actor"]), RunAgent) {
+	if !e.a.repoAccess(repo, e.actor, RunAgent) {
 		return nil, fmt.Errorf("repository_access_denied")
 	}
 
@@ -468,8 +469,8 @@ func (e *wfExec) opSpawn(args map[string]any) (map[string]any, error) {
 		if childParams == nil {
 			childParams = map[string]any{}
 		}
-		childParams["_actor"] = e.params["_actor"]
-		if !e.a.repoAccess(strOr(childParams["repo"]), strOr(e.params["_actor"]), RunAgent) {
+		childParams["_actor"] = e.actor
+		if !e.a.repoAccess(strOr(childParams["repo"]), e.actor, RunAgent) {
 			return nil, fmt.Errorf("repository_access_denied")
 		}
 		items, err := e.a.Trestle.ListRecords("workflows", "")
@@ -478,7 +479,7 @@ func (e *wfExec) opSpawn(args map[string]any) (map[string]any, error) {
 		}
 		var def map[string]any
 		for _, it := range items {
-			if it["name"] == wfName && e.a.workflowOwner(strOr(it["id"])) == strOr(e.params["_actor"]) {
+			if it["name"] == wfName && e.a.workflowOwner(strOr(it["id"])) == e.actor {
 				def = it
 				break
 			}

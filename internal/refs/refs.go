@@ -163,7 +163,7 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 	}
 
 	// build the commit in a disposable scratch clone
-	dir, err := s.buildCommit(repo, remote, branch, changes, message)
+	dir, err := s.buildCommit(repo, remote, branch, current, changes, message)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 	return &Result{Status: "ok", OldSHA: current, NewSHA: newSHA, Ref: "refs/heads/" + branch}, nil
 }
 
-func (s *Service) buildCommit(repo, remote, branch string, changes []Change, message string) (string, error) {
+func (s *Service) buildCommit(repo, remote, branch, expected string, changes []Change, message string) (string, error) {
 	dir, err := os.MkdirTemp(s.ScratchDir, "scratch-*")
 	if err != nil {
 		return "", err
@@ -224,6 +224,13 @@ func (s *Service) buildCommit(repo, remote, branch string, changes []Change, mes
 	// an Artifacts 400) on later ops. Remove it so only the explicitly passed
 	// -c header is sent.
 	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
+	head, err := exec.Command("git", "-C", dir, "rev-parse", "HEAD").Output()
+	if err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(string(head)) != expected {
+		return "", fmt.Errorf("branch moved before draft clone; reload and retry")
+	}
 	for _, c := range changes {
 		p, err := ContainedPath(dir, c.Path)
 		if err != nil {
@@ -426,6 +433,12 @@ func (s *Service) ResolveIntoSource(repo, target, source, message, provenance st
 	l := s.lock(repo, target)
 	l.Lock()
 	defer l.Unlock()
+	filesDir, err := os.MkdirTemp(s.ScratchDir, "resolve-files-*")
+	if err != nil {
+		return nil, nil, err
+	}
+	defer os.RemoveAll(filesDir)
+
 	remote, err := s.remote(repo)
 	if err != nil {
 		return nil, nil, err
@@ -462,12 +475,18 @@ func (s *Service) ResolveIntoSource(repo, target, source, message, provenance st
 			ours, _ := gitOut(dir, "show", ":2:"+name)
 			base, _ := gitOut(dir, "show", ":1:"+name)
 			theirs, _ := gitOut(dir, "show", ":3:"+name)
-			ot := filepath.Join(dir, ".ours")
-			bt := filepath.Join(dir, ".base")
-			tt := filepath.Join(dir, ".theirs")
-			_ = os.WriteFile(ot, []byte(ours), 0644)
-			_ = os.WriteFile(bt, []byte(base), 0644)
-			_ = os.WriteFile(tt, []byte(theirs), 0644)
+			ot := filepath.Join(filesDir, "ours")
+			bt := filepath.Join(filesDir, "base")
+			tt := filepath.Join(filesDir, "theirs")
+			if e := os.WriteFile(ot, []byte(ours), 0600); e != nil {
+				return nil, nil, e
+			}
+			if e := os.WriteFile(bt, []byte(base), 0600); e != nil {
+				return nil, nil, e
+			}
+			if e := os.WriteFile(tt, []byte(theirs), 0600); e != nil {
+				return nil, nil, e
+			}
 			// git merge-file <current> <base> <other> -> writes merged into <current>
 			if git(dir, "", "merge-file", "-p", ot, bt, tt) != nil {
 				// still conflicting: source's version wins (bounded deterministic policy)

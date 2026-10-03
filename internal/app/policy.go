@@ -254,6 +254,7 @@ func (a *App) handleAudit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("audit", "")
+	items = a.visibleRecords("audit", items, a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return

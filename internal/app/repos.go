@@ -145,8 +145,5 @@ func (a *App) handleRepoContent(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 404, map[string]any{"error": strings.TrimPrefix(err.Error(), "raw ")})
 		return
 	}
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.Header().Set("Content-Security-Policy", "sandbox; default-src 'none'")
-	w.Write(data)
+	serveRepositoryContent(w, data)
 }

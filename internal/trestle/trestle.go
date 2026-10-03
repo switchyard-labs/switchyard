@@ -10,19 +10,20 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
 )
 
 type Client struct {
-	BaseURL    string
-	adminUser  string
-	adminPass  string
-	http       *http.Client
-	mu         sync.Mutex
-	csrf       string
-	loginAt    time.Time
+	BaseURL   string
+	adminUser string
+	adminPass string
+	http      *http.Client
+	mu        sync.Mutex
+	csrf      string
+	loginAt   time.Time
 }
 
 func New(baseURL, adminUser, adminPass string) *Client {
@@ -289,5 +290,5 @@ func (c *Client) DeleteRecord(collection, id, version string) error {
 }
 
 func urlQueryEscape(s string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(s, " ", "%20"), "&", "%26")
+	return url.QueryEscape(s)
 }

@@ -33,14 +33,6 @@ func (a *App) orgRole(org map[string]any, username string) string {
 			}
 		}
 	}
-	// compatibility with CP12's old members array.
-	if ms, ok := org["members"].([]any); ok {
-		for _, m := range ms {
-			if strOr(m) == username {
-				return "member"
-			}
-		}
-	}
 	return ""
 }
 func roleRank(r string) int {

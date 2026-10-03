@@ -52,7 +52,7 @@ func (a *App) ensureOwnerNamespace(slug, ownerType, ownerID string) error {
 
 func (a *App) repositoryMetaByOwner(owner, slug string) map[string]any {
 	full := normalizeOwnerSlug(owner) + "/" + normalizeRepoSlug(slug)
-	items, err := a.Trestle.ListRecords("repository_meta", `full_name = "`+full+`"`)
+	items, err := a.Trestle.ListRecords("repository_meta", filterEq("full_name", full))
 	if err != nil || len(items) == 0 {
 		return nil
 	}
@@ -60,7 +60,7 @@ func (a *App) repositoryMetaByOwner(owner, slug string) map[string]any {
 }
 
 func (a *App) repositoryMetaByArtifact(name string) map[string]any {
-	items, err := a.Trestle.ListRecords("repository_meta", `artifact_name = "`+name+`"`)
+	items, err := a.Trestle.ListRecords("repository_meta", filterEq("artifact_name", name))
 	if err != nil || len(items) == 0 {
 		return nil
 	}
@@ -268,12 +268,7 @@ func (a *App) handleCanonicalRepoContent(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, 404, map[string]any{"error": strings.TrimPrefix(err.Error(), "raw ")})
 		return
 	}
-	ct := http.DetectContentType(data)
-	if strings.HasPrefix(ct, "text/plain") {
-		ct = "text/plain; charset=utf-8"
-	}
-	w.Header().Set("Content-Type", ct)
-	_, _ = w.Write(data)
+	serveRepositoryContent(w, data)
 }
 
 type repositoryRoute struct {

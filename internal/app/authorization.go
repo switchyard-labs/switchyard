@@ -120,6 +120,11 @@ func (a *App) recordAccess(collection string, x map[string]any, user string, cap
 	if x == nil {
 		return false
 	}
+	if collection == "audit" {
+		org := a.orgBySlugOrID(strOr(x["org"]))
+		role := a.orgRole(org, user)
+		return role == "owner" || role == "admin"
+	}
 	if collection == "repository_meta" {
 		return a.CanRepository(x, user, cap)
 	}
@@ -150,6 +155,10 @@ func (a *App) recordAccess(collection string, x map[string]any, user string, cap
 	if p, ok := x["packet"].(map[string]any); ok {
 		if repo := strOr(p["repo"]); repo != "" {
 			return a.repoAccess(repo, user, cap)
+		}
+		collection := map[string]string{"queue_blocked": "iq", "workflow_approval": "workflow_runs"}[strOr(p["target_kind"])]
+		if collection != "" {
+			return a.recordAccess(collection, a.scopedRecord(collection, strOr(p["target_id"])), user, cap)
 		}
 	}
 	if collection == "attention" {
@@ -218,7 +227,7 @@ func (a *App) authorizeHandler(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if strings.HasPrefix(path, "/api/attention/") {
-			collections := map[string]string{"attempt_conflict": "attempts", "queue_blocked": "iq", "workflow_approval": "workflow_runs", "open_finding": "attempts"}
+			collections := map[string]string{"attempt_conflict": "attempts", "queue_blocked": "iq", "workflow_approval": "workflow_runs", "open_finding": "attempts", "attempt": "attempts", "queue": "iq", "workflow": "workflow_runs"}
 			c := collections[r.PathValue("kind")]
 			denied = c == "" || !a.recordAccess(c, a.scopedRecord(c, r.PathValue("id")), user, cap)
 		}
