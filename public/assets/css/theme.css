@@ -1,4 +1,7 @@
 :root {
+  --shell-width:1280px; --shell-inset:24px; --header-height:64px; --control-height:38px;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:24px; --space-6:32px;
+  --text-on-accent:#20160e; --danger-soft:rgba(212,118,103,.06); --danger-border:rgba(212,118,103,.45); --overlay:rgba(0,0,0,.72);
   --bg:#181a1b; --bg-header:rgba(24,26,27,.94); --bg-panel:#222425; --bg-elevated:#292b2c; --bg-input:#17191a; --bg-code:#111314;
   --panel:#222425; --panel-soft:#202223; --panel-hover:#2a2c2d;
   --border:#383b3d; --border-subtle:#303335; --border-strong:#4a4d4f;
@@ -17,3 +20,5 @@
 .skip-link{position:fixed;left:12px;top:10px;z-index:200;transform:translateY(-160%);background:var(--signal-amber);color:#18120c;padding:9px 13px;border-radius:8px;font-weight:800}.skip-link:focus{transform:none}button,a,input,select,textarea,summary{scroll-margin-top:88px}button,.btn,.hamburger,summary{min-height:38px}img{max-width:100%;height:auto}pre,table{max-width:100%;overflow:auto}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
 html { scrollbar-gutter: stable; }
+
+@media(max-width:620px) { :root { --shell-inset:16px; } }

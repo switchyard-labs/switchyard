@@ -1,0 +1,54 @@
+{
+  "desktop": {
+    "open": {
+      "close": [
+        1203,
+        13,
+        38,
+        38
+      ],
+      "focus": "mobile-close",
+      "inert": true,
+      "open": [
+        1203,
+        13,
+        38,
+        38
+      ],
+      "scroll": 1265,
+      "width": 1280
+    },
+    "closed": {
+      "focus": "hamburger",
+      "hidden": true,
+      "inert": false
+    },
+    "checks": 7
+  },
+  "mobile": {
+    "open": {
+      "close": [
+        321,
+        13,
+        38,
+        38
+      ],
+      "focus": "mobile-close",
+      "inert": true,
+      "open": [
+        321,
+        13,
+        38,
+        38
+      ],
+      "scroll": 375,
+      "width": 390
+    },
+    "closed": {
+      "focus": "hamburger",
+      "hidden": true,
+      "inert": false
+    },
+    "checks": 7
+  }
+}

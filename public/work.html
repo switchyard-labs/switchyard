@@ -5,8 +5,9 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Switchyard</title>
 		<link rel="icon" type="image/webp" href="/assets/images/favicon.webp">
-		<link rel="stylesheet" href="/assets/css/theme.css">
-		<link rel="stylesheet" href="/assets/css/app.css">
+		<link rel="stylesheet" href="/assets/css/theme.css?v=c17">
+		<link rel="stylesheet" href="/assets/css/components.css?v=c17b">
+		<link rel="stylesheet" href="/assets/css/app.css?v=c17">
 	</head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
@@ -19,33 +20,12 @@
 				</div>
 			</div>
 		</header>
-		<nav class="mobile-menu" id="mobile-menu" aria-label="Switchyard" hidden>
-			<div class="mobile-menu-head"><a class="brand" href="/./"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a><button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button></div>
-			<div class="menu-groups">
-				<details class="menu-group" open><summary>Git</summary><div class="menu-links">
-					<a href="/./">Dashboard</a>
-					<a href="/./repositories.html">Repositories</a>
-					<a href="/./work.html">Work</a>
-				</div></details>
-				<details class="menu-group" open><summary>Agent-native</summary><div class="menu-links">
-					<a href="/operations#attention">Needs Attention</a>
-					<a href="/operations#queue">Integration Queue</a>
-					<a href="/operations#workflows">Workflows</a>
-					<a href="/operations#agents">Agents</a>
-				</div></details>
-				<details class="menu-group" open><summary>Account</summary><div class="menu-links">
-					<div class="mobile-auth" id="mobile-auth"></div>
-					<a href="/organizations">Organizations</a><a href="/settings">Settings</a>
-				</div></details>
-			</div>
-			<div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>
-		</nav>
 		<main class="site-main" id="main-content">
 			<main><section class="panel"><div class="repo-head"><div><p class="eyebrow">Human-first task tracking</p><h1>Work</h1><p class="muted">Use Work like an issue/task tracker. Attempts and Agents are optional execution details.</p></div></div><form id="work-form" class="work-create"><input name="title" placeholder="Title" required><textarea name="body" placeholder="Describe the problem or desired outcome"></textarea><div class="inline-form"><select name="kind"><option value="feature">feature</option><option value="bug">bug</option><option value="investigation">investigation</option><option value="benchmark">benchmark</option><option value="maintenance">maintenance</option><option value="release">release</option></select><input name="repo" placeholder="owner/repository (optional)"><input name="assignee" placeholder="assignee (optional)"><button type="submit">Create work</button></div></form><div class="segmented work-filter"><button class="active" data-work-filter="open">Open</button><button data-work-filter="closed">Closed</button><button data-work-filter="all">All</button></div><div id="work-list" class="work-list"><p class="muted">Loading…</p></div></section></main>
 		</main>
 		<script src="/assets/js/code-surface.js"></script>
 		<script src="/assets/js/markdown.js"></script>
 		<script src="/assets/js/code-blocks.js"></script>
-		<script src="/assets/js/app.js"></script>
+		<script src="/assets/js/app.js?v=c17"></script>
 	</body>
 </html>

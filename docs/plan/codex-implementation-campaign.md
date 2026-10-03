@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
 
 ## C1 — contained repository filesystem
 
@@ -171,3 +171,9 @@ Strict approved configuration exports reject arbitrary environment/secret/creden
 ## C16 — current competition and platform alignment
 
 Read the current challenge, announcement, submission form, rules, Artifacts/custom CI and Builds documentation. `docs/plan/cloudflare-competition-alignment.md` maps actual Worker/Artifacts execution to evidence and remaining gates, records residency/license/manual-entry prerequisites and avoids claiming eligibility or submission. Added source-level runnable README and corrected active authority/runtime descriptions while preserving historical CP0 evidence. Existing MIT LICENSE verified. C17–C25 remain pending; preview/deployment setup and full dogfood/submission materials remain uncertified.
+
+## C17 — consolidated design foundation
+
+Replaced the accumulated shared CSS overrides with one components stylesheet and consolidated page layout declarations. Buttons, icon controls, forms, tabs, badges, tables, panels, dialogs, tooltips, status/empty/loading states, avatars and code surfaces use shared graphite/amber tokens. Removed the undefined page token and hard-coded Actions panel/dialog chrome. One navigation renderer now serves both Nift and hand-written pages, with desktop links, SVG controls, focus trapping, inert background and Escape/focus restoration. Header/menu padding and dimensions share a single rule. Versioned asset references prevent stale token files being combined with new layouts; this failure was observed and corrected in the real browser.
+
+Validation: Nift rebuilt all six generated pages; JavaScript syntax, static accessibility across 17 pages, formatting and whitespace gates passed. Permanent browser shell checks ran on an actual Actions run at 1280px and the actual Alice profile at 390px: 14 checks, exact matching open/close rectangles, no document overflow, background isolation and focus restoration. Evidence is in docs/evidence/campaign/C17. Mobile overlay scrolling initially introduced a second gutter; scroll now belongs to menu content. These are foundation checks, not a claim of product-wide GitHub parity or the C22 matrix.

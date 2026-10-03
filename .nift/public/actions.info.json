@@ -21,6 +21,7 @@
   "reqs": [
     "public/assets/css/actions.css",
     "public/assets/css/app.css",
+    "public/assets/css/components.css",
     "public/assets/css/theme.css",
     "public/assets/images/favicon.webp",
     "public/assets/js/app-action-controls.mjs",
@@ -30,8 +31,6 @@
     "public/assets/js/code-blocks.js",
     "public/assets/js/code-surface.js",
     "public/assets/js/markdown.js",
-    "public/index.html",
-    "public/repositories.html",
-    "public/work.html"
+    "public/index.html"
   ]
 }

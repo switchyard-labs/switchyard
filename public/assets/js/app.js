@@ -26,12 +26,21 @@
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
-  // Hand-written product pages (profile/settings/etc.) pre-date the Nift shell.
-  // Give them the exact same full-screen navigation instead of leaving a dead
-  // hamburger button on those routes.
+  // One navigation renderer serves generated and hand-written product pages.
   function ensureGlobalMenu() {
     const btn = document.getElementById("hamburger");
-    if (!btn || document.getElementById("mobile-menu")) return;
+    if (!btn) return;
+    btn.type = "button";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
+    const header = document.querySelector(".header-inner");
+    if (header && !header.querySelector(".site-nav")) {
+      const links = document.createElement("nav");
+      links.className = "site-nav";
+      links.setAttribute("aria-label", "Primary");
+      links.innerHTML = '<a href="/">Dashboard</a><a href="/repositories">Repositories</a><a href="/work">Work</a><a href="/pulls">Pull requests</a>';
+      header.querySelector(".header-right").before(links);
+    }
+    document.getElementById("mobile-menu")?.remove();
     const nav = document.createElement("nav");
     nav.className = "mobile-menu";
     nav.id = "mobile-menu";
@@ -40,14 +49,14 @@
     nav.innerHTML = `
       <div class="mobile-menu-head">
         <a class="brand" href="/"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
-        <button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation">×</button>
+        <button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       </div>
       <div class="menu-groups">
-        <details class="menu-group" open><summary>Git</summary><div class="menu-links"><a href="/">Home</a><a href="/repositories.html">Repositories</a><a href="/work.html">Work</a><a href="/pulls.html">Pull Requests</a></div></details>
-        <details class="menu-group" open><summary>Agent-native</summary><div class="menu-links"><a href="/operations#attention">Needs Attention</a><a href="/operations#queue">Integration Queue</a><a href="/operations#workflows">Workflows</a><a href="/operations#agents">Agents</a></div></details>
+        <details class="menu-group" open><summary>Your workspace</summary><div class="menu-links"><a href="/">Home</a><a href="/repositories.html">Repositories</a><a href="/work.html">Work</a><a href="/pulls.html">Pull Requests</a></div></details>
+        <details class="menu-group" open><summary>Coordination</summary><div class="menu-links"><a href="/operations#attention">Needs Attention</a><a href="/operations#queue">Integration Queue</a><a href="/operations#workflows">Workflows</a><a href="/operations#agents">Agents</a></div></details>
         <details class="menu-group" open><summary>Account</summary><div class="menu-links"><div class="mobile-auth" id="mobile-auth"></div><a href="/organizations">Organizations</a><a href="/settings">Settings</a></div></details>
       </div>
-      <div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>`;
+      <div class="menu-footer">Switchyard · Code, work and review in one place.</div>`;
     document.body.insertBefore(nav, document.querySelector("main") || document.body.firstChild);
     btn.setAttribute("aria-controls", "mobile-menu");
     btn.setAttribute("aria-expanded", "false");
@@ -58,9 +67,15 @@
   const hamburger = document.getElementById("hamburger");
   const mobileMenu = document.getElementById("mobile-menu");
   const mobileClose = document.getElementById("mobile-close");
+  const menuInertState = new Map();
   function openMenu() {
     if (!mobileMenu) return;
     mobileMenu.hidden = false;
+    for (const child of document.body.children) {
+      if (child === mobileMenu || child.tagName === "SCRIPT") continue;
+      menuInertState.set(child, child.inert);
+      child.inert = true;
+    }
     document.body.classList.add("menu-open");
     hamburger.setAttribute("aria-expanded", "true");
     mobileClose.focus();
@@ -69,15 +84,17 @@
   function closeMenu() {
     if (!mobileMenu) return;
     mobileMenu.hidden = true;
+    for (const [child, wasInert] of menuInertState) child.inert = wasInert;
+    menuInertState.clear();
     document.body.classList.remove("menu-open");
     hamburger.setAttribute("aria-expanded", "false");
     document.removeEventListener("keydown", trap);
     hamburger.focus();
   }
   function trap(e) {
-    if (e.key === "Escape") closeMenu();
+    if (e.key === "Escape") { e.preventDefault(); closeMenu(); return; }
     if (e.key === "Tab") {
-      const focusables = [...mobileMenu.querySelectorAll("a[href], button, summary")].filter((x) => !x.hasAttribute("disabled"));
+      const focusables = [...mobileMenu.querySelectorAll("a[href], button, summary")].filter((x) => !x.hasAttribute("disabled") && x.getClientRects().length);
       const first = focusables[0], last = focusables[focusables.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
@@ -87,9 +104,9 @@
   if (mobileClose) mobileClose.addEventListener("click", closeMenu);
   if (mobileMenu) mobileMenu.addEventListener("click", (e) => { if (e.target.closest("a[href]")) closeMenu(); });
   if (mobileMenu) {
-    const here = location.pathname.replace(/\/index\.html$/, "/");
-    mobileMenu.querySelectorAll("a[href]").forEach((a) => {
-      try { const p = new URL(a.href, location.href).pathname.replace(/\/index\.html$/, "/"); if (p === here) a.setAttribute("aria-current", "page"); } catch (_) {}
+    const here = location.pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "").replace(/\.html$/, "");
+    document.querySelectorAll(".mobile-menu a[href], .site-nav a[href]").forEach((a) => {
+      try { const p = new URL(a.href, location.href).pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, ""); if (p === here) a.setAttribute("aria-current", "page"); } catch (_) {}
     });
   }
 
@@ -103,7 +120,7 @@
       state.innerHTML = user ? '<a class="account-chip" href="/'+encodeURIComponent(user)+'"><img src="/api/avatars/user/'+encodeURIComponent(user)+'" alt=""><span>'+esc(user)+'</span></a>' : '<a class="btn header-signin" href="/signin.html">Sign in</a>';
     }
     if (mAuth) mAuth.innerHTML = user
-      ? '<a href="/'+encodeURIComponent(user)+'">Profile</a><a href="/settings">Settings</a><a href="#" id="logout-mobile">Sign out ('+esc(user)+')</a>'
+      ? '<a href="/'+encodeURIComponent(user)+'">Profile</a><a href="#" id="logout-mobile">Sign out ('+esc(user)+')</a>'
       : '<a href="/signin.html">Sign in</a>';
     const lo = document.getElementById("logout-mobile");
     if (lo) lo.onclick = async (e) => { e.preventDefault(); await api("/api/auth/logout", { method: "POST" }); location.reload(); };
