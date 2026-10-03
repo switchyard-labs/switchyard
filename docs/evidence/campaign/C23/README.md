@@ -39,3 +39,13 @@ known serial-scan scaling limitation. None of these results supports blaming
 Trestle for the remote repository browse delay or adopting a mirror prematurely.
 
 Twelve real disposable Attempt previews also passed: median 13160.72 ms, nearest-rank p95 18714.59 ms, range 11828.96–18714.59 ms. Each request performs textual merge preview and semantic validation of the merged tree; this measures their combined end-to-end cost, not independent semantic compute. No canonical publication occurred. Raw data: `preview-12-samples-20261004.json`.
+
+The preview handler previously performed two complete remote checkout paths, one
+for textual merge and another for semantic validation. Both now share one merged
+checkout, with caller-owned cleanup and no mirror/cache or publication change.
+Real Git regressions verify merged contents, conflict filenames containing spaces,
+scratch cleanup and unchanged remote refs. Twelve follow-up requests all passed:
+median 6696.15 ms, nearest-rank p95 10446.97 ms, range 5979.85–10446.97 ms.
+That is a 49.1% lower observed median and 44.2% lower upper observation than the
+preceding run, not a controlled population estimate. Remote Git transport still
+dominates this path. Raw results: `preview-single-checkout-12-samples-20261004.json`.

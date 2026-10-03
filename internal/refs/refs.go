@@ -364,21 +364,29 @@ func (s *Service) PreviewMerge(repo, target, source string) ([]string, error) {
 // directory (remove it after use). Used by the semantic-conflict check: a
 // clean Git merge does NOT imply the combined tree is semantically valid.
 func (s *Service) PreviewMergedTree(repo, target, source string) (string, error) {
+	dir, _, err := s.PreviewMergedTreeWithConflicts(repo, target, source)
+	return dir, err
+}
+
+// PreviewMergedTreeWithConflicts performs one remote checkout for both textual
+// and semantic preview. A successful caller owns dir and must remove it.
+// Conflicts and failures clean their scratch automatically; remote refs never move.
+func (s *Service) PreviewMergedTreeWithConflicts(repo, target, source string) (string, []string, error) {
 	l := s.lock(repo, target)
 	l.Lock()
 	defer l.Unlock()
 	remote, err := s.remote(repo)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	if _, ok, err := s.branchExists(remote, source); err != nil {
-		return "", err
+		return "", nil, err
 	} else if !ok {
-		return "", fmt.Errorf("preview-tree: source branch %s does not exist", source)
+		return "", nil, fmt.Errorf("preview-tree: source branch %s does not exist", source)
 	}
 	dir, err := os.MkdirTemp(s.ScratchDir, "ptree-*")
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	keep := false
 	defer func() {
@@ -388,34 +396,34 @@ func (s *Service) PreviewMergedTree(repo, target, source string) (string, error)
 	}()
 	args, err := s.authArgs(repo)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	c := append([]string{"clone", "--quiet"}, args...)
 	c = append(c, "--branch", target, remote, dir)
 	if err := git(dir, "", c...); err != nil {
-		return "", fmt.Errorf("preview-tree clone: %w", err)
+		return "", nil, fmt.Errorf("preview-tree clone: %w", err)
 	}
 	_ = git(dir, "", "config", "--unset-all", "http.extraheader")
 	f := append([]string{}, args...)
 	f = append(f, "fetch", "--quiet", remote, source+":"+"src")
 	if err := git(dir, "", f...); err != nil {
-		return "", fmt.Errorf("preview-tree fetch: %w", err)
+		return "", nil, fmt.Errorf("preview-tree fetch: %w", err)
 	}
 	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "merge", "--no-commit", "--no-ff", "src"); err != nil {
 		out, diffErr := gitOut(dir, "diff", "--name-only", "--diff-filter=U")
 		if diffErr != nil {
-			return "", fmt.Errorf("preview-tree conflict inspection: %w", diffErr)
+			return "", nil, fmt.Errorf("preview-tree conflict inspection: %w", diffErr)
 		}
 		if strings.TrimSpace(out) == "" {
-			return "", fmt.Errorf("preview-tree merge failed without textual conflicts: %w", err)
+			return "", nil, fmt.Errorf("preview-tree merge failed without textual conflicts: %w", err)
 		}
 		// textual conflict: no merged tree to validate
 		_ = git(dir, "", "merge", "--abort")
 		_ = os.RemoveAll(dir)
-		return "", nil
+		return "", strings.Split(strings.TrimSpace(out), "\n"), nil
 	}
 	keep = true
-	return dir, nil
+	return dir, nil, nil
 }
 
 // ResolveIntoSource performs a real three-way merge of the source branch into

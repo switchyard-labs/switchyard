@@ -1,0 +1,23 @@
+{
+  "scope": "same real disposable Attempt after one-checkout textual/semantic preview optimization; no publication",
+  "samples": 12,
+  "median_ms": 6696.145,
+  "p95_nearest_rank_ms": 10446.97,
+  "min_ms": 5979.85,
+  "max_ms": 10446.97,
+  "timings_ms": [
+    9846.82,
+    7388.85,
+    6000.55,
+    9860.64,
+    10446.97,
+    6575.39,
+    7560.38,
+    6736.0,
+    6045.73,
+    6656.29,
+    5979.85,
+    6050.62
+  ],
+  "all_status": "ok"
+}
