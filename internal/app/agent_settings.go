@@ -103,7 +103,7 @@ func (a *App) validateAgentPreferences(user string, p agentPreferences) error {
 		}
 	}
 	for role, selection := range p.Roles {
-		if role != "implementer" && role != "reviewer" && role != "conflict-resolver" {
+		if role != "implementer" && role != "reviewer" && role != "conflict-resolver" && role != "proposer" {
 			return fmt.Errorf("unknown agent role")
 		}
 		if selection.Provider == "" {

@@ -1,7 +1,7 @@
 (() => {
  'use strict';
  const $ = id => document.getElementById(id);
- const roles = [['implementer','Implementation'],['reviewer','Reviews'],['conflict-resolver','Conflict resolution']];
+ const roles = [['implementer','Implementation'],['reviewer','Reviews'],['conflict-resolver','Conflict resolution'],['proposer','Proposal intake']];
  let preferences = {models:{}, credentials:{}, roles:{}}, providers = [], credentials = [], selected = '';
  async function api(path, options) {
   const r = await fetch(path,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...options});

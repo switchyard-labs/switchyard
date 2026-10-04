@@ -20,11 +20,7 @@ func proposalValues(p Proposal) map[string]any {
 func (a *App) handleProposals(w http.ResponseWriter, r *http.Request) {
 	meta := a.repositoryMetaByOwner(r.PathValue("owner"), r.PathValue("repo"))
 	user := a.currentUser(r)
-	cap := ReadRepo
-	if r.Method != http.MethodGet {
-		cap = WriteRepo
-	}
-	if !a.CanRepository(meta, user, cap) {
+	if !a.CanRepository(meta, user, ReadRepo) {
 		writeJSON(w, 404, map[string]any{"error": "repository_not_found"})
 		return
 	}
@@ -32,6 +28,10 @@ func (a *App) handleProposals(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if user == "" || a.isDemoGuest(r) {
 			writeJSON(w, 401, map[string]any{"error": "sign_in_required"})
+			return
+		}
+		if !a.proposalIntakeAllowed(meta, user) {
+			writeJSON(w, 403, map[string]any{"error": "proposal_intake_permission_required"})
 			return
 		}
 		var p Proposal
@@ -63,7 +63,7 @@ func (a *App) handleProposals(w http.ResponseWriter, r *http.Request) {
 		if p.Labels == nil {
 			p.Labels = []string{}
 		}
-		if p.Type == "Security" {
+		if p.Type == "Security" && strOr(meta["visibility"]) != "private" {
 			writeJSON(w, 400, map[string]any{"error": "restricted_security_intake_not_available"})
 			return
 		}
@@ -127,6 +127,24 @@ func (a *App) handleProposals(w http.ResponseWriter, r *http.Request) {
 				matches = false
 			}
 		}
+		if wanted := r.URL.Query().Get("label"); wanted != "" {
+			found := false
+			labels, _ := item["labels"].([]any)
+			for _, label := range labels {
+				if strOr(label) == wanted {
+					found = true
+				}
+			}
+			if !found {
+				matches = false
+			}
+		}
+		if wanted := r.URL.Query().Get("provenance"); wanted != "" {
+			provenance, _ := item["provenance"].(map[string]any)
+			if strOr(provenance["source"]) != wanted {
+				matches = false
+			}
+		}
 		if query := strings.ToLower(r.URL.Query().Get("q")); query != "" && !strings.Contains(strings.ToLower(strOr(item["title"])), query) {
 			matches = false
 		}
@@ -165,7 +183,7 @@ func (a *App) handleUpdateProposal(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 401, map[string]any{"error": "sign_in_required"})
 		return
 	}
-	if !a.CanRepository(meta, user, WriteRepo) {
+	if !a.CanRepository(meta, user, ReadRepo) {
 		writeJSON(w, 404, map[string]any{"error": "repository_not_found"})
 		return
 	}
@@ -193,6 +211,16 @@ func (a *App) handleUpdateProposal(w http.ResponseWriter, r *http.Request) {
 	if readJSON(r, &in) != nil {
 		writeJSON(w, 400, map[string]any{"error": "bad_request"})
 		return
+	}
+	if !a.CanRepository(meta, user, WriteRepo) {
+		if strOr(values["author_principal"]) != user {
+			writeJSON(w, 403, map[string]any{"error": "proposal_author_required"})
+			return
+		}
+		if in.State != nil || in.ClosureOutcome != nil || in.Priority != nil || in.Severity != nil {
+			writeJSON(w, 403, map[string]any{"error": "proposal_maintainer_required"})
+			return
+		}
 	}
 	if in.Version == "" {
 		writeJSON(w, 400, map[string]any{"error": "proposal_version_required"})
@@ -225,7 +253,7 @@ func (a *App) handleUpdateProposal(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "supersession_relationship_required"})
 		return
 	}
-	if p.Type == "Security" {
+	if p.Type == "Security" && strOr(meta["visibility"]) != "private" {
 		writeJSON(w, 400, map[string]any{"error": "restricted_security_intake_not_available"})
 		return
 	}

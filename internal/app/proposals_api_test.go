@@ -161,3 +161,48 @@ func TestProposalGraphIsolationAndSupersession(t *testing.T) {
 		t.Fatal(w.Code, w.Body.String())
 	}
 }
+
+func TestProposalIntakeAndAuthorBoundaries(t *testing.T) {
+	records := map[string][]map[string]any{
+		"repository_meta":   {{"id": "pub", "full_name": "alice/public", "owner_type": "user", "owner_id": "alice", "visibility": "public"}},
+		"proposal_settings": {{"repository_id": "pub", "intake": "writers"}},
+		"proposals":         {{"id": "owned", "repository_id": "pub", "title": "Own consideration", "type": "Question", "state": "open", "author_principal": "bob"}},
+	}
+	a := securityFixture(t, records)
+	call := func(method, actor, body string) int {
+		r := httptest.NewRequest(method, "/proposal", strings.NewReader(body))
+		r = r.WithContext(contextWithUser(r.Context(), actor))
+		r.SetPathValue("owner", "alice")
+		r.SetPathValue("repo", "public")
+		r.SetPathValue("id", "owned")
+		w := httptest.NewRecorder()
+		if method == "POST" {
+			a.handleProposals(w, r)
+		} else {
+			a.handleUpdateProposal(w, r)
+		}
+		return w.Code
+	}
+	if got := call("POST", "bob", `{"title":"Reader intake","type":"Question"}`); got != 403 {
+		t.Fatal(got)
+	}
+	records["proposal_settings"][0]["intake"] = "readers"
+	if got := call("POST", "bob", `{"title":"Reader intake","type":"Question","author_principal":"agent:forged"}`); got != 201 {
+		t.Fatal(got)
+	}
+	if records["proposals"][1]["author_principal"] != "bob" {
+		t.Fatal("forged principal accepted")
+	}
+	if got := call("PATCH", "bob", `{"version":"1","title":"Clarification"}`); got != 200 {
+		t.Fatal(got)
+	}
+	if got := call("PATCH", "bob", `{"version":"1","state":"accepted"}`); got != 403 {
+		t.Fatal(got)
+	}
+	if got := call("PATCH", "charlie", `{"version":"1","title":"Hijack"}`); got != 403 {
+		t.Fatal(got)
+	}
+	if got := call("POST", "bob", `{"title":"Confidential","type":"Security"}`); got != 400 {
+		t.Fatal(got)
+	}
+}

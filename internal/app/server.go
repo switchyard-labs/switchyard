@@ -204,6 +204,9 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/proposals/{id}/links", a.handleProposalLinks)
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals/{id}/links", a.handleProposalLinks)
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals/{id}/work", a.handleProposalWork)
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals/generate", a.handleGenerateProposal)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/proposal-settings", a.handleProposalSettings)
+	mux.HandleFunc("PATCH /api/repositories/{owner}/{repo}/proposal-settings", a.handleProposalSettings)
 	// work
 	mux.HandleFunc("GET /api/work", a.authorizeHandler(a.handleListWork))
 	mux.HandleFunc("POST /api/work", a.authorizeHandler(a.handleCreateWork))

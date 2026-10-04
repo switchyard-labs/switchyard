@@ -30,3 +30,25 @@ Validation: lifecycle/metadata tests and full app regression tests; HTTP fixture
 - New provider review Findings now snapshot the reviewed SHA and execution ID. Proposal creation can attach checked Finding evidence without closing/deleting that Finding; historical unknown SHA remains unknown.
 - Tests cover reader discussion versus own-comment moderation, private-repo evidence denial, cycle denial, Work replay/input conflict/partial-write repair, and multiple Work items. Full app regression and vet passed before the final supersession additions; rerun required for checkpoint commit.
 - No deployment or push. Agent-generated output adapters, restricted Security intake, intake settings, browser certification and Pages remain pending.
+
+## Intake, Agent entry point and UI/CLI follow-up — PARTIAL
+
+- Added explicit writers/readers intake policy with administrator CAS updates. Default is writers; initialization returns a reload conflict rather than falsely acknowledging a competing policy. Authors may update their text; lifecycle/priority/severity remain maintainer decisions. Permission tests cover reader opt-in, forged principal denial and author/maintainer separation.
+- Security Proposals are accepted only inside private repositories. Public Security intake remains unavailable; there is no separately confidential public-repository reporting channel.
+- Added explicit bounded `proposer` provider execution and normal Proposal creation with server-owned Agent/execution/source SHA provenance. Real provider dogfood, durable generation recovery and Agent discussion remain pending; this is not certified Agent intake.
+- Discussion edit/delete UI, evidence details and author/label/priority/provenance filters added. CLI metadata update/comment/link/links added. Full app and CLI command regressions pass; app vet passes.
+- Chromium fixture matrix renders list/detail at 1600/1280/1024/768/430/390. Visual inspection found and fixed insecure-origin `randomUUID` failure. Fixture rendering is not a real backend/API/CLI combined dogfood certification. Browser evidence is temporary at `/tmp/switchyard-proposal-browser`; final campaign evidence must use the real isolated runtime.
+- Remaining Proposal work includes settings UI, metadata editing UI, complete supersession behavior, generation recovery/certification, Finding action, Agent participation, durable CAS concurrency tests and real runtime dogfood.
+
+## Pages independent groundwork — PARTIAL / native domain CONDITIONAL
+
+Nick confirmed `switchyard.cx` has not yet been purchased/configured and requested all independent work continue. Domain purchase, authoritative DNS and native TLS certification remain CONDITIONAL; they do not block implementation or local routing tests. No Cloudflare resources were created and no Worker was deployed.
+
+- Added explicit configuration validation for owner/project, source ref, working/build/output directories and public-output acknowledgement for private sources. This model is not yet connected to settings/storage/API.
+- Added Worker serving primitive for owner roots, dotted project prefixes and immutable preview identities. Claimed project failures cannot fall through to owner root. Supports conditional requests, HEAD, ranges, scoped index/404/SPA fallback and restricted response headers.
+- Manifest hash is required and verified before serving/promotion; manifest entry count/size/path/type are bounded. Promotion validates payload sizes, uses one conditional owner-map write, preserves unrelated mappings and binds retry receipts to the complete target identity.
+- Trusted Node exporter rejects traversal, symlinks and nonregular files; hashes payloads and writes the immutable manifest last. No production pointer changes during export. File count/size/path limits apply.
+- Local tests cover root/project/preview routing, unsafe paths, ETag/ranges, promotion conflicts, competing promotion acknowledgements, changed replay input, corrupt manifests, exporter containment and upload failure. These tests do not certify live R2, Actions integration, real deployment records, retention or permissions.
+- Pages APIs/schema, approved Actions integration, persistent deployment/projection/recovery coordinator, preview publication, UI/CLI, rename reservations, retention and full combined dogfood remain pending. Custom domains remain phase 2.
+
+Deployment: all of these changes remain local; no push, Linode deployment or hostname routing change.
