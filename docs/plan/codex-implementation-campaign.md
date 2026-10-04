@@ -435,3 +435,14 @@ orphan identity inspection and destruction both returned HTTP200. Evidence:
 `C37/sandbox-orphan-recovery.json`. This proves precise recovery, not yet that the
 upstream RPC hypothesis resolves subsequent builds. C23 has eight real queue
 samples; four remain. No additional Agent load or resize on Linode.
+
+C46 Actions live follow-up: the recovered exact-SHA build succeeded and automatically
+published the original bound draft. A fresh tag then passed on its first attempt,
+with exactly one native run, scoped output upload, automatic attachment/publication
+and anonymous checksum-matching download. See C46/actions-release-recovery.json
+and C46/actions-native-tag-release.json. A 30-day build-assets-only R2 rule was
+applied/read back while preserving the bucket's existing multipart-abort rule;
+release-assets are excluded. See C46/build-output-retention.json. Actual elapsed
+expiry is not claimed. Queue definition restored with revision protection; its
+interrupted exact-SHA retry accepted. App Actions-release code still awaits the
+next coherent Linode deployment and final whole-product/runtime gates.

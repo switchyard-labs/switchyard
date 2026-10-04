@@ -1,0 +1,133 @@
+{
+  "candidate_commit": "25361e0",
+  "worker_commit": "b97caa7",
+  "worker_version": "a281a381-203d-4e0a-afb3-cd924fb0468a",
+  "tag": "c46-first-1791106578",
+  "source_sha": "2244399ff989c1a4efe726ab8ceb434c4dffe6df",
+  "run": {
+    "actor": "",
+    "created_at": "2026-10-04T09:36:30.803Z",
+    "definition_revision": "09f34c2f21de29e0dd44c4cec50008a2a970c4cffe1352038e903c7eaa8a4313",
+    "id": "154b609e-266a-4226-b7bc-74a9008d28e0",
+    "ref": "refs/tags/c46-first-1791106578",
+    "repo": "codex-actions-probe-20261003",
+    "source_sha": "2244399ff989c1a4efe726ab8ceb434c4dffe6df",
+    "state": {
+      "external_status": "complete",
+      "finished_at": "2026-10-04T09:36:44.954Z",
+      "manifest": {
+        "finished_at": "2026-10-04T09:36:44.954Z",
+        "jobs": [
+          {
+            "assets": [
+              {
+                "job_id": "build",
+                "key": "build-assets/codex-actions-probe-20261003/154b609e-266a-4226-b7bc-74a9008d28e0/build/fea6875d3c546f4c0997b1ee6e8c91c3065ee4144b7d2b7c208509e38f6666e4",
+                "name": "fixture.bin",
+                "sha256": "70ffea48d7beb9bfb5d6426b43dd44738fe7c5f64fa36cf38f836a28b60a8260",
+                "size": 34,
+                "source_sha": "2244399ff989c1a4efe726ab8ceb434c4dffe6df"
+              }
+            ],
+            "id": "build",
+            "name": "build",
+            "status": "succeeded",
+            "steps": [
+              {
+                "finished_at": "2026-10-04T09:36:42.764Z",
+                "id": "package",
+                "log_key": "runs/154b609e-266a-4226-b7bc-74a9008d28e0/build-package.json",
+                "name": "package",
+                "started_at": "2026-10-04T09:36:31.844Z",
+                "status": "succeeded",
+                "truncated": false
+              }
+            ]
+          }
+        ],
+        "run": {
+          "definition_revision": "09f34c2f21de29e0dd44c4cec50008a2a970c4cffe1352038e903c7eaa8a4313",
+          "event": {
+            "type": "tag"
+          },
+          "jobs": [
+            {
+              "assets": [
+                {
+                  "name": "fixture.bin",
+                  "path": "dist/fixture.bin"
+                }
+              ],
+              "id": "build",
+              "steps": [
+                {
+                  "command": "node --test ci.test.mjs && mkdir -p /tmp/ci-source/dist && printf \"Switchyard first native tag proof\\n\" > /tmp/ci-source/dist/fixture.bin",
+                  "id": "package",
+                  "timeout_ms": 60000
+                }
+              ]
+            }
+          ],
+          "owner": "switchyard-cp0",
+          "provider": "cloudflare-artifacts",
+          "providerData": {
+            "namespace": "switchyard-cp0"
+          },
+          "ref": "refs/tags/c46-first-1791106578",
+          "release": {
+            "prerelease": true,
+            "publish": true
+          },
+          "repo": "codex-actions-probe-20261003",
+          "run_id": "154b609e-266a-4226-b7bc-74a9008d28e0",
+          "sha": "2244399ff989c1a4efe726ab8ceb434c4dffe6df",
+          "trigger": "tag"
+        },
+        "source": {
+          "commit_present": true,
+          "config": null,
+          "inspection": "artifacts-worker-binding",
+          "repo": "codex-actions-probe-20261003",
+          "sha": "2244399ff989c1a4efe726ab8ceb434c4dffe6df"
+        },
+        "started_at": "2026-10-04T09:36:30.803Z",
+        "status": "succeeded"
+      },
+      "status": "success"
+    },
+    "trigger": "tag"
+  },
+  "release": {
+    "assets": [
+      {
+        "id": "ast_25c6b6379bf98db977b11485",
+        "storage_key": "release-assets/codex-actions-probe-20261003/ast_25c6b6379bf98db977b11485",
+        "name": "fixture.bin",
+        "size": 34,
+        "sha256": "70ffea48d7beb9bfb5d6426b43dd44738fe7c5f64fa36cf38f836a28b60a8260",
+        "content_type": "application/octet-stream",
+        "created_at": "2026-10-04T09:36:53Z",
+        "state": "ready"
+      }
+    ],
+    "author": "alice",
+    "body": "Built by Actions at 2244399ff989c1a4efe726ab8ceb434c4dffe6df",
+    "created_at": "2026-10-04T09:36:53Z",
+    "draft": "false",
+    "id": "rel_action_276d0dd3b9df4c8fe11546b9395edd03",
+    "prerelease": "true",
+    "published_at": "2026-10-04T09:36:57Z",
+    "source_tar_gz": "/alice/railway/archive/2244399ff989c1a4efe726ab8ceb434c4dffe6df.tar.gz",
+    "source_zip": "/alice/railway/archive/2244399ff989c1a4efe726ab8ceb434c4dffe6df.zip",
+    "tag": "c46-first-1791106578",
+    "target_sha": "2244399ff989c1a4efe726ab8ceb434c4dffe6df",
+    "title": "c46-first-1791106578",
+    "updated_at": "2026-10-04T09:36:57Z"
+  },
+  "anonymous_download": {
+    "size": 34,
+    "sha256": "70ffea48d7beb9bfb5d6426b43dd44738fe7c5f64fa36cf38f836a28b60a8260",
+    "matches_ci_receipt": true
+  },
+  "result": "PASS native tag event, first-attempt CI, scoped R2 output, automated attach/publish, anonymous download"
+}

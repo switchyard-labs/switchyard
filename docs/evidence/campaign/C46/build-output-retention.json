@@ -1,0 +1,11 @@
+{
+  "bucket": "switchyard-actions-probe-20261003",
+  "prefix": "build-assets/",
+  "retention_days": 30,
+  "age_seconds": 2592000,
+  "preserved_rule": "Default Multipart Abort Rule",
+  "apply": "PASS",
+  "readback": "PASS",
+  "release_assets_affected": false,
+  "limitation": "Actual 30-day asynchronous expiry not elapsed; configuration certification only"
+}

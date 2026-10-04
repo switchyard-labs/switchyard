@@ -1,0 +1,45 @@
+{
+  "source_commit": "25361e0",
+  "recovery_commit": "b97caa7",
+  "worker_version": "a281a381-203d-4e0a-afb3-cd924fb0468a",
+  "tag": "c46-actions-1791103407",
+  "source_sha": "2244399ff989c1a4efe726ab8ceb434c4dffe6df",
+  "initial_native_run": "707fb134-de3a-47d9-b74e-7e87fca979c3",
+  "initial_result": "failed; bound draft retained with zero assets",
+  "exact_sha_rerun": "manual-f7f52f263fad098b5878abba22717c686f517daa06bc7554eef4ad2c55a7ef04",
+  "result": "succeeded; original bound release attached and published automatically",
+  "release": {
+    "assets": [
+      {
+        "id": "ast_a1ae2982949d9ba2ad2bb8cc",
+        "storage_key": "release-assets/codex-actions-probe-20261003/ast_a1ae2982949d9ba2ad2bb8cc",
+        "name": "fixture.bin",
+        "size": 40,
+        "sha256": "5f2c01111c3179678dd0ff9cb90f045f9615bd5cee398bd640fd5371aeb53939",
+        "content_type": "application/octet-stream",
+        "created_at": "2026-10-04T09:26:33Z",
+        "state": "ready"
+      }
+    ],
+    "author": "alice",
+    "body": "Built by Actions at 2244399ff989c1a4efe726ab8ceb434c4dffe6df",
+    "created_at": "2026-10-04T08:44:08Z",
+    "draft": "false",
+    "id": "rel_action_7238f03164ccdca0d2aae4cfa0160fdb",
+    "prerelease": "true",
+    "published_at": "2026-10-04T09:26:42Z",
+    "source_tar_gz": "/alice/railway/archive/2244399ff989c1a4efe726ab8ceb434c4dffe6df.tar.gz",
+    "source_zip": "/alice/railway/archive/2244399ff989c1a4efe726ab8ceb434c4dffe6df.zip",
+    "tag": "c46-actions-1791103407",
+    "target_sha": "2244399ff989c1a4efe726ab8ceb434c4dffe6df",
+    "title": "c46-actions-1791103407",
+    "updated_at": "2026-10-04T09:26:42Z"
+  },
+  "download": {
+    "anonymous_http": 200,
+    "size": 40,
+    "sha256": "5f2c01111c3179678dd0ff9cb90f045f9615bd5cee398bd640fd5371aeb53939",
+    "matches_receipt": true
+  },
+  "limitation": "actual success used exact-SHA rerun after failed native tag event; direct first-attempt tag success remains to certify"
+}

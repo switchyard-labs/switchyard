@@ -165,3 +165,31 @@ operator recovery action: step-label matching is not a persisted ownership recei
 so independently confirm the sole orphan in the container API before destruction.
 No application deletion, instance-limit increase or new paid allocation is needed.
 The real recovery and successful native release proof remain unverified.
+
+### Certified tag builds and temporary output retention
+
+Real proofs `C46/actions-release-recovery.json` and
+`C46/actions-native-tag-release.json` now cover failed native build → empty bound
+draft → exact-SHA rerun → attach/publish, and a separate first-attempt native tag
+push → CI → R2 build output → bound release → automatic publication. Anonymous
+asset downloads matched the exact CI receipt size/SHA-256. These are isolated
+app/disposable Worker proofs; the Actions-release app code is not yet on Linode.
+
+Temporary `build-assets/` objects expire after 30 days in the disposable bucket.
+The applied rule was read back; its pre-existing multipart-abort rule was
+preserved. Published and draft release payloads use `release-assets/` and are
+outside this rule. Lifecycle deletion is asynchronous, not a 30-day deletion
+latency certification. Metadata/CI receipts remain available. Reconcile a
+successful build within the retention window; after expiry, rerun its exact SHA
+to regenerate output rather than marking a missing payload ready. Grants expire
+in 10 minutes and cannot authorize writes to release payloads.
+
+For another existing Actions bucket, serialize operator configuration changes
+and run `scripts/operations/configure-build-output-retention.py` with account,
+bucket and a new private backup path. The API token is read from the environment,
+never argv/output. Without `--apply` the command only backs up and plans. It
+preserves other rules, refuses a conflicting managed rule, checks for concurrent
+configuration changes before write and verifies readback. R2 exposes whole-rule
+replacement rather than CAS; do not run other lifecycle writers concurrently.
+See https://developers.cloudflare.com/r2/buckets/object-lifecycles/ and
+https://developers.cloudflare.com/api/resources/r2/subresources/buckets/subresources/lifecycle/methods/update/.
