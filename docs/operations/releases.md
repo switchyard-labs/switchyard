@@ -66,3 +66,27 @@ Trestle, Artifacts access, and the configured token helper remain required.
 This document describes the new deployment procedure. It does not certify a
 production service-user migration, release publication, TLS deployment, or
 brochure refresh; those have separate evidence gates.
+
+### Release assets (C46 local implementation)
+
+Assets use the signed Actions Worker R2 transport, independently of a CI job.
+The canonical upload API is `POST /api/repositories/{owner}/{repo}/release-assets?tag={tag}&name={filename}` with a raw body and explicit Content-Length.
+The maximum payload is 64 MiB. The server stages the bytes in a private temporary
+file, computes SHA-256, and reserves name/content metadata in the release record
+before R2 upload. Binaries never enter Trestle. At most 50 assets attach to a release.
+
+Publication and upload reservation share the release record CAS. Pending/deleting
+assets prevent publication. Same-name different-content uploads are rejected;
+retrying identical content resumes an interrupted upload. Published assets cannot
+be uploaded or deleted. Draft deletion requires removing assets first.
+
+Download/delete use `/api/repositories/{owner}/{repo}/release-assets/{asset-id}?tag={tag}`.
+Downloads enforce repository/draft visibility and check remote size/checksum headers.
+Draft asset deletion persists a deletion reservation before the R2 effect, then
+removes metadata. Interrupted deletion can be retried. Pending uploads must be
+retried to completion before deletion, to avoid racing a still-running writer.
+Automatic abandoned-upload cleanup remains an outstanding operational gate.
+
+These endpoints are local implementation only until a clean verified deployment
+of the app/schema and Worker. The release browser UI, Actions tag automation and
+CLI remain separate unfinished gates.

@@ -276,3 +276,13 @@ commands remain. No release asset endpoint is exposed by the app yet. No C46
 migration or Worker deployment has occurred. Linode remains at 6baddcb. Follow the
 accepted continuation in attachment 887ee67f-a529-4fa4-8528-5a6fa08bffde; preserve
 control-plane/worker separation and do not repeat certified host load tests.
+
+C46 asset lifecycle follow-up: local app raw upload, authorized download and draft
+asset deletion now use the signed R2 transport. Asset reservation/completion and
+release publication share a CAS record; pending/deleting states block publication.
+Same-name different-content uploads and published asset mutations are rejected.
+Interrupted upload/deletion remains retryable. A gated concurrent upload regression
+proves publication and a conflicting name are denied while the writer is in flight.
+Full Go tests/vet and affected race checks passed. Schema version7 adds the asset
+reservation metadata. Automatic abandoned-upload cleanup, real R2/app round-trip,
+UI/Actions/CLI and final lifecycle certification remain open; not deployed.

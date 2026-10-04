@@ -78,3 +78,36 @@ func TestPublishedReleaseCannotBeDeleted(t *testing.T) {
 		t.Fatalf("status=%d", w.Code)
 	}
 }
+
+func TestReleasePendingAssetBlocksPublication(t *testing.T) {
+	meta := map[string]any{"id": "repo-id", "full_name": "alice/demo", "owner_slug": "alice", "slug": "demo", "owner_type": "user", "owner_id": "alice", "visibility": "public", "artifact_name": "physical"}
+	a := securityFixture(t, map[string][]map[string]any{"repository_meta": {meta}, "releases": {{"id": "draft", "identity": releaseIdentity("repo-id", "v1"), "draft": "true", "assets_json": "[{\"id\":\"ast_x\",\"state\":\"pending\"}]"}}})
+	r := httptest.NewRequest("PATCH", "/api/repositories/alice/demo/releases/v1", strings.NewReader(`{"publish":true}`))
+	r.SetPathValue("owner", "alice")
+	r.SetPathValue("repo", "demo")
+	r.SetPathValue("tag", "v1")
+	r = r.WithContext(contextWithUser(r.Context(), "alice"))
+	w := httptest.NewRecorder()
+	a.handleRelease(w, r)
+	if w.Code != 409 || !strings.Contains(w.Body.String(), "release_assets_pending") {
+		t.Fatalf("status=%d body=%s", w.Code, w.Body.String())
+	}
+}
+func TestReleaseAssetReservationValidation(t *testing.T) {
+	for _, name := range []string{"../escape", "a/b", "a\\b", ".", "", "a\x00b", "a\x7fb"} {
+		if validAssetName(name) {
+			t.Errorf("accepted %q", name)
+		}
+	}
+	if !validAssetName("build-linux.tar.gz") {
+		t.Fatal("normal asset rejected")
+	}
+	for _, raw := range []string{`[{"state":"pending"}]`, `[{"state":"deleting"}]`, `invalid`} {
+		if releaseAssetsReady(map[string]any{"assets_json": raw}) {
+			t.Fatalf("publish allowed for %s", raw)
+		}
+	}
+	if !releaseAssetsReady(map[string]any{"assets_json": `[{"state":"ready"}]`}) {
+		t.Fatal("ready assets rejected")
+	}
+}

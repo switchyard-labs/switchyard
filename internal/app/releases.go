@@ -11,7 +11,7 @@ import (
 
 func releaseCollections() [][2]any {
 	fields := []trestle.CollectionField{}
-	for _, name := range []string{"id", "identity", "repo_id", "tag", "target_sha", "title", "body", "draft", "prerelease", "author", "created_at", "updated_at", "published_at"} {
+	for _, name := range []string{"id", "identity", "repo_id", "tag", "target_sha", "title", "body", "draft", "prerelease", "author", "created_at", "updated_at", "published_at", "assets_json"} {
 		fields = append(fields, trestle.CollectionField{Name: name, Type: "text", Unique: name == "id" || name == "identity"})
 	}
 	assets := []trestle.CollectionField{}
@@ -46,6 +46,10 @@ func (a *App) releaseView(meta, record map[string]any) map[string]any {
 		out[key] = record[key]
 	}
 	base := "/" + url.PathEscape(strOf(meta["owner_slug"])) + "/" + url.PathEscape(strOf(meta["slug"]))
+	assets, err := releaseAssets(record)
+	if err == nil {
+		out["assets"] = assets
+	}
 	out["source_zip"] = base + "/archive/" + strOf(record["target_sha"]) + ".zip"
 	out["source_tar_gz"] = base + "/archive/" + strOf(record["target_sha"]) + ".tar.gz"
 	return out
@@ -148,6 +152,13 @@ func (a *App) handleRelease(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 403, map[string]any{"error": "release_maintainer_required"})
 		return
 	}
+	if r.Method == "DELETE" {
+		assets, e := releaseAssets(record)
+		if e != nil || len(assets) > 0 {
+			writeJSON(w, 409, map[string]any{"error": "release_assets_must_be_deleted"})
+			return
+		}
+	}
 	if r.Method == "DELETE" && strOf(record["draft"]) != "true" {
 		writeJSON(w, 409, map[string]any{"error": "published_release_cannot_be_deleted"})
 		return
@@ -185,6 +196,10 @@ func (a *App) handleRelease(w http.ResponseWriter, r *http.Request) {
 			patch["prerelease"] = fmt.Sprint(*in.Prerelease)
 		}
 		if in.Publish && strOf(record["draft"]) == "true" {
+			if !releaseAssetsReady(record) {
+				writeJSON(w, 409, map[string]any{"error": "release_assets_pending"})
+				return
+			}
 			commits, e := a.Artifacts.LogContext(r.Context(), repo, "refs/tags/"+strOf(record["tag"]))
 			if e != nil {
 				writeArtifactsError(w, e)

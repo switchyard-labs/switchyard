@@ -46,7 +46,11 @@ func (a *App) measureHTTP(next http.Handler) http.Handler {
 			}
 			a.Metrics.Record(name, time.Since(start), status)
 		}()
-		r.Body = http.MaxBytesReader(record, r.Body, 16<<20)
+		limit := int64(16 << 20)
+		if r.Method == "POST" && strings.HasPrefix(r.URL.Path, "/api/repositories/") && strings.HasSuffix(r.URL.Path, "/release-assets") {
+			limit = 64 << 20
+		}
+		r.Body = http.MaxBytesReader(record, r.Body, limit)
 		next.ServeHTTP(record, r)
 	})
 }
