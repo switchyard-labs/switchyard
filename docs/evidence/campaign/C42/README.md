@@ -1,4 +1,4 @@
-# C42 — final canonical regression, in progress
+# C42 — final canonical regression, DONE with tooling limits
 
 October 4 canonical editor gap closed: repository Edit links and file navigation use
 `/alice/railway/edit/editor-c20/src/routes.mjs`. Existing `edit.html?name=...`
@@ -52,3 +52,24 @@ repository, source, editor, Actions, repository settings, PR list and Work at
 zero inner image border, image filling the control, and no document overflow.
 This is header geometry coverage, not certification of all loaded body states.
 Evidence: header-54-cases.json; maintained helper scripts/cua-header-matrix.mjs.
+
+
+Final deployed binary 84552b7 passed 114 Chromium cases: all 16 requested
+surfaces plus release detail/new form and menu, at 1600/1280/1024/768/430/390.
+`final-84552b7/matrix.json` and screenshots verify loaded content, actual viewport,
+product shell, no horizontal/vertical document overflow and no dead placeholder
+links. Canonical navigation records commit deep-link refresh, back/forward,
+branches/tags and repository-scoped Work. Editor selection/refresh and single
+repository identity are retained separately. Final Code popover passes bounds,
+keyboard modes, Escape/focus return, toggle and outside dismissal at six widths.
+
+One initial branch load returned a visible error; a reload loaded the real refs.
+A source selector wait also timed out while content was still fetching, then
+fully loaded without reload. Backend selector waits are shorter than requested;
+readiness now allows bounded retries unless a visible alert appears. These
+observations are retained as reliability limits, not hidden by the passing layout
+captures. Screenshot checks are not a user-network latency benchmark.
+
+Browser credential minting remains C33 and awaits action-time approval. Archive
+exact-content proof is C45; final embedded runtime/download is C43. Firefox and
+WebKit remain UNAVAILABLE through the connected browser tooling.

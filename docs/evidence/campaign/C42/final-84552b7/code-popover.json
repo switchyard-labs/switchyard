@@ -1,0 +1,206 @@
+[
+  {
+    "dialog": {
+      "bottom": 907.703125,
+      "height": 601.578125,
+      "left": 953.5,
+      "right": 1393.5,
+      "top": 306.125,
+      "width": 440,
+      "x": 953.5,
+      "y": 306.125
+    },
+    "focus": "clone-mode-https",
+    "open": true,
+    "trigger": {
+      "bottom": 298.125,
+      "height": 36,
+      "left": 1291.25,
+      "right": 1393.5,
+      "top": 262.125,
+      "width": 102.25,
+      "x": 1291.25,
+      "y": 262.125
+    },
+    "width": 1600,
+    "checks": [
+      "anchored",
+      "viewport bounds",
+      "keyboard mode switch",
+      "Escape",
+      "focus return",
+      "trigger toggle",
+      "outside dismissal"
+    ]
+  },
+  {
+    "dialog": {
+      "bottom": 907.703125,
+      "height": 601.578125,
+      "left": 786,
+      "right": 1226,
+      "top": 306.125,
+      "width": 440,
+      "x": 786,
+      "y": 306.125
+    },
+    "focus": "clone-mode-https",
+    "open": true,
+    "trigger": {
+      "bottom": 298.125,
+      "height": 36,
+      "left": 1123.75,
+      "right": 1226,
+      "top": 262.125,
+      "width": 102.25,
+      "x": 1123.75,
+      "y": 262.125
+    },
+    "width": 1280,
+    "checks": [
+      "anchored",
+      "viewport bounds",
+      "keyboard mode switch",
+      "Escape",
+      "focus return",
+      "trigger toggle",
+      "outside dismissal"
+    ]
+  },
+  {
+    "dialog": {
+      "bottom": 907.703125,
+      "height": 601.578125,
+      "left": 530,
+      "right": 970,
+      "top": 306.125,
+      "width": 440,
+      "x": 530,
+      "y": 306.125
+    },
+    "focus": "clone-mode-https",
+    "open": true,
+    "trigger": {
+      "bottom": 298.125,
+      "height": 36,
+      "left": 867.75,
+      "right": 970,
+      "top": 262.125,
+      "width": 102.25,
+      "x": 867.75,
+      "y": 262.125
+    },
+    "width": 1024,
+    "checks": [
+      "anchored",
+      "viewport bounds",
+      "keyboard mode switch",
+      "Escape",
+      "focus return",
+      "trigger toggle",
+      "outside dismissal"
+    ]
+  },
+  {
+    "dialog": {
+      "bottom": 922.703125,
+      "height": 601.578125,
+      "left": 274,
+      "right": 714,
+      "top": 321.125,
+      "width": 440,
+      "x": 274,
+      "y": 321.125
+    },
+    "focus": "clone-mode-https",
+    "open": true,
+    "trigger": {
+      "bottom": 313.125,
+      "height": 36,
+      "left": 611.75,
+      "right": 714,
+      "top": 277.125,
+      "width": 102.25,
+      "x": 611.75,
+      "y": 277.125
+    },
+    "width": 768,
+    "checks": [
+      "anchored",
+      "viewport bounds",
+      "keyboard mode switch",
+      "Escape",
+      "focus return",
+      "trigger toggle",
+      "outside dismissal"
+    ]
+  },
+  {
+    "dialog": {
+      "bottom": 992,
+      "height": 624.71875,
+      "left": 8,
+      "right": 407,
+      "top": 367.28125,
+      "width": 399,
+      "x": 8,
+      "y": 367.28125
+    },
+    "focus": "clone-mode-https",
+    "open": true,
+    "trigger": {
+      "bottom": 359.28125,
+      "height": 36,
+      "left": 215.625,
+      "right": 317.875,
+      "top": 323.28125,
+      "width": 102.25,
+      "x": 215.625,
+      "y": 323.28125
+    },
+    "width": 430,
+    "checks": [
+      "anchored",
+      "viewport bounds",
+      "keyboard mode switch",
+      "Escape",
+      "focus return",
+      "trigger toggle",
+      "outside dismissal"
+    ]
+  },
+  {
+    "dialog": {
+      "bottom": 992,
+      "height": 603.03125,
+      "left": 8,
+      "right": 367,
+      "top": 388.96875,
+      "width": 359,
+      "x": 8,
+      "y": 388.96875
+    },
+    "focus": "clone-mode-https",
+    "open": true,
+    "trigger": {
+      "bottom": 380.96875,
+      "height": 36,
+      "left": 215.625,
+      "right": 317.875,
+      "top": 344.96875,
+      "width": 102.25,
+      "x": 215.625,
+      "y": 344.96875
+    },
+    "width": 390,
+    "checks": [
+      "anchored",
+      "viewport bounds",
+      "keyboard mode switch",
+      "Escape",
+      "focus return",
+      "trigger toggle",
+      "outside dismissal"
+    ]
+  }
+]

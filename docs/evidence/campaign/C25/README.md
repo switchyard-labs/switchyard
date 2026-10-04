@@ -38,3 +38,21 @@ resource/timing evidence. No findings and no Linode Agent. The complete earlier
 multi-role flow remains the source of coding/conflict/repair/queue evidence;
 this follow-up certifies the additional context recording without claiming the
 older executions had fields that were added later.
+
+### Final bounded certification — 5 October 2026
+
+DONE for the adopted isolated-worker product flow. Fifteen sequential coding
+tasks, two- and three-Agent concurrent coding, one instrumented four-Agent
+success, separate review and conflict-resolution models, semantic repair,
+re-preview/re-review, exact-source native CI, queue and canonical publication
+are recorded in this directory and C41. Four-way reliability is not universally
+certified, and earlier failed runs remain preserved. Immutable context recording
+was added later and has its own real follow-up proof; old executions are not
+falsely backfilled. Provider HTTP timing is certified only for OpenCode Go.
+
+The final resource policy is 1 GiB memory per execution, concurrency two, waiting
+queue 16, PID limit 128, CPU budget 200%, swap disabled. The guarded small Linode
+run crossed its reserved-memory threshold; separate Agent workers are recommended.
+No routine Agent load or resize was added on Linode. Saved isolated provider
+preferences were restored and only the temporary campaign credential removed,
+while execution history was preserved: final-credential-cleanup.json.

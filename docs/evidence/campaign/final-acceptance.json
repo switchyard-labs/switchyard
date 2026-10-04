@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-05",
+  "product_commit": "84552b74226cba3dfbd296a3381478bb2a69ac4f",
+  "go_build": "PASS",
+  "go_test_all": "PASS",
+  "go_vet": "PASS",
+  "release_race": "PASS",
+  "sy_test_vet": "PASS",
+  "sy_build_linux_amd64_darwin_arm64_windows_amd64": "PASS",
+  "worker_tests": 23,
+  "worker_typecheck": "PASS",
+  "worker_dry_build": "PASS",
+  "app_nift_build_all": "PASS",
+  "brochure_nift_build_all": "PASS",
+  "c42_cases": 114,
+  "c43_loaded_surfaces": 16,
+  "brochure_cases": 8,
+  "browser_credential_issuance": "CONDITIONAL",
+  "authenticated_linode_sy": "PARTIAL: live sign-in required",
+  "worker_preview": "CONDITIONAL: scoped deployment setup required"
+}

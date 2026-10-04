@@ -1,0 +1,194 @@
+[
+  {
+    "surface": "profile",
+    "url": "http://127.0.0.1:18133/alice",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "repo",
+    "url": "http://127.0.0.1:18133/alice/railway",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "source",
+    "url": "http://127.0.0.1:18133/alice/railway/blob/main/src/routes.mjs",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "release",
+    "url": "http://127.0.0.1:18133/alice/railway/releases/c46-first-1791106578",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "actions",
+    "url": "http://127.0.0.1:18133/alice/railway/actions/5f79219d-87a0-4009-b97e-7af5a5b96b00",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "editor",
+    "url": "http://127.0.0.1:18133/alice/railway/edit/editor-c20/src/routes.mjs",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "dashboard",
+    "url": "http://127.0.0.1:18133/",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "work",
+    "url": "http://127.0.0.1:18133/work/wk_de7b6ee579db014c",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "pr",
+    "url": "http://127.0.0.1:18133/alice/railway/pull/wk_8e849a6797c1b619",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "org",
+    "url": "http://127.0.0.1:18133/railway-labs",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "settings",
+    "url": "http://127.0.0.1:18133/alice/railway/settings",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "attention",
+    "url": "http://127.0.0.1:18133/operations#attention",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "workflow",
+    "url": "http://127.0.0.1:18133/operations#workflows",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "history",
+    "url": "http://127.0.0.1:18133/alice/railway/commits/main",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "branches",
+    "url": "http://127.0.0.1:18133/alice/railway/branches",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  },
+  {
+    "surface": "tags",
+    "url": "http://127.0.0.1:18133/alice/railway/tags",
+    "width": 1600,
+    "checks": [
+      "loaded content",
+      "embedded shell",
+      "document bounds",
+      "loaded images"
+    ],
+    "console": []
+  }
+]

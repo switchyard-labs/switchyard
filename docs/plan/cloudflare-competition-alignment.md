@@ -55,3 +55,32 @@ complete competition demonstration is finished.
 | Complete recorded competition demo | PARTIAL | C41 must combine the capabilities and configure genuine external Agents; no submission/video claim |
 
 No terms acceptance, submission, project push or eligibility claim is made by this matrix.
+
+
+## Final campaign evidence update — 5 October 2026
+
+This supersedes the capability status rows above. The rules/eligibility review is
+historical and still requires the entrant's own review; nothing was submitted.
+
+| Capability | Final bounded status | Evidence and limits |
+| --- | --- | --- |
+| Artifacts Git truth/direct Worker binding | PASS | C33 scoped Git; C34 immutable source inspection/config fingerprint; C36 native events |
+| Event subscriptions/automatic push response | PASS | C35/C36 normalization, native push, duplicate/reconciliation and exact-SHA CI |
+| Workers/Workflows/CI Sandbox/R2 | PASS | C10/C13/C14/C15/C36/C38 execution/logs/control/security; existing sequential basic Container capacity |
+| Concurrent real external Agents | PASS with resource limits | C25 15 sequential tasks, 2/3 concurrent and one instrumented four-way success; not a universal four-way capacity guarantee |
+| Review and conflict-resolution Agents | PASS | C25 real distinct models, immutable context and execution identity; honest empty reviewer findings retained |
+| Semantic disagreement and repair | PASS | C25/C41 text-clean API/consumer disagreement, resolver repair, re-preview/re-review and native exact-source CI |
+| Integration Queue/canonical publication/provenance | PASS | C25/C41 both Attempts integrated; immutable checks and final refs; C24 one actual publication across graceful shutdown |
+| Source archives | PASS within bounds | C45 exact browser/server/sy Git-tree comparison; C43 final embedded ZIP verified 18 files |
+| Releases/R2 | PASS within bounds | C46 manual/CLI lifecycle, native tag CI assets, checksums, reservations/CAS races, immutable publication identity |
+| Whole-product usability | PASS with browser limits | C42 114 Chromium six-width cases; Firefox/WebKit unavailable |
+| Worker Builds Preview | CONDITIONAL | Genuine Builds connection/trigger/scoped deployment configuration missing; no preview URL or deployment claim |
+| Reproducible competition walkthrough | PASS as script/capture bundle | C41 maintained scripts, loaded screenshots, timeline, logs, findings, conflict, queue, refs and provenance; fresh disposable version-1 baseline is an explicit prerequisite |
+| Competition video/submission/public source availability | EXTERNAL PREREQUISITE | No recorded submission video, source push, eligibility decision or terms acceptance is claimed |
+
+The small Linode is the control plane under a reserved-memory policy. Isolated
+Agent worker capacity scales separately; the guarded host experiment supports
+that recommendation rather than proving an Agent can never run on Linode.
+Final browser credential issuance and authenticated live sy checks remain separately
+identified external prerequisites. They do not invalidate already-recorded server
+credential and local CLI integration evidence.

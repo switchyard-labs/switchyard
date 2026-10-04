@@ -42,3 +42,8 @@ credential. No production deployment or `sy` change is part of this checkpoint.
 The short-lived credential is still sensitive until expiry; it is not revocable
 through this endpoint. The server's operator token helper is bounded to 20 seconds
 and 64 KiB, and mint response reads to 64 KiB.
+
+Final update: the implementation is deployed, and sy scoped clone support exists.
+Browser credential mint/copy and real expiry rejection remain CONDITIONAL on the
+pending action-time approval. Permission/protected-ref API tests passed; browser
+layout and generic Actions clipboard proof do not substitute for this token flow.

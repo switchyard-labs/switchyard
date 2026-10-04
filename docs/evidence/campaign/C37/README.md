@@ -33,3 +33,6 @@ competition documentation.
 
 Evidence: [C36](../C36/README.md), [C38](../C38/README.md),
 [architecture](../../../architecture/cloudflare-actions.md).
+
+Final update: C25/C41 now supply real full-story queue/review/repair evidence.
+Generic CI remains PASS. Preview remains CONDITIONAL on genuine deployment setup.

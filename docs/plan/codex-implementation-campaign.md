@@ -1,7 +1,7 @@
 # Codex implementation campaign
 
 Baseline: `ff22794`, main clean and equal to refreshed origin/main, 2026-10-03.
-Switchyard and its brochure are authorized for campaign changes; `sy` and all reference projects remain untouched. Local checkpoint commits only; no pushes.
+Switchyard and its brochure are authorized for campaign changes. Later explicit instructions also authorize `sy` implementation and dogfood. Reference projects remain untouched. Local checkpoint commits only; no pushes. Historical status entries below describe their recorded dates; the final ledger supersedes them.
 
 The latest adopted outline requires uninterrupted sequential C5–C25 work, with a local commit at each checkpoint and an early stop only for a genuine blocker. Warden/Gantry Core editor adaptation without an interactive terminal is recorded for C20; collapsible directories and drag/drop moves are acceptance requirements.
 
@@ -32,7 +32,7 @@ Go test ./..., go vet ./..., go build ./..., git diff --check and nift build --a
 
 ## Checkpoint ledger
 
-C0–C13 locally implemented and verified. C14 run controls verified; preview/deployment setup remains unavailable. C15 credential boundary verified; C16 alignment review complete; C17 shared design foundation verified; C18 repository redesign verified; C19 workspace and identity redesign verified; C20 workbench verified; C21 decision surfaces verified; C22 Chromium matrix verified; C23–C25 pending. Checkpoint identities are recorded in the batch handover ledger below.
+See the final C0–C46 ledger below for current status. Earlier chronological entries remain retained as evidence, not current completion claims.
 
 ## C1 — contained repository filesystem
 
@@ -536,3 +536,99 @@ Capture found/fixed PR Checks omitting native Actions and terminal enqueue
 controls; clean 84552b7 deployed locally and Linode. Full app tests/vet and JS
 syntax checks passed. Exact live binary hash and active Switchyard/Caddy recorded
 in C24/linode-deployment-84552b7.json; backup/rollback retained.
+
+
+### C46/C42 final gates (2026-10-05)
+
+C46 DONE within documented release/asset limits. Actual manual and native tag
+Actions/R2 proofs, full CLI local lifecycle and final six-width release pages are
+retained. New deterministic barriers certify edit/publish and publish/publish CAS
+races, retry and immutable identity/publication date; full Go tests/vet and release
+race tests passed. See C46/README.md and releases_concurrency_test.go.
+
+C42 DONE with Chromium/tooling limits: 114 cases, 16 requested surfaces plus
+release detail/new/menu, all six widths. Canonical deep links/refresh/back-forward,
+editor file navigation and single identity, profile graph/header and Code popover
+are recorded. Initial branch load error and bounded source-readiness timeout are
+not concealed. Firefox/WebKit unavailable. C33 browser issuance and full live sy
+authenticated dogfood remain external prerequisites; C43 final runtime is underway.
+
+sy human repository view now shows owner/name and a readable empty description,
+omitting an API-absent Clone field. Full sy tests/vet passed; public Linode view
+verified. Local sy commit 3dcdb71; no push. Linode continues clean 84552b7/schema8,
+control-plane only; no extra Agent load or capacity change.
+
+## Final C0–C46 ledger — 5 October 2026
+
+This table supersedes all earlier dated pending statuses. DONE means the bounded
+implementation and recorded checks are complete, not universal scale certification.
+Product commit `84552b7` is live on Linode; later changes add tests/evidence/docs only.
+Evidence lives in `docs/evidence/campaign/Cn`, or the chronological entries above
+where an individual directory is absent. Final app/CLI builds, tests and vet pass.
+
+| Checkpoint | Status | Implementation/evidence commit | Evidence and limits |
+| --- | --- | --- | --- |
+| C0 Baseline/certification gate | DONE | `94717ff` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C1 Filesystem containment | DONE | `a440691` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C2 Repository authorization | DONE | `e9faf30` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C3 Credentials/sessions | DONE | `2768fa9` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C4 Draft CAS/editor state | DONE | `0c3b1a9` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C5 Immutable exact-SHA integration | DONE | `d5bb9b0` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C6 Durable queue recovery | DONE | `4860dd9` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C7 Workflow replay/gates | DONE | `4c5e1e1` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C8 Isolated typed runner | DONE | `508c9f9 / 80c7de0` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C9 Schema migrations | DONE | `6d744c5` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C10 Native Cloudflare CI | DONE | `e2d6abd` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C11 Distinct exact-source Actions | DONE | `802a4c9 / 84552b7` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C12 Actions list/detail | DONE | `c9a239a` | [C12](../evidence/campaign/C12/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C13 Read-only captured logs | DONE | `46684ef` | [C13](../evidence/campaign/C13/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C14 Run controls | DONE | `e5c4fb2` | [C14](../evidence/campaign/C14/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C15 CI credential boundary | DONE | `894c4a9` | [C15](../evidence/campaign/C15/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C16 Platform alignment | DONE | `fdd32d6` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C17 Design foundation | DONE | `af3886f` | [C17](../evidence/campaign/C17/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C18 Repository/source browsing | DONE | `676a38d / ee8a473` | [C18](../evidence/campaign/C18/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C19 Workspace/profile/social/settings | DONE | `adde19d` | [C19](../evidence/campaign/C19/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C20 Warden-style workbench | DONE | `8528adc` | [C20](../evidence/campaign/C20/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C21 Decision surfaces | DONE | `4ec2bb2` | [C21](../evidence/campaign/C21/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C22 Initial Chromium certification | DONE | `7cf12d7` | [C22](../evidence/campaign/C22/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C23 Representative performance | DONE | `7b7bd95` | [C23](../evidence/campaign/C23/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C24 Operations/reset/drain | DONE | `869e096 / cc6740c` | [C24](../evidence/campaign/C24/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C25 Real multi-role Agents | DONE | `80c7de0 / 139e1af / 07894b9 / 0b0da9e` | [C25](../evidence/campaign/C25/README.md). 15 sequential and 2/3 concurrent real runs; one instrumented four-way success, not a stable four-worker capacity guarantee. Isolated worker proof; Linode control plane only. |
+| C26 Embedded binary | DONE | `1e9b7a7` | [C26](../evidence/campaign/C26/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C27 Release/deployment procedure | DONE | `304fb8b / 84552b7` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C28 Canonical routing | DONE | `c8a2dee / 8241fb0` | [C28](../evidence/campaign/C28/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C29 Owner/profile identity | DONE | `a17989e / e1b1e8e` | [C29](../evidence/campaign/C29/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C30 Code popover | DONE | `dd68dde` | [C30](../evidence/campaign/C30/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C31 SSH architecture decision | DONE | `8328a9a` | Dated implementation entry / commit. Decision complete: documented HTTPS transport; custom SSH gateway deferred. |
+| C32 SSH key UI | NOT APPLICABLE | `8328a9a` | Dated implementation entry / commit. NOT APPLICABLE because native SSH/key support and a justified gateway are absent; no misleading SSH tab. |
+| C33 Scoped HTTPS credentials | CONDITIONAL | `27c1b35` | [C33](../evidence/campaign/C33/README.md). CONDITIONAL: server authorization/scoped real clone/fetch passed. Browser credential mint/copy needs action-time authorization; real expiry rejection remains part of that pending proof. |
+| C34 Direct Worker Artifacts binding | DONE | `28003e5` | [C34](../evidence/campaign/C34/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C35 Artifacts events | DONE | `a91499c` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C36 Automatic event-to-CI proof | DONE | `104072d` | [C36](../evidence/campaign/C36/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C37 Cloudflare Actions/Worker Preview | CONDITIONAL | `08f4f21` | [C37](../evidence/campaign/C37/README.md). CONDITIONAL: generic native CI PASS; Worker Builds/Preview requires trusted scoped deployment connection/token. |
+| C38 Actions controls/log quality | DONE | `6bcc82b` | [C38](../evidence/campaign/C38/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C39 sy API handoff | DONE | `b390ef0 / 3647e48` | Dated implementation entry / commit. Recorded implementation checks; final product matrix covers affected UI. |
+| C40 Competition evidence matrix | DONE | `b20287f` | Dated implementation entry / commit. Matrix complete, submission/video/source push external and unperformed. |
+| C41 Reproducible competition walkthrough | DONE | `9a83ac0` | [C41](../evidence/campaign/C41/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C42 Final six-width regression | DONE | `84552b7 + final evidence` | [C42](../evidence/campaign/C42/README.md). 114 Chromium cases plus navigation/editor/identity/popover checks. Firefox/WebKit unavailable; transient upstream load failure retained. |
+| C43 Final clean-runtime suite | DONE | `84552b7 + final evidence` | [C43](../evidence/campaign/C43/README.md). Fresh runtime directory, existing external Trestle/Cloudflare. 16 loaded surfaces and exact Git-tree browser archive; browser download latency not certified. |
+| C44 Architecture/brochure cleanup | DONE | `final documentation batch` | [C44](../evidence/campaign/C44/README.md). Nift build and eight local browser cases; hosting publication awaits normal push workflow. |
+| C45 Immutable source archives | DONE | `67b1992 / ec4f127` | [C45](../evidence/campaign/C45/README.md). Recorded implementation checks; final product matrix covers affected UI. |
+| C46 Releases/R2/Actions/CLI | DONE | `485aeae / 521128b / c8f98d6 + final tests` | [C46](../evidence/campaign/C46/README.md). Bounded asset policy/CAS and real R2/native tag release verified; elapsed 30-day retention has not been observed. |
+
+### Separate external acceptance prerequisites
+
+- Full authenticated **Linode** `sy` dogfood: PARTIAL. Anonymous repo list/view/
+  releases work; local authenticated integration is separate. A live existing
+  sign-in/credential is required. The isolated fixture password was rejected and
+  no live password was reset. Agent execution on Linode is unnecessary.
+- C33 action-time browser mint approval remains unanswered; no token was minted
+  through the browser and no secret-copy success is inferred from layout tests.
+- C37 preview connection/scoped deployment token remains unavailable. Generic
+  Actions is complete and this does not require blocking unrelated features.
+- Competition submission, video, source availability and brochure publication
+  require the external submission/push workflow; this campaign does not push.
+
+No new product must-fix issue is claimed open by the completed bounded matrix.
+Recorded transient provider errors and download-tool delay remain limitations.
+Separate worker capacity is recommended; no resize or further Linode Agent load.

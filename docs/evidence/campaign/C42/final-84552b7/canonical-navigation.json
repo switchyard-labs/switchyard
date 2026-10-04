@@ -1,0 +1,58 @@
+[
+  {
+    "surface": "branches",
+    "url": "http://127.0.0.1:18127/alice/railway/branches",
+    "links": [
+      "browser-c22-review",
+      "c24-publication-1791115098",
+      "c24-publication-1791115163",
+      "c24-publication-1791115254",
+      "editor-c20",
+      "event-c36",
+      "event-competition-3cd04f1cf939-a",
+      "event-competition-3cd04f1cf939-b",
+      "event-competition-3cd04f1cf939-c",
+      "event-competition-3cd04f1cf939-d",
+      "event-competition-de2f9b13f5a2-a",
+      "event-competition-de2f9b13f5a2-b",
+      "event-competition-f211f9ea6f52-a",
+      "event-competition-f211f9ea6f52-b",
+      "event-queue-perf-1791097912-00",
+      "event-queue-perf-1791097923-01",
+      "event-queue-perf-1791097932-02",
+      "event-queue-perf-1791097942-03",
+      "event-queue-perf-1791097952-04",
+      "event-queue-perf-1791097963-05",
+      "event-queue-perf-1791097972-06",
+      "event-queue-perf-1791097983-07",
+      "event-queue-perf-1791097997-08",
+      "event-queue-perf-1791098008-09",
+      "event-queue-perf-1791098018-10",
+      "event-queue-perf-1791098027-11",
+      "main"
+    ]
+  },
+  {
+    "surface": "commit-refresh",
+    "url": "http://127.0.0.1:18127/alice/railway/commit/3851c3945342bad29b10a44447cfb41d55614eb9",
+    "detail": "COMMIT\n\n3851c3945342\n\nintegration queue wk_8de714bbc0115895\n\nAn ordinary Git commit."
+  },
+  {
+    "surface": "history-back-forward",
+    "passed": true
+  },
+  {
+    "surface": "tags",
+    "url": "http://127.0.0.1:18127/alice/railway/tags",
+    "text": "Tags\nBack to code\nc46-actions-1791103407\nc46-first-1791106578\nc46-proof-20261004\nc46-sy-proof-20261004"
+  },
+  {
+    "surface": "repository-work",
+    "url": "http://127.0.0.1:18127/alice/railway/work",
+    "text": "Handle disconnected stations\nbug · opened by alice · alice/railway\nopen\nImprove route validation\nfeature · opened by alice · alice/railway\nopen\nDocument the first contribution\ntask · opened by alice · alice/railway\nopen"
+  },
+  {
+    "surface": "console",
+    "entries": []
+  }
+]

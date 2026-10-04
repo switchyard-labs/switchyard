@@ -1,0 +1,90 @@
+[
+  {
+    "surface": "brochure/home",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/home",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/demo",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/demo",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/status",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/status",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/architecture",
+    "width": 1280,
+    "actualWidth": 1280,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  },
+  {
+    "surface": "brochure/architecture",
+    "width": 390,
+    "actualWidth": 390,
+    "checks": [
+      "heading",
+      "overflow",
+      "images",
+      "Nift expansion"
+    ]
+  }
+]

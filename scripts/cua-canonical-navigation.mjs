@@ -7,7 +7,9 @@ async function ready(tab, locator) {
     catch (error) {
       const snapshot = await tab.playwright.domSnapshot();
       if (await locator.isVisible()) return;
-      if (!snapshot.includes('Loading') || attempt === 9) throw error;
+      // Content may still be fetching after the metadata spinner disappears.
+      // Stop on a visible error; otherwise allow the bounded readiness retries.
+      if (snapshot.includes('- alert:') || attempt === 9) throw error;
     }
   }
 }
@@ -35,7 +37,7 @@ export async function verifyCanonicalNavigation(tab, origin, owner, repo) {
   await tab.goto(base + '/tags');
   await ready(tab, tab.playwright.getByText('Back to code', {exact: true}));
   results.push({surface: 'tags', url: await tab.url(), text: await tab.playwright.locator('#repository-directory').innerText()});
-  await tab.playwright.getByRole('link', {name: 'Work', exact: true}).nth(1).click();
+  await tab.playwright.getByRole('navigation', {name: 'Repository', exact: true}).getByRole('link', {name: 'Work', exact: true}).click();
   await ready(tab, tab.playwright.locator('#work-count').getByText(/items?/));
   results.push({surface: 'repository-work', url: await tab.url(), text: await tab.playwright.locator('#work-list').innerText()});
   results.push({surface: 'console', entries: await tab.dev.logs({levels: ['error', 'warn'], limit: 50})});

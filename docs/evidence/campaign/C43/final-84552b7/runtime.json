@@ -1,0 +1,15 @@
+{
+  "pid": 449328,
+  "previous_group_exited": true,
+  "runtime": "/tmp/switchyard-c43-final-84552b7",
+  "binary_sha256": "fb24de16dddff7941e031b15e4e5afeb9399f11e7f0a023cab28db021552b790",
+  "frontend_files": false,
+  "tools_path": "/tmp/switchyard-c43-system-tools",
+  "workflow_runner": "off",
+  "external_dependencies": [
+    "Git",
+    "Trestle",
+    "Cloudflare"
+  ],
+  "final_group_drained": true
+}

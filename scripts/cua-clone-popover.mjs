@@ -19,7 +19,8 @@ export async function verifyClonePopover(tab, viewport) {
     if(await tab.playwright.evaluate(()=>document.getElementById('clone-dialog').open||document.activeElement.id!=='clone-toggle'))throw Error('Escape focus return failed');
     await trigger.click();await trigger.click();
     if(await tab.playwright.evaluate(()=>document.getElementById('clone-dialog').open))throw Error('Trigger toggle failed');
-    await trigger.click();await tab.playwright.locator('#repo-name').click();
+    // Use a non-navigating outside target so focus-return is observable.
+    await trigger.click();await tab.playwright.locator('#repo-visibility').click();
     if(await tab.playwright.evaluate(()=>document.getElementById('clone-dialog').open||document.activeElement.id!=='clone-toggle'))throw Error('Outside dismissal failed');
     results.push({...position,checks:['anchored','viewport bounds','keyboard mode switch','Escape','focus return','trigger toggle','outside dismissal']});
   }
