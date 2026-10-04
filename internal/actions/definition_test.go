@@ -7,6 +7,23 @@ import (
 
 const sampleDefinition = `const timeout=30000; export default {refs:['refs/heads/main'],jobs:[{id:'test',steps:[{id:'unit',command:'npm test',timeout_ms:timeout}]}]};`
 
+func TestReleaseDefinitionBindsExplicitTagsAndSafeUniqueOutputs(t *testing.T) {
+	source := `export default {refs:['refs/tags/v1'],release:{publish:true,prerelease:false},jobs:[{id:'build',assets:[{name:'program.zip',path:'dist/program.zip'}],steps:[{id:'build',command:'make',timeout_ms:30000}]}]};`
+	d, err := CompileDefinition(source)
+	if err != nil || d.Release == nil || !d.Release.Publish || d.Jobs[0].Assets[0].Path != "dist/program.zip" {
+		t.Fatalf("release configuration: %v", err)
+	}
+	for _, change := range [][2]string{{"refs/tags/v1", "refs/heads/main"}, {"dist/program.zip", "../secret"}, {"dist/program.zip", ".git/config"}, {"program.zip',path", "../program.zip',path"}} {
+		if _, err := CompileDefinition(strings.Replace(source, change[0], change[1], 1)); err == nil {
+			t.Fatal("unsafe release configuration accepted")
+		}
+	}
+	d.Jobs = append(d.Jobs, Job{ID: "other", Steps: d.Jobs[0].Steps, Assets: d.Jobs[0].Assets})
+	if d.Validate() == nil {
+		t.Fatal("duplicate asset name across jobs accepted")
+	}
+}
+
 func TestCompileDefinitionBindsSource(t *testing.T) {
 	a, err := CompileDefinition(sampleDefinition)
 	if err != nil {

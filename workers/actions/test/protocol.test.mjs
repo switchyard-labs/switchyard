@@ -1,6 +1,13 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {validateRun,signature,equalSignature} from '../src/protocol.mjs';
 const run=()=>({provider:'cloudflare-artifacts',providerData:{namespace:'test'},owner:'test',repo:'repo',sha:'a'.repeat(40),ref:'refs/heads/main',run_id:'run-1',definition_revision:'b'.repeat(64),jobs:[{id:'test',steps:[{id:'unit',command:'node --test',timeout_ms:1000}]}]});
+test('release outputs require tag identity and safe globally unique names',()=>{
+ const value=run();value.ref='refs/tags/v1';value.release={publish:true,prerelease:false};value.jobs[0].assets=[{name:'program.zip',path:'dist/program.zip'}];
+ assert.equal(validateRun(value,'test',['repo']),value);
+ assert.throws(()=>validateRun({...value,ref:'refs/heads/main'},'test',['repo']));
+ for(const path of ['../secret','/absolute','.git/config','a//b','a/./b','a\\b'])assert.throws(()=>validateRun({...value,jobs:[{...value.jobs[0],assets:[{name:'program.zip',path}]}]},'test',['repo']));
+ assert.throws(()=>validateRun({...value,jobs:[value.jobs[0],{...value.jobs[0],id:'other'}]},'test',['repo']));
+});
 test('bind repository, namespace, immutable SHA and definition',()=>{assert.equal(validateRun(run(),'test',['repo']).sha,'a'.repeat(40));for(const patch of [{sha:'main'},{repo:'private'},{owner:'other'},{definition_revision:'v1'},{ref:'refs/heads/a/../main'}])assert.throws(()=>validateRun({...run(),...patch},'test',['repo']));});
 test('reject excessive or malformed commands and duplicate steps',()=>{let value=run();value.jobs[0].steps[0].timeout_ms=120001;assert.throws(()=>validateRun(value,'test',['repo']));value=run();value.jobs[0].steps.push({...value.jobs[0].steps[0]});assert.throws(()=>validateRun(value,'test',['repo']));});
 test('HMAC binds body, method, query and timestamp',async()=>{const first=await signature('secret','1234567890','POST','/dispatch','body');assert.ok(equalSignature(first,first));for(const args of [['secret','1234567891','POST','/dispatch','body'],['secret','1234567890','GET','/dispatch','body'],['secret','1234567890','POST','/dispatch?x=1','body'],['secret','1234567890','POST','/dispatch','other']])assert.ok(!equalSignature(first,await signature(...args)));assert.ok(!equalSignature('',first));});

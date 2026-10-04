@@ -15,11 +15,20 @@ type StepState struct {
 	Truncated  bool   `json:"truncated"`
 }
 type JobState struct {
-	ID         string      `json:"id"`
-	ReusedFrom string      `json:"reused_from,omitempty"`
-	Name       string      `json:"name"`
-	Status     string      `json:"status"`
-	Steps      []StepState `json:"steps"`
+	ID         string              `json:"id"`
+	ReusedFrom string              `json:"reused_from,omitempty"`
+	Name       string              `json:"name"`
+	Status     string              `json:"status"`
+	Steps      []StepState         `json:"steps"`
+	Assets     []BuildAssetReceipt `json:"assets,omitempty"`
+}
+type BuildAssetReceipt struct {
+	Name      string `json:"name"`
+	Size      int64  `json:"size"`
+	SHA256    string `json:"sha256"`
+	SourceSHA string `json:"source_sha"`
+	Key       string `json:"key"`
+	JobID     string `json:"job_id"`
 }
 type Manifest struct {
 	Run        Run               `json:"run"`

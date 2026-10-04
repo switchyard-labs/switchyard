@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 
 	"switchyard/internal/actions"
@@ -124,7 +125,7 @@ func (a *App) handleActionDispatch(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": "definition_unavailable"})
 		return
 	}
-	run := actions.Run{Provider: "cloudflare-artifacts", ProviderData: map[string]string{"namespace": a.Artifacts.Namespace}, Owner: a.Artifacts.Namespace, Repo: repo, SHA: input.SHA, Ref: input.Ref, Trigger: "manual", Actor: a.currentUser(r), DefinitionRevision: definition.Revision, Jobs: definition.Jobs}
+	run := actions.Run{Provider: "cloudflare-artifacts", ProviderData: map[string]string{"namespace": a.Artifacts.Namespace}, Owner: a.Artifacts.Namespace, Repo: repo, SHA: input.SHA, Ref: input.Ref, Trigger: "manual", Actor: a.currentUser(r), DefinitionRevision: definition.Revision, Jobs: definition.Jobs, Release: definition.Release}
 	parentID := r.PathValue("id")
 	if parentID != "" {
 		_, _, parent, err := a.Trestle.FindRecord("action_runs", filterEq("id", parentID))
@@ -188,6 +189,10 @@ func (a *App) handleActionDispatch(w http.ResponseWriter, r *http.Request) {
 
 	if !eventSHA.MatchString(run.SHA) || !validRef || strings.Contains(run.Ref, "..") {
 		writeJSON(w, 422, map[string]any{"error": "invalid_source_identity"})
+		return
+	}
+	if run.Release != nil && (!strings.HasPrefix(run.Ref, "refs/tags/") || !slices.Contains(definition.Refs, run.Ref)) {
+		writeJSON(w, 422, map[string]any{"error": "release_requires_approved_tag"})
 		return
 	}
 	run.ID = fmt.Sprintf("manual-%x", sha256.Sum256([]byte(repo+"\x00"+run.Actor+"\x00"+input.RequestID)))

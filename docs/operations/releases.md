@@ -98,3 +98,46 @@ has local browser publication/download proof, and `sy release` has real API/R2
 proof. Recovery requires the next application deployment. Actions tag automation
 and final live browser/CLI certification remain unfinished gates; consult the
 campaign ledger for the deployed commit and evidence.
+
+## Actions release automation candidate
+
+The local candidate accepts an explicitly approved tag-only definition:
+
+```js
+export default {
+  refs: ['refs/tags/v1.0.0'],
+  release: {publish: true, prerelease: false},
+  jobs: [{
+    id: 'build',
+    steps: [{id: 'package', command: 'make package', timeout_ms: 120000}],
+    assets: [{name: 'program.zip', path: 'dist/program.zip'}]
+  }]
+};
+```
+
+Approval records the policy and output paths with the definition revision.
+Names are unique across jobs, at most 180 ASCII characters; paths must be safe
+relative paths outside `.git`. There are at most 50 outputs of 64 MiB each.
+The trusted uploader runs after the last command of each build job succeeds.
+Node.js with fetch is required in the build image. It streams opened regular
+files whose descriptor remains within the checkout. The build receives only
+short-lived grants scoped to one run/job/output/SHA, never the control secret
+or R2 credentials. Upload grants are redacted from captured logs.
+
+Payloads first land under the existing R2 bucket's `build-assets/` prefix.
+Successful receipts are read from R2 metadata and matched to the approved
+configuration and exact source SHA. Reconciliation owns a deterministic
+automation release ID; it refuses to adopt a manual draft. It reserves all
+output names with release CAS, streams verified outputs into immutable release
+objects, and publishes only after every configured asset is ready and the tag
+still points at the original commit. Copies interrupted after reservation remain
+pending and can be retried. Failed or cancelled builds retain a draft without
+attaching failed output. Current maintainer authority is required during
+reconciliation. Manual releases remain independently available.
+
+This candidate passes Go/Worker tests, affected races, vet, typecheck and Worker
+dry-run bundling. Native tag-to-release proof, deployment, and the staging R2
+object cleanup policy remain outstanding. No automated-release deployment is
+claimed by this documentation. Definitions currently require tag-only refs;
+main-branch CI should retain its existing definition until a coherent release
+automation rollout is selected.

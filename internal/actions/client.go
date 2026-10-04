@@ -25,9 +25,18 @@ type Step struct {
 	TimeoutMS int    `json:"timeout_ms"`
 }
 type Job struct {
-	ID    string `json:"id"`
-	Name  string `json:"name,omitempty"`
-	Steps []Step `json:"steps"`
+	ID     string       `json:"id"`
+	Name   string       `json:"name,omitempty"`
+	Steps  []Step       `json:"steps"`
+	Assets []BuildAsset `json:"assets,omitempty"`
+}
+type BuildAsset struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+type ReleasePolicy struct {
+	Publish    bool `json:"publish"`
+	Prerelease bool `json:"prerelease"`
 }
 type Run struct {
 	Provider           string            `json:"provider"`
@@ -44,6 +53,7 @@ type Run struct {
 	Jobs               []Job             `json:"jobs"`
 	RerunOf            string            `json:"rerun_of,omitempty"`
 	SelectedJobs       []string          `json:"selected_jobs,omitempty"`
+	Release            *ReleasePolicy    `json:"release,omitempty"`
 }
 type Client struct {
 	base   string

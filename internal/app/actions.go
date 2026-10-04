@@ -56,6 +56,11 @@ func (a *App) actionRecord(collection, id string, values map[string]any) error {
 	return a.Trestle.PatchRecord(collection, rid, version, patch)
 }
 func (a *App) syncActionSnapshot(snapshot actions.Snapshot) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	return a.syncActionSnapshotContext(ctx, snapshot)
+}
+func (a *App) syncActionSnapshotContext(ctx context.Context, snapshot actions.Snapshot) error {
 	manifest := snapshot.Manifest
 	if manifest == nil {
 		return fmt.Errorf("Actions manifest pending")
@@ -83,7 +88,7 @@ func (a *App) syncActionSnapshot(snapshot actions.Snapshot) error {
 	if err = decodeAction(definition["definition"], &approved); err != nil {
 		return err
 	}
-	if approved.Revision != run.DefinitionRevision || !reflect.DeepEqual(approved.Jobs, run.Jobs) {
+	if approved.Revision != run.DefinitionRevision || !reflect.DeepEqual(approved.Jobs, run.Jobs) || !reflect.DeepEqual(approved.Release, run.Release) {
 		return fmt.Errorf("Actions snapshot definition mismatch")
 	}
 	status := actions.NormalizeStatus(snapshot.ExternalStatus.Status, manifest.Status)
@@ -150,7 +155,10 @@ func (a *App) syncActionSnapshot(snapshot actions.Snapshot) error {
 			return err
 		}
 	}
-	return a.actionRecord("external_executions", run.ID, map[string]any{"id": run.ID, "repo": run.Repo, "run_id": run.ID, "provider": "cloudflare-workflows", "provider_id": run.ID, "state": map[string]any{"status": status}})
+	if err = a.actionRecord("external_executions", run.ID, map[string]any{"id": run.ID, "repo": run.Repo, "run_id": run.ID, "provider": "cloudflare-workflows", "provider_id": run.ID, "state": map[string]any{"status": status}}); err != nil {
+		return err
+	}
+	return a.syncActionRelease(ctx, manifest, strOf(definition["approved_by"]), status)
 }
 func (a *App) reconcileActions(ctx context.Context) error {
 	if a.Actions == nil {
@@ -179,7 +187,7 @@ func (a *App) reconcileActions(ctx context.Context) error {
 			if err = a.Actions.Status(ctx, manifest.Run.ID, &snapshot); err != nil {
 				return err
 			}
-			if err = a.syncActionSnapshot(snapshot); err != nil {
+			if err = a.syncActionSnapshotContext(ctx, snapshot); err != nil {
 				return err
 			}
 		}

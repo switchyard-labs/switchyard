@@ -2,7 +2,9 @@ package actions
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +13,32 @@ import (
 	"strconv"
 	"time"
 )
+
+func (c *Client) GetBuildAsset(ctx context.Context, repo, run, job, name string) (*http.Response, error) {
+	if !assetRepoPattern.MatchString(repo) || !assetRepoPattern.MatchString(run) || !actionID.MatchString(job) || name == "" {
+		return nil, fmt.Errorf("invalid build asset identity")
+	}
+	hash := sha256.Sum256([]byte(name))
+	path := "/build-output/" + repo + "/" + run + "/" + job + "/" + hex.EncodeToString(hash[:])
+	r, err := http.NewRequestWithContext(ctx, "GET", c.base+path, nil)
+	if err != nil {
+		return nil, err
+	}
+	stamp := strconv.FormatInt(time.Now().Unix(), 10)
+	r.Header.Set("X-Switchyard-Time", stamp)
+	r.Header.Set("X-Switchyard-Signature", Signature(c.secret, stamp, "GET", path, nil))
+	client := *c.http
+	client.Timeout = 2 * time.Minute
+	response, err := client.Do(r)
+	if err != nil {
+		return nil, err
+	}
+	if response.StatusCode != 200 {
+		response.Body.Close()
+		return nil, &HTTPError{Status: response.StatusCode}
+	}
+	return response, nil
+}
 
 const ReleaseAssetLimit int64 = 64 << 20
 

@@ -17,10 +17,11 @@ import (
 // Definition is an approved, immutable compilation of JavaScript configuration.
 // JavaScript runs only during owner approval, never in the privileged Worker.
 type Definition struct {
-	Source   string   `json:"source"`
-	Revision string   `json:"revision"`
-	Refs     []string `json:"refs"`
-	Jobs     []Job    `json:"jobs"`
+	Source   string         `json:"source"`
+	Revision string         `json:"revision"`
+	Refs     []string       `json:"refs"`
+	Jobs     []Job          `json:"jobs"`
+	Release  *ReleasePolicy `json:"release,omitempty"`
 }
 
 var actionID = regexp.MustCompile(`^[A-Za-z0-9_-]{1,40}$`)
@@ -53,8 +54,9 @@ func CompileDefinition(source string) (Definition, error) {
 		return result, fmt.Errorf("Actions definition exceeds 128 KiB")
 	}
 	var exported struct {
-		Refs []string `json:"refs"`
-		Jobs []Job    `json:"jobs"`
+		Refs    []string       `json:"refs"`
+		Jobs    []Job          `json:"jobs"`
+		Release *ReleasePolicy `json:"release,omitempty"`
 	}
 	decoder := json.NewDecoder(strings.NewReader(body))
 	decoder.DisallowUnknownFields()
@@ -63,6 +65,7 @@ func CompileDefinition(source string) (Definition, error) {
 	}
 	result.Refs = exported.Refs
 	result.Jobs = exported.Jobs
+	result.Release = exported.Release
 	if err = result.Validate(); err != nil {
 		return result, err
 	}
@@ -83,11 +86,23 @@ func (d Definition) Validate() error {
 	labels := map[string]bool{}
 	jobs := map[string]bool{}
 	count := 0
+	assetNames := map[string]bool{}
 	for _, job := range d.Jobs {
 		if !actionID.MatchString(job.ID) || jobs[job.ID] || len(job.Steps) == 0 || len(job.Steps) > 16 {
 			return fmt.Errorf("invalid or duplicate Actions job")
 		}
 		jobs[job.ID] = true
+		for _, asset := range job.Assets {
+			if d.Release == nil || !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$`).MatchString(asset.Name) || assetNames[asset.Name] || asset.Path == "" || len(asset.Path) > 500 || strings.HasPrefix(asset.Path, "/") || strings.Contains(asset.Path, "\\") {
+				return fmt.Errorf("invalid or duplicate Actions release asset")
+			}
+			for _, part := range strings.Split(asset.Path, "/") {
+				if part == "" || part == "." || part == ".." || !regexp.MustCompile(`^[A-Za-z0-9._-]+$`).MatchString(part) || part == ".git" {
+					return fmt.Errorf("unsafe Actions release asset path")
+				}
+			}
+			assetNames[asset.Name] = true
+		}
 		steps := map[string]bool{}
 		for _, step := range job.Steps {
 			count++
@@ -104,6 +119,16 @@ func (d Definition) Validate() error {
 	}
 	if count > 32 {
 		return fmt.Errorf("Actions exceeds 32 steps")
+	}
+	if len(assetNames) > 50 {
+		return fmt.Errorf("Actions exceeds 50 release assets")
+	}
+	if d.Release != nil {
+		for _, ref := range d.Refs {
+			if !strings.HasPrefix(ref, "refs/tags/") {
+				return fmt.Errorf("Actions releases require explicit tag refs")
+			}
+		}
 	}
 	return nil
 }
