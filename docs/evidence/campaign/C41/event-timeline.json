@@ -1,0 +1,65 @@
+{
+  "items": [
+    {
+      "occurred_at": "2026-10-04T06:02:21.493611232Z",
+      "repo": "codex-actions-probe-20261003",
+      "type": "git.ref_changed",
+      "payload": {
+        "ref": "refs/heads/event-competition-de2f9b13f5a2-a",
+        "before": "",
+        "after": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "source": "queue",
+        "seen_at": "2026-10-04T06:02:21.493611232Z"
+      }
+    },
+    {
+      "occurred_at": "2026-10-04T06:02:31.883957187Z",
+      "repo": "codex-actions-probe-20261003",
+      "type": "git.ref_changed",
+      "payload": {
+        "ref": "refs/heads/event-competition-de2f9b13f5a2-b",
+        "before": "",
+        "after": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "source": "queue",
+        "seen_at": "2026-10-04T06:02:31.883957187Z"
+      }
+    },
+    {
+      "occurred_at": "2026-10-04T06:02:59.517243502Z",
+      "repo": "codex-actions-probe-20261003",
+      "type": "git.ref_changed",
+      "payload": {
+        "ref": "refs/heads/event-competition-de2f9b13f5a2-a",
+        "before": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "after": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+        "source": "queue",
+        "seen_at": "2026-10-04T06:02:59.517243502Z"
+      }
+    },
+    {
+      "occurred_at": "2026-10-04T06:03:02.51578146Z",
+      "repo": "codex-actions-probe-20261003",
+      "type": "git.ref_changed",
+      "payload": {
+        "ref": "refs/heads/event-competition-de2f9b13f5a2-b",
+        "before": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "after": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+        "source": "queue",
+        "seen_at": "2026-10-04T06:03:02.51578146Z"
+      }
+    },
+    {
+      "occurred_at": "2026-10-04T06:05:32.743545297Z",
+      "repo": "codex-actions-probe-20261003",
+      "type": "git.ref_changed",
+      "payload": {
+        "ref": "refs/heads/event-competition-de2f9b13f5a2-b",
+        "before": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+        "after": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+        "source": "queue",
+        "seen_at": "2026-10-04T06:05:32.743545297Z"
+      }
+    }
+  ],
+  "scope": "Retained normalized real Git ref observations for the competition branches; Artifacts direct binding/queue event proof is separately C36"
+}

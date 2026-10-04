@@ -522,3 +522,17 @@ download retained separately. Success/failure/manual/rerun/cancel C14, captured
 output/SSE C13, native CI C36/C25 and drain recovery C24 form distinct evidence.
 C37 Worker Builds/Preview remains CONDITIONAL on configured scoped deployment
 setup; generic Actions PASS. Final responsive regression remains C42.
+
+### C41 recorded competition walkthrough and PR UI fix (2026-10-04)
+
+C41 DONE for the maintained script + real clean C25 replay/capture bundle.
+C41/walkthrough.json retains actual reviews (no fabricated findings), the
+text-clean semantic disagreement, repair/re-preview/re-review/native exact-SHA
+CI, both queue publications, completion refs/provenance. Event timeline and
+loaded Work/PR/checks/queue/log screenshots retained with historical limits.
+Provisioning/fresh version-1 repository baseline is an explicit prerequisite;
+scripts do not reset live Git or silently grant provider credentials.
+Capture found/fixed PR Checks omitting native Actions and terminal enqueue
+controls; clean 84552b7 deployed locally and Linode. Full app tests/vet and JS
+syntax checks passed. Exact live binary hash and active Switchyard/Caddy recorded
+in C24/linode-deployment-84552b7.json; backup/rollback retained.

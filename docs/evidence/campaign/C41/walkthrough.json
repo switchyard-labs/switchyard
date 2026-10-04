@@ -1,0 +1,320 @@
+{
+  "work_id": "wk_de7b6ee579db014c",
+  "sequence": [
+    {
+      "stage": "original-actions-settings",
+      "state": "done",
+      "seconds": 0.007,
+      "id": null
+    },
+    {
+      "stage": "approve-actions-before-push",
+      "state": "done",
+      "seconds": 0.697,
+      "id": null
+    },
+    {
+      "stage": "implementation-a",
+      "state": "done",
+      "seconds": 25.63,
+      "id": null
+    },
+    {
+      "stage": "implementation-b",
+      "state": "done",
+      "seconds": 29.295,
+      "id": null
+    },
+    {
+      "stage": "native-ci-a",
+      "state": "done",
+      "seconds": null,
+      "id": "b5bfc1e5-e452-49a1-af80-fcdcaf3ae273"
+    },
+    {
+      "stage": "initial-preview-a",
+      "state": "done",
+      "seconds": 6.757,
+      "id": null
+    },
+    {
+      "stage": "initial-review-a",
+      "state": "done",
+      "seconds": 19.69,
+      "id": null
+    },
+    {
+      "stage": "pr-a",
+      "state": "done",
+      "seconds": 0.509,
+      "id": "wk_6f410d72f9ea9127"
+    },
+    {
+      "stage": "native-ci-b",
+      "state": "done",
+      "seconds": null,
+      "id": "b16ce32b-1bde-401b-9a57-623244843e49"
+    },
+    {
+      "stage": "initial-preview-b",
+      "state": "done",
+      "seconds": 9.804,
+      "id": null
+    },
+    {
+      "stage": "initial-review-b",
+      "state": "done",
+      "seconds": 23.255,
+      "id": null
+    },
+    {
+      "stage": "pr-b",
+      "state": "done",
+      "seconds": 0.379,
+      "id": "wk_8e849a6797c1b619"
+    },
+    {
+      "stage": "lane-a-enqueue",
+      "state": "done",
+      "seconds": 8.778,
+      "id": "iq_f32b5cd36a14484cc063e79f"
+    },
+    {
+      "stage": "lane-a-published",
+      "state": "done",
+      "seconds": null,
+      "id": "iq_f32b5cd36a14484cc063e79f"
+    },
+    {
+      "stage": "semantic-conflict",
+      "state": "done",
+      "seconds": 6.459,
+      "id": null
+    },
+    {
+      "stage": "real-resolver",
+      "state": "done",
+      "seconds": 38.545,
+      "id": null
+    },
+    {
+      "stage": "repair-repreview",
+      "state": "done",
+      "seconds": 6.649,
+      "id": null
+    },
+    {
+      "stage": "repair-rereview",
+      "state": "done",
+      "seconds": 16.964,
+      "id": null
+    },
+    {
+      "stage": "repair-native-ci",
+      "state": "done",
+      "seconds": null,
+      "id": "5f79219d-87a0-4009-b97e-7af5a5b96b00"
+    },
+    {
+      "stage": "lane-b-enqueue",
+      "state": "done",
+      "seconds": 9.999,
+      "id": "iq_7960ea840cf8ef8bb08b4b1d"
+    },
+    {
+      "stage": "lane-b-published",
+      "state": "done",
+      "seconds": null,
+      "id": "iq_7960ea840cf8ef8bb08b4b1d"
+    },
+    {
+      "stage": "final-refs",
+      "state": "done",
+      "seconds": 2.302,
+      "id": null
+    },
+    {
+      "stage": "final-provenance",
+      "state": "done",
+      "seconds": 0.294,
+      "id": null
+    }
+  ],
+  "semantic_conflict": {
+    "attempt_id": "wk_47ae565ab9b10404",
+    "conflict": false,
+    "findings": [
+      {
+        "file": "api-version.json",
+        "message": "semantic conflict: git merge is clean but api-version.json:version (2) != new-consumer.json:requires (1)",
+        "severity": "error"
+      }
+    ],
+    "semantic_conflict": true,
+    "status": "semantic_conflict"
+  },
+  "final_refs_at_proof_completion": {
+    "refs": {
+      "HEAD": "552beee1b6a57feae0f120c063f67360bff90ab8",
+      "refs/heads/event-competition-de2f9b13f5a2-a": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+      "refs/heads/event-competition-de2f9b13f5a2-b": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+      "refs/heads/main": "552beee1b6a57feae0f120c063f67360bff90ab8"
+    }
+  },
+  "provenance_at_proof_completion": {
+    "chain": [
+      {
+        "id": "wk_de7b6ee579db014c",
+        "kind": "work",
+        "owner": "alice",
+        "status": "open",
+        "title": "Competition: two competing implementations"
+      },
+      {
+        "branch": "event-competition-de2f9b13f5a2-a",
+        "id": "wk_10ad029585a18271",
+        "kind": "attempt",
+        "repo": "codex-actions-probe-20261003",
+        "status": "created"
+      },
+      {
+        "at": "2026-10-04T06:02:57Z",
+        "attempt_id": "wk_10ad029585a18271",
+        "kind": "run",
+        "message": "agent run (opencode-go/gpt-5.6-luna)",
+        "new_sha": "b11b67e73fbc11a30289587f8adf0b9d560da596"
+      },
+      {
+        "base": "main",
+        "branch": "event-competition-de2f9b13f5a2-a",
+        "check_status": "pass",
+        "id": "wk_6f410d72f9ea9127",
+        "kind": "pr",
+        "repo": "codex-actions-probe-20261003",
+        "status": "integrated"
+      },
+      {
+        "branch": "event-competition-de2f9b13f5a2-b",
+        "id": "wk_47ae565ab9b10404",
+        "kind": "attempt",
+        "repo": "codex-actions-probe-20261003",
+        "status": "repair_proposed"
+      },
+      {
+        "at": "2026-10-04T06:03:01Z",
+        "attempt_id": "wk_47ae565ab9b10404",
+        "kind": "run",
+        "message": "agent run (opencode-go/gpt-5.6-luna)",
+        "new_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e"
+      },
+      {
+        "base": "main",
+        "branch": "event-competition-de2f9b13f5a2-b",
+        "check_status": "pass",
+        "id": "wk_8e849a6797c1b619",
+        "kind": "pr",
+        "repo": "codex-actions-probe-20261003",
+        "status": "integrated"
+      },
+      {
+        "branch": "event-competition-de2f9b13f5a2-b",
+        "kind": "ref_update",
+        "new_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "old_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "provenance": "user:alice",
+        "repo": "codex-actions-probe-20261003"
+      },
+      {
+        "branch": "event-competition-de2f9b13f5a2-b",
+        "kind": "ref_update",
+        "new_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+        "old_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "provenance": "user:alice",
+        "repo": "codex-actions-probe-20261003"
+      },
+      {
+        "branch": "event-competition-de2f9b13f5a2-a",
+        "kind": "ref_update",
+        "new_sha": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+        "old_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "provenance": "user:alice",
+        "repo": "codex-actions-probe-20261003"
+      },
+      {
+        "branch": "event-competition-de2f9b13f5a2-b",
+        "kind": "ref_update",
+        "new_sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+        "old_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+        "provenance": "conflict-resolver:alice:wk_47ae565ab9b10404",
+        "repo": "codex-actions-probe-20261003"
+      },
+      {
+        "branch": "event-competition-de2f9b13f5a2-a",
+        "kind": "ref_update",
+        "new_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "old_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+        "provenance": "user:alice",
+        "repo": "codex-actions-probe-20261003"
+      }
+    ],
+    "work_id": "wk_de7b6ee579db014c"
+  },
+  "reviews": {
+    "initial-preview-a": {
+      "attempt_id": "wk_10ad029585a18271",
+      "conflict": false,
+      "conflicts": [],
+      "semantic_conflict": false,
+      "status": "ok"
+    },
+    "initial-review-a": {
+      "attempt_id": "wk_10ad029585a18271",
+      "execution": "exe_8643213d",
+      "findings": [
+        {
+          "file": "api-version.json",
+          "message": "api-version.json is valid JSON with version=2 and requires=2.",
+          "severity": "info"
+        },
+        {
+          "file": "switchyard.contract.json",
+          "message": "switchyard.contract.json is valid JSON.",
+          "severity": "info"
+        },
+        {
+          "file": "switchyard.contract.json",
+          "message": "Contract rule field_equals(api-version.json:version, api-version.json:requires) is satisfied: 2 == 2.",
+          "severity": "info"
+        }
+      ],
+      "reviewed_by": "alice"
+    },
+    "initial-preview-b": {
+      "attempt_id": "wk_47ae565ab9b10404",
+      "conflict": false,
+      "conflicts": [],
+      "semantic_conflict": false,
+      "status": "ok"
+    },
+    "initial-review-b": {
+      "attempt_id": "wk_47ae565ab9b10404",
+      "execution": "exe_d05f0b6a",
+      "findings": [],
+      "reviewed_by": "alice"
+    },
+    "repair-repreview": {
+      "attempt_id": "wk_47ae565ab9b10404",
+      "conflict": false,
+      "conflicts": [],
+      "semantic_conflict": false,
+      "status": "ok"
+    },
+    "repair-rereview": {
+      "attempt_id": "wk_47ae565ab9b10404",
+      "execution": "exe_513d57f9",
+      "findings": [],
+      "reviewed_by": "alice"
+    }
+  },
+  "scope": "Real local isolated Agents and coordinator, disposable Artifacts repository, native Cloudflare CI. Historical completion refs retained; later disposable certifications advanced main."
+}
