@@ -141,3 +141,27 @@ object cleanup policy remain outstanding. No automated-release deployment is
 claimed by this documentation. Definitions currently require tag-only refs;
 main-branch CI should retain its existing definition until a coherent release
 automation rollout is selected.
+
+### Native CI sandbox recovery (4 October 2026)
+
+The Actions-output candidate `25361e0` is deployed to the existing disposable
+Actions Worker and isolated local app, but not Linode. Its real tag build failed
+before output upload with `RPC session was shut down by disposing the main stub`.
+The associated release stayed a draft with no assets, as required. The container
+API showed one late-started runner still occupying the existing one-instance cap.
+
+A version- and source-hash-pinned compatibility patch guards the Sandbox 0.12.1
+`onStop` disconnect when RPC has no WebSocket connection. This matches the symptom
+reported in https://github.com/cloudflare/sandbox-sdk/issues/928; the report is a
+hypothesis, not proof of our root cause. All other SDK cleanup remains intact.
+Installation/build fails closed on dependency drift; remove the patch after a
+reviewed upstream fix. Deployments must run the postinstall/prebuild patch.
+
+Signed POST `/sandbox-recovery` accepts an operator-selected instance name/id,
+failed or cancelled run and `inspect`/`destroy`. It checks the allowlisted repo,
+terminal Workflow, matching step label and exact namespace-derived instance ID
+before any destroy call. Inspect never starts or destroys a runner. This is an
+operator recovery action: step-label matching is not a persisted ownership receipt,
+so independently confirm the sole orphan in the container API before destruction.
+No application deletion, instance-limit increase or new paid allocation is needed.
+The real recovery and successful native release proof remain unverified.

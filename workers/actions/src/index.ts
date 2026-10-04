@@ -6,6 +6,7 @@ import { releaseAssetRequest } from './release-assets.mjs';
 import { inspectArtifactSource } from './artifacts-source.mjs';
 import {buildAssetRequest,issueBuildAssetGrant,buildAssetKey} from './build-asset-grants.mjs';
 import {buildExportCommand} from './build-export.mjs';
+import {recoverSandbox} from './sandbox-recovery.mjs';
 export { CiSandbox };
 type Step = {id:string; name?:string; command:string; timeout_ms:number};
 type Run = CiParams<CloudflareArtifacts> & {run_id:string; definition_revision:string; jobs:{id:string; name?:string; steps:Step[];assets?:{name:string;path:string}[]}[];rerun_of?:string;selected_jobs?:string[];release?:{publish:boolean;prerelease:boolean}};
@@ -103,6 +104,10 @@ export default {
   const timestamp=request.headers.get('X-Switchyard-Time')||'',given=request.headers.get('X-Switchyard-Signature')||'';
   if(!env.CONTROL_SECRET||!/^\d{10}$/.test(timestamp)||Math.abs(Date.now()/1000-Number(timestamp))>300||!equalSignature(given,await signature(env.CONTROL_SECRET,timestamp,request.method,url.pathname+url.search,body)))return json({error:'unauthorized'},401);
   try {
+   if(url.pathname==='/sandbox-recovery'&&request.method==='POST'){
+    const result=await recoverSandbox(JSON.parse(body),env,async(id:string)=>{const object=await env.BACKUP_BUCKET.get(key(id));return object?await object.json():null;});
+    return json(result,result.status);
+   }
    const sourceMatch=url.pathname.match(/^\/source\/([a-zA-Z0-9_-]{1,90})\/([0-9a-f]{40})$/);
    const outputMatch=url.pathname.match(/^\/build-output\/([A-Za-z0-9_-]{1,90})\/([A-Za-z0-9_-]{1,90})\/([A-Za-z0-9_-]{1,40})\/([a-f0-9]{64})$/);
    if(outputMatch&&request.method==='GET'){

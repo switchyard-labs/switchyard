@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {recoverSandbox} from '../src/sandbox-recovery.mjs';
+const id='a'.repeat(64),input={operation:'destroy',id,name:'verify-unit-a85dead0-46f4-481b-857d-bfcbbc315415',run:'failed-run'};
+function fixture(){let destroyed=0;return {env:{ALLOWED_REPOS:'fixture',CI_WORKFLOW:{get:async()=>({status:async()=>({status:'errored'})})},SANDBOX:{idFromName:()=>({toString:()=>id}),get:()=>({destroy:async()=>{destroyed++}})}},manifest:{status:'failed',run:{repo:'fixture'},jobs:[{id:'verify',steps:[{id:'unit'}]}]},count:()=>destroyed};}
+test('recovery verifies terminal workflow, runner label and exact namespace identity',async()=>{const f=fixture();assert.equal((await recoverSandbox(input,f.env,async()=>f.manifest)).status,200);assert.equal(f.count(),1);});
+test('inspect never destroys; mismatched, live or unauthorized recovery is rejected',async()=>{for(const change of [{operation:'inspect'},{id:'b'.repeat(64)},{name:'other-unit-a85dead0-46f4-481b-857d-bfcbbc315415'}]){const f=fixture();await recoverSandbox({...input,...change},f.env,async()=>f.manifest);assert.equal(f.count(),0);}for(const change of [{status:'running'},{run:{repo:'private'}}]){const f=fixture();assert.equal((await recoverSandbox(input,f.env,async()=>({...f.manifest,...change}))).status,409);assert.equal(f.count(),0);}});
