@@ -452,3 +452,11 @@ integrations completed. Median Git revalidation 8.152 s, publication 4.018 s,
 semantic validation 0.157 ms. C23/queue-semantic-timing-12.json records all samples,
 p95/min/max and limits. This supports separating remote Git/publication cost from
 the tiny semantic computation; it is not a large-repository or user-network claim.
+
+Clean app `c8f98d6` is now deployed on Linode (2026-10-04T09:52:51Z build).
+Full Go tests/vet and affected Actions/app races passed. Private integrity-checked
+backup, migration, version, Switchyard/Caddy active and canonical anonymous
+Releases browser smoke passed. Evidence: C46/linode-deployment-c8f98d6.json and
+C46/linode-public-releases-c8f98d6.png. No Linode Agent load. A real local review
+certified the new immutable context snapshot: C25/live-context-snapshot-review.json.
+C24 operations and final browser/runtime/CLI/demo/brochure gates remain open.

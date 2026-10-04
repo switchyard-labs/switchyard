@@ -1,0 +1,14 @@
+{
+  "commit": "c8f98d627dfb30d57856bb94e2c60e64624928c8",
+  "built_at": "2026-10-04T09:52:51Z",
+  "binary_sha256": "dbda9685737428b7bee2ec4e2fac56837eab7df01d23028b639e200fb319d3f3",
+  "backup": "/opt/cp0/switchyard-backup-20261004-c8f98d6",
+  "sqlite_integrity": "ok",
+  "schema_migration": "applied",
+  "switchyard": "active",
+  "caddy": "active",
+  "http_readiness": 200,
+  "browser": "anonymous canonical Releases fully loaded",
+  "rollback": "prepared with exact writer identity, private checksum-verified artifacts; failure injection not claimed",
+  "agent_load": "none on Linode"
+}

@@ -29,3 +29,12 @@ execution on storage errors. The regression test changes the Work association
 during execution and verifies the original Work and both PR identifiers remain
 in persisted metadata. Full Go tests, vet and the affected race test pass.
 This source change awaits the next coherent deployment and real-run proof.
+
+The immutable Work/Attempt/PR context snapshot is now verified by one real local
+review on the Actions-release candidate. `live-context-snapshot-review.json`
+records execution exe_414e1480, Work wk_de7b6ee579db014c, one linked PR, role,
+provider/model, principal, credential profile, source SHA, sandbox limits and
+resource/timing evidence. No findings and no Linode Agent. The complete earlier
+multi-role flow remains the source of coding/conflict/repair/queue evidence;
+this follow-up certifies the additional context recording without claiming the
+older executions had fields that were added later.

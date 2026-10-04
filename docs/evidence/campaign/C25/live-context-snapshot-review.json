@@ -1,0 +1,63 @@
+{
+  "result": "PASS",
+  "scope": "one real local review; no Linode Agent",
+  "source_commit": "25361e0",
+  "execution": {
+    "adapter": "opencode-go/deepseek-v4-flash",
+    "attempt_id": "wk_47ae565ab9b10404",
+    "finished_at": "2026-10-04T10:06:07Z",
+    "id": "exe_414e1480",
+    "metadata": {
+      "attempt_id": "wk_47ae565ab9b10404",
+      "branch": "event-competition-de2f9b13f5a2-b",
+      "cpu_time_ns": 7902247000,
+      "credential_profile": "cred_6f6bdfb415bb731d221b6533",
+      "duration_ns": 10063710932,
+      "exit_code": 0,
+      "failure_code": "",
+      "file": "REVIEW.json",
+      "model": "deepseek-v4-flash",
+      "output_truncated": false,
+      "pr_ids": [
+        "wk_8e849a6797c1b619"
+      ],
+      "principal": "alice",
+      "provider": "opencode-go",
+      "resource_usage": {
+        "accounting": "sampled cgroup v2; last sample may precede exit",
+        "cpu.max": "200000 100000",
+        "cpu.stat": "usage_usec 7902247\nuser_usec 6976603\nsystem_usec 925644\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 98\nnr_throttled 7\nthrottled_usec 859085\nnr_bursts 0\nburst_usec 0",
+        "memory.current": "126484480",
+        "memory.current.sampled_peak": "664465408",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1073741824",
+        "memory.peak": "668913664",
+        "memory.swap.max": "0",
+        "pids.current": "16",
+        "pids.current.sampled_peak": "44",
+        "pids.events": "max 0",
+        "pids.max": "128",
+        "pids.peak": "47"
+      },
+      "role": "reviewer",
+      "sandbox": true,
+      "source_sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+      "status": "succeeded",
+      "timings_ns": {
+        "adapter_total_ns": 9970308708,
+        "model_execution_ns": 9968858579,
+        "provider_http_complete_ns": 9495072486,
+        "provider_http_headers_ns": 5781783804,
+        "provider_http_requests": 5,
+        "queue_wait_ns": 1605,
+        "runner_bootstrap_ns": 1204896,
+        "workspace_result_read_ns": 58979
+      },
+      "work_id": "wk_de7b6ee579db014c"
+    },
+    "role": "reviewer",
+    "started_at": "2026-10-04T10:05:57Z",
+    "status": "succeeded"
+  },
+  "finding_count": 0
+}
