@@ -1,0 +1,28 @@
+abi <abi/4.0>,
+include <tunables/global>
+
+# Root-owned 0750 copy, executable only by the dedicated runner group.
+# Namespace setup has capabilities; executed model processes do not.
+profile switchyard-bwrap /usr/local/libexec/switchyard-bwrap flags=(attach_disconnected,mediate_deleted) {
+  capability,
+  /{**,} rwlkm,
+  network,
+  unix,
+  ptrace,
+  signal,
+  mount,
+  umount,
+  pivot_root,
+  userns,
+  /** pix -> &switchyard-bwrap//&switchyard-unpriv,
+}
+profile switchyard-unpriv flags=(attach_disconnected,mediate_deleted) {
+  /{**,} rwlkm,
+  network,
+  unix,
+  ptrace,
+  signal,
+  userns,
+  /** pix -> &switchyard-unpriv,
+  audit deny capability,
+}

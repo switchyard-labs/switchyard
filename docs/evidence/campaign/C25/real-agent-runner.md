@@ -49,3 +49,17 @@ Read-only Linode measurements: 961 MiB physical RAM, 605 MiB available, one CPU,
 **Linode adequacy: INSUFFICIENT EVIDENCE.** The observed two-Agent workload exceeds this host's physical RAM; even one observed coding task requires careful reservation alongside the control plane. A lower-memory local test and a dedicated non-root execution boundary are needed before any bounded Linode certification. No resize or production concurrency change has been made. Separate control-plane and worker budgets.
 
 C25 remains PARTIAL: complete real review/conflict/queue/Actions workflow, production isolation, safe Linode execution, first-provider-request instrumentation, and final capacity recommendations are outstanding. Local three-Agent success is not production certification.
+
+## Subsequent certification at 6280c3d
+
+Fifteen additional exact-output coding tasks passed, five each at 768/896/1024 MiB. See budget-summary.json and per-budget immutable-source proofs. No observed memory/PID limit events occurred. Five narrow tasks per cap do not establish reliability for arbitrary repositories/models. 768 MiB has less variance headroom; 1 GiB is the conservative local candidate. The default concurrency remains two until production sizing is certified; the local envelope now includes an exact-output four-Agent PASS at 1 GiB per Agent, 40.061 seconds total and 2.893 GiB sampled combined memory. This does not erase prior failed publications/timeouts or establish production capacity.
+
+Stage instrumentation shows material Artifacts/Git preflight/fetch variation independently of model execution. Provider HTTP request timing is not directly observed; complete runtime/model duration is labelled accordingly. Typed failure/API/UI/queue policy details are in stage-instrumentation.md.
+
+Linode preparation has installed bubblewrap and created dedicated switchyard-agent uid 999 with a user service manager; production Switchyard remains root and unchanged. Standalone isolation and guarded single-Agent certification are in progress. No Linode real-Agent capacity verdict yet.
+
+## Linode isolation probes, 2026-10-04
+
+The prepared AppArmor profile was installed only after explicit approval for its broad persistent permissions. The dedicated executable is root-owned 0750 and restricted to the switchyard-agent group. Its model child profile denies capabilities; mount containment remains bubblewrap's responsibility. The global unprivileged-user-namespace restriction remains enabled.
+
+The non-root UID 999 identity probe passed (38 ms, 1.2 MiB peak). A 64 MiB allocation in a 32 MiB zero-swap cgroup was killed by the memory controller (85 ms, 32 MiB peak). A parent with a sleeping child was terminated by the two-second service deadline (2.013 seconds, KillMode=control-group). These certify startup and bounded termination only, not real Agent capacity. No provider credential has been copied to Linode and no real model request has run there yet.

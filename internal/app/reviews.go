@@ -36,9 +36,11 @@ func (a *App) handleReviewAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 	var findings []map[string]any
 	var providerExecution string
+	var reviewExecution *agent.Execution
 	if configured {
 		var ex *agent.Execution
 		findings, ex, err = a.providerReview(ctx, repo, branch, attemptID)
+		reviewExecution = ex
 		if ex != nil {
 			providerExecution = ex.ID
 		}
@@ -46,7 +48,11 @@ func (a *App) handleReviewAttempt(w http.ResponseWriter, r *http.Request) {
 		findings, err = a.deterministicReview(repo, branch, attemptID)
 	}
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		if configured {
+			writeAgentExecutionError(w, reviewExecution, err)
+		} else {
+			writeJSON(w, 502, map[string]any{"error": "review_failed"})
+		}
 		return
 	}
 	for _, f := range findings {

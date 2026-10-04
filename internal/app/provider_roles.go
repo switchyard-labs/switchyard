@@ -27,17 +27,21 @@ func (a *App) requestedProvider(r *http.Request, role string) (context.Context, 
 	}
 	return ctx, s.Provider != "", nil
 }
+
+type agentSourceSHAKey struct{}
+
 func (a *App) providerReview(ctx context.Context, repo, branch, attempt string) ([]map[string]any, *agent.Execution, error) {
-	paths, err := a.changedFiles(repo, branch)
+	head, err := a.repoHead(repo, branch)
+	if err != nil {
+		return nil, nil, err
+	}
+	ctx = context.WithValue(ctx, agentSourceSHAKey{}, head)
+	paths, err := a.changedFiles(repo, head)
 	if err != nil {
 		return nil, nil, err
 	}
 	if len(paths) > 100 {
 		return nil, nil, fmt.Errorf("review exceeds 100 changed files")
-	}
-	head, err := a.repoHead(repo, branch)
-	if err != nil {
-		return nil, nil, err
 	}
 	files := map[string]string{}
 	total := 0
@@ -55,7 +59,7 @@ func (a *App) providerReview(ctx context.Context, repo, branch, attempt string) 
 	input, _ := json.Marshal(files)
 	ex, err := a.runViaSubstrateContext(ctx, "reviewer", attempt, repo, branch, "REVIEW.json", string(input), `Review these files. Return files.REVIEW.json containing a JSON array of objects with severity (info/warning/error), message, file. Do not modify repository files.`)
 	if err != nil {
-		return nil, nil, err
+		return nil, ex, err
 	}
 	var findings []map[string]any
 	if err = json.Unmarshal([]byte(ex.Result["REVIEW.json"]), &findings); err != nil {

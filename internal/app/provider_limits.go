@@ -21,7 +21,7 @@ func providerLimits() (agent.RunnerLimits, error) {
 		}
 		return n, nil
 	}
-	memory, err := read("SWITCHYARD_AGENT_MEMORY_MIB", 1536, 128, 4096)
+	memory, err := read("SWITCHYARD_AGENT_MEMORY_MIB", 1024, 128, 4096)
 	if err != nil {
 		return limits, err
 	}

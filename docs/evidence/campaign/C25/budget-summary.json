@@ -1,0 +1,38 @@
+{
+  "scope": "local coding fixtures; five repetitions per cap; no population p95 claim",
+  "results": [
+    {
+      "budget_mib": 768,
+      "tasks": 5,
+      "verified_successes": 5,
+      "total_seconds_median": 25.525,
+      "total_seconds_min": 23.026,
+      "total_seconds_max": 26.553,
+      "peak_memory_mib_max": 686.0546875,
+      "model_execution_seconds_median": 13.227909019,
+      "publication_seconds_median": 7.993068347
+    },
+    {
+      "budget_mib": 896,
+      "tasks": 5,
+      "verified_successes": 5,
+      "total_seconds_median": 38.518,
+      "total_seconds_min": 22.973,
+      "total_seconds_max": 42.457,
+      "peak_memory_mib_max": 707.640625,
+      "model_execution_seconds_median": 12.062455748,
+      "publication_seconds_median": 10.166825897
+    },
+    {
+      "budget_mib": 1024,
+      "tasks": 5,
+      "verified_successes": 5,
+      "total_seconds_median": 27.248,
+      "total_seconds_min": 19.823,
+      "total_seconds_max": 34.413,
+      "peak_memory_mib_max": 663.66796875,
+      "model_execution_seconds_median": 12.36354808,
+      "publication_seconds_median": 7.920396194
+    }
+  ]
+}
