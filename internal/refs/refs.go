@@ -20,6 +20,15 @@ import (
 	"switchyard/internal/trestle"
 )
 
+type StageError struct {
+	Code      string
+	Err       error
+	TimingsNS map[string]int64
+}
+
+func (e *StageError) Error() string { return e.Code }
+func (e *StageError) Unwrap() error { return e.Err }
+
 type Change struct {
 	Path    string `json:"path"`
 	Content string `json:"content,omitempty"`
@@ -28,10 +37,11 @@ type Change struct {
 }
 
 type Result struct {
-	Status string `json:"status"` // "ok" | "stale"
-	OldSHA string `json:"old_sha"`
-	NewSHA string `json:"new_sha"`
-	Ref    string `json:"ref"`
+	Status    string           `json:"status"` // "ok" | "stale"
+	OldSHA    string           `json:"old_sha"`
+	NewSHA    string           `json:"new_sha"`
+	Ref       string           `json:"ref"`
+	TimingsNS map[string]int64 `json:"timings_ns,omitempty"`
 }
 
 type Service struct {
@@ -129,7 +139,22 @@ func (s *Service) currentSHA(repo, remote, branch string) (string, error) {
 
 // Update applies file changes to the current branch head and CAS-updates the
 // ref via a non-force push. Returns status "ok" or "stale".
-func (s *Service) Update(repo, branch, expected string, changes []Change, message, provenance string) (*Result, error) {
+func (s *Service) Update(repo, branch, expected string, changes []Change, message, provenance string) (result *Result, returnErr error) {
+	timings := map[string]int64{}
+	started := time.Now()
+	defer func() {
+		timings["publication_total_ns"] = int64(time.Since(started))
+		if result != nil {
+			result.TimingsNS = timings
+		}
+		if returnErr != nil {
+			if stage, ok := returnErr.(*StageError); ok {
+				stage.TimingsNS = timings
+			} else {
+				returnErr = &StageError{Code: "publication_failed", Err: returnErr, TimingsNS: timings}
+			}
+		}
+	}()
 	if err := validateBranch(branch); err != nil {
 		return nil, err
 	}
@@ -170,13 +195,16 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 	}
 
 	// build the commit in a disposable scratch clone
-	dir, err := s.buildCommit(repo, remote, branch, current, changes, message)
+	timings["publication_preflight_ns"] = int64(time.Since(started))
+	dir, err := s.buildCommit(repo, remote, branch, current, changes, message, timings)
 	if err != nil {
 		return nil, err
 	}
 	defer os.RemoveAll(dir)
 
+	pushStarted := time.Now()
 	newSHA, pushErr := s.push(repo, remote, branch, dir, expected)
+	timings["git_push_ns"] = int64(time.Since(pushStarted))
 	if pushErr != nil {
 		// a rejected non-force push means the ref moved; if it did, STALE,
 		// otherwise it is a genuine error.
@@ -184,8 +212,9 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 		if e == nil && now != "" && now != expected {
 			return &Result{Status: "stale", OldSHA: expected, NewSHA: now, Ref: "refs/heads/" + branch}, nil
 		}
-		return nil, fmt.Errorf("push failed: %w", pushErr)
+		return nil, &StageError{Code: "git_push_failed", Err: pushErr}
 	}
+	stateStarted := time.Now()
 	// record provenance
 	if s.Trestle != nil {
 		_, _, _ = s.Trestle.CreateRecord("ref_updates", map[string]any{
@@ -193,10 +222,16 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 			"provenance": provenance, "occurred_at": time.Now().UTC().Format(time.RFC3339),
 		}, "refupd-"+repo+"-"+branch+"-"+newSHA[:12])
 	}
+	timings["publication_state_ns"] = int64(time.Since(stateStarted))
 	return &Result{Status: "ok", OldSHA: current, NewSHA: newSHA, Ref: "refs/heads/" + branch}, nil
 }
 
-func (s *Service) buildCommit(repo, remote, branch, expected string, changes []Change, message string) (string, error) {
+func (s *Service) buildCommit(repo, remote, branch, expected string, changes []Change, message string, timingArgs ...map[string]int64) (string, error) {
+	timings := map[string]int64{}
+	if len(timingArgs) > 0 {
+		timings = timingArgs[0]
+	}
+	fetchStarted := time.Now()
 	dir, err := os.MkdirTemp(s.ScratchDir, "scratch-*")
 	if err != nil {
 		return "", err
@@ -224,8 +259,11 @@ func (s *Service) buildCommit(repo, remote, branch, expected string, changes []C
 	cloneArgs := append([]string{"clone", "--quiet"}, args...)
 	cloneArgs = append(cloneArgs, "--branch", cloneBranch, remote, dir)
 	if err := git(dir, "", cloneArgs...); err != nil {
-		return "", fmt.Errorf("scratch clone: %w", err)
+		timings["git_fetch_ns"] = int64(time.Since(fetchStarted))
+		return "", &StageError{Code: "git_fetch_failed", Err: err}
 	}
+	timings["git_fetch_ns"] = int64(time.Since(fetchStarted))
+	commitStarted := time.Now()
 	// `git clone -c http.extraHeader=...` persists the header into the new
 	// repo's config, which would produce duplicate Authorization headers (and
 	// an Artifacts 400) on later ops. Remove it so only the explicitly passed
@@ -269,8 +307,9 @@ func (s *Service) buildCommit(repo, remote, branch, expected string, changes []C
 		return "", err
 	}
 	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "commit", "--quiet", "-m", message); err != nil {
-		return "", fmt.Errorf("commit: %w", err)
+		return "", &StageError{Code: "git_commit_failed", Err: err}
 	}
+	timings["git_commit_ns"] = int64(time.Since(commitStarted))
 	success = true
 	return dir, nil
 }

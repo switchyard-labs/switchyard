@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -114,7 +115,11 @@ func (a *App) handleRunAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 	ex, res, err := a.runAgentStepContext(agentCtx, "implementer", attemptID, repo, branch, file, string(cur), prompt, head, "user:"+user)
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		writeAgentExecutionError(w, ex, err)
+		return
+	}
+	if res.Status == "stale" {
+		writeJSON(w, 409, map[string]any{"error": "publication_stale", "message": "The branch changed before publication. Reload and retry.", "execution": ex.ID, "new_sha": res.NewSHA})
 		return
 	}
 	newContent := ""
@@ -130,7 +135,7 @@ func (a *App) handleRunAttempt(w http.ResponseWriter, r *http.Request) {
 		"attempt_id": attemptID, "repo": repo, "branch": branch, "new_sha": res.NewSHA,
 		"message": "agent run (" + ex.Adapter + ")", "created_at": now,
 	}, "run-"+attemptID+"-"+res.NewSHA[:10])
-	writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "execution": ex.ID, "status": res.Status, "new_sha": res.NewSHA, "adapter": ex.Adapter, "output": ex.Output})
+	writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "execution": ex.ID, "status": res.Status, "new_sha": res.NewSHA, "adapter": ex.Adapter, "output": ex.Output, "timings_ns": ex.TimingsNS, "publication_timings_ns": res.TimingsNS})
 }
 
 func (a *App) attemptByID(r *http.Request, id string) map[string]any {
@@ -208,14 +213,14 @@ func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, re
 		"finished_at": ex.Finished.Format(time.RFC3339),
 	}, "exec-"+ex.ID)
 	if persistErr == nil {
-		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"branch": branch, "file": file, "status": ex.Status, "resource_usage": ex.ResourceUsage, "failure_code": ex.FailureCode, "credential_profile": credentialProfile, "principal": principal, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": task.Provider != "" || ex.Adapter == "cli-sandbox", "provider": task.Provider, "model": task.Model, "role": role}}, "execution-meta-"+ex.ID)
+		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"branch": branch, "file": file, "status": ex.Status, "resource_usage": ex.ResourceUsage, "timings_ns": ex.TimingsNS, "failure_code": ex.FailureCode, "credential_profile": credentialProfile, "principal": principal, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": task.Provider != "" || ex.Adapter == "cli-sandbox", "provider": task.Provider, "model": task.Model, "role": role}}, "execution-meta-"+ex.ID)
 	}
 
 	if persistErr != nil {
 		return nil, fmt.Errorf("execution persistence: %w", persistErr)
 	}
 	if err != nil {
-		return nil, err
+		return ex, err
 	}
 	return ex, nil
 }
@@ -232,7 +237,7 @@ func (a *App) runAgentStep(role, attemptID, repo, branch, file, currentContent, 
 func (a *App) runAgentStepContext(ctx context.Context, role, attemptID, repo, branch, file, currentContent, appendLine, expectedHead, provenance string) (*agent.Execution, *refs.Result, error) {
 	ex, err := a.runViaSubstrateContext(ctx, role, attemptID, repo, branch, file, currentContent, appendLine)
 	if err != nil {
-		return nil, nil, err
+		return ex, nil, err
 	}
 	newContent, ok := ex.Result[file]
 	if !ok {
@@ -241,15 +246,51 @@ func (a *App) runAgentStepContext(ctx context.Context, role, attemptID, repo, br
 	if err := ctx.Err(); err != nil {
 		return nil, nil, err
 	}
+	publicationStarted := time.Now()
 	msg := "attempt " + attemptID + " run (" + ex.Adapter + ") execution " + ex.ID
 	res, err := a.Refs.Update(repo, branch, expectedHead, []refs.Change{{Path: file, Content: newContent}}, msg, provenance)
+	defer func() {
+		if a.Trestle == nil {
+			return
+		}
+		rid, ver, values, findErr := a.Trestle.FindRecord("execution_metadata", `execution_id = "`+ex.ID+`"`)
+		if findErr != nil || rid == "" {
+			return
+		}
+		meta, _ := values["metadata"].(map[string]any)
+		if meta == nil {
+			meta = map[string]any{}
+		}
+		meta["publication_duration_ns"] = int64(time.Since(publicationStarted))
+		if res != nil {
+			meta["publication_timings_ns"] = res.TimingsNS
+			meta["publication_status"] = res.Status
+			meta["published_sha"] = res.NewSHA
+		}
+		if err != nil {
+			meta["publication_failure_code"] = "publication_failed"
+			var stage *refs.StageError
+			if errors.As(err, &stage) {
+				meta["publication_failure_code"] = stage.Code
+				meta["publication_timings_ns"] = stage.TimingsNS
+			}
+		}
+		_ = a.Trestle.PatchRecord("execution_metadata", rid, ver, map[string]any{"metadata": meta})
+	}()
 	if err != nil {
 		// Recover an ambiguous publication only for this exact execution.
 		// A previous execution on the same Attempt is not evidence of success.
-		if head, e2 := a.repoHead(repo, branch); e2 == nil && a.commitHasMessage(repo, branch, head, msg) {
-			return ex, &refs.Result{Status: "ok", NewSHA: head}, nil
+		head, recoveryErr := a.repoHead(repo, branch)
+		if recoveryErr != nil {
+			err = &refs.StageError{Code: "publication_recovery_failed", Err: err}
+			return ex, nil, err
 		}
-		return nil, nil, err
+		if a.commitHasMessage(repo, branch, head, msg) {
+			res = &refs.Result{Status: "ok", NewSHA: head}
+			err = nil
+			return ex, res, nil
+		}
+		return ex, nil, err
 	}
 	return ex, res, nil
 }
@@ -287,4 +328,54 @@ func randHex(n int) string {
 		panic("secure random ID unavailable")
 	}
 	return hex.EncodeToString(bytes)[:n]
+}
+
+func writeAgentExecutionError(w http.ResponseWriter, ex *agent.Execution, err error) {
+	code := "publication_failed"
+	if ex != nil && ex.FailureCode != "" {
+		code = ex.FailureCode
+	}
+	var gitErr *refs.StageError
+	if errors.As(err, &gitErr) {
+		code = gitErr.Code
+	}
+	status := http.StatusBadGateway
+	summary := "The task failed. Inspect its execution details before retrying."
+	switch code {
+	case "provider_auth_failed":
+		status = 424
+		summary = "The provider rejected your credential. Check Agent provider settings."
+	case "provider_rate_limited":
+		status = 429
+		summary = "The provider is rate limiting requests. Wait before retrying."
+	case "provider_timeout", "runner_wall_timeout":
+		status = 504
+		summary = "The task exceeded its time limit. Retry or reduce its scope."
+	case "runner_memory_limit":
+		status = 503
+		summary = "The Agent exceeded its memory budget. Check runner limits."
+	case "runner_pid_limit":
+		status = 503
+		summary = "The Agent exceeded its process budget. Check runner limits."
+	case "runner_queue_full":
+		status = 429
+		summary = "The Agent queue is full. Wait before retrying."
+	case "runner_start_failed":
+		status = 503
+		summary = "The Agent sandbox could not start. Check runner configuration."
+	case "runner_cancelled":
+		status = 409
+		summary = "The Agent task was cancelled."
+	case "git_fetch_failed":
+		summary = "Repository fetch failed. Check repository availability."
+	case "git_commit_failed":
+		summary = "The Agent result could not be committed. Inspect execution details."
+	case "git_push_failed":
+		summary = "The commit could not be published. Check the branch before retrying."
+	}
+	result := map[string]any{"error": code, "message": summary}
+	if ex != nil {
+		result["execution"] = ex.ID
+	}
+	writeJSON(w, status, result)
 }

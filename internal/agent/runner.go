@@ -313,6 +313,14 @@ func (r *CLIRunner) Run(ctx context.Context, ex *Execution, task Task) (runErr e
 	}
 	emit("output", "stdout", ex.Stdout)
 	emit("output", "stderr", ex.Stderr)
+	var report struct {
+		FailureCode string           `json:"failure_code"`
+		TimingsNS   map[string]int64 `json:"timings_ns"`
+	}
+	if !output.truncated && json.Unmarshal([]byte(output.rawStdout()), &report) == nil {
+		ex.TimingsNS = report.TimingsNS
+	}
+
 	switch {
 	case errors.Is(runCtx.Err(), context.DeadlineExceeded):
 		ex.Status = "timed_out"
@@ -325,6 +333,9 @@ func (r *CLIRunner) Run(ctx context.Context, ex *Execution, task Task) (runErr e
 	case err != nil:
 		ex.Status = "failed"
 		ex.FailureCode = resourceFailureCode(ex.ResourceUsage)
+		if ex.FailureCode == "runner_exit_nonzero" && validProviderFailure(report.FailureCode) {
+			ex.FailureCode = report.FailureCode
+		}
 	default:
 		ex.Status = "succeeded"
 	}
@@ -405,3 +416,11 @@ func (o *runnerOutput) text(stream string) string {
 	return text
 }
 func (o *runnerOutput) rawStdout() string { o.mu.Lock(); defer o.mu.Unlock(); return o.stdout.String() }
+
+func validProviderFailure(code string) bool {
+	switch code {
+	case "provider_auth_failed", "provider_rate_limited", "provider_timeout", "provider_request_failed", "provider_invalid_response", "runner_start_failed":
+		return true
+	}
+	return false
+}

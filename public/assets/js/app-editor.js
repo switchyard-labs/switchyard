@@ -35,7 +35,7 @@
       ),
     );
     const b = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(b.error || r.statusText);
+    if (!r.ok) throw new Error(b.message || b.error || r.statusText);
     return b;
   }
   let committedText = "",

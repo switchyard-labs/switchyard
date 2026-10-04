@@ -74,3 +74,15 @@ func TestOpenCodePermissionPatternsCannotExpandTaskPath(t *testing.T) {
 		}
 	}
 }
+
+func TestProviderErrorsUseStructuredStatusWithoutMessages(t *testing.T) {
+	for _, tc := range []struct {
+		status float64
+		code   string
+	}{{401, "provider_auth_failed"}, {403, "provider_auth_failed"}, {429, "provider_rate_limited"}, {408, "provider_timeout"}, {504, "provider_timeout"}, {500, "provider_request_failed"}} {
+		event := map[string]any{"error": map[string]any{"data": map[string]any{"statusCode": tc.status, "message": "secret-token"}}}
+		if got := providerEventFailure(event); got != tc.code {
+			t.Fatalf("status %v: %s", tc.status, got)
+		}
+	}
+}

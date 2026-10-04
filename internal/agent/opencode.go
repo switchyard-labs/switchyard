@@ -28,7 +28,16 @@ func (w *serializedDiagnostics) Write(p []byte) (int, error) {
 
 // RunOpenCodeAdapter is the bounded JSON bridge executed inside CLIRunner's
 // sandbox. It never loads the operator's existing OpenCode login or plugins.
-func RunOpenCodeAdapter(input io.Reader, output, diagnostics io.Writer) error {
+func RunOpenCodeAdapter(input io.Reader, output, diagnostics io.Writer) (returnErr error) {
+	started := time.Now()
+	code := "runner_start_failed"
+	timings := map[string]int64{}
+	defer func() {
+		timings["adapter_total_ns"] = int64(time.Since(started))
+		if returnErr != nil {
+			_ = json.NewEncoder(output).Encode(map[string]any{"failure_code": code, "timings_ns": timings})
+		}
+	}()
 	// Child stderr and parsed stdout events can arrive concurrently.
 	diagnostics = &serializedDiagnostics{w: diagnostics}
 	var task Task
@@ -92,6 +101,9 @@ func RunOpenCodeAdapter(input io.Reader, output, diagnostics io.Writer) error {
 	scanner.Buffer(make([]byte, 4096), 1<<20)
 	events := 0
 	providerError := false
+	code = "provider_request_failed"
+	timings["runner_bootstrap_ns"] = int64(time.Since(started))
+	modelStarted := time.Now()
 	for scanner.Scan() {
 		events++
 		if events > 1000 {
@@ -103,6 +115,7 @@ func RunOpenCodeAdapter(input io.Reader, output, diagnostics io.Writer) error {
 			kind, _ := event["type"].(string)
 			if kind == "error" {
 				providerError = true
+				code = providerEventFailure(event)
 			}
 			fmt.Fprintf(diagnostics, "OpenCode event: %s\n", kind)
 			if kind == "tool_use" {
@@ -128,9 +141,15 @@ func RunOpenCodeAdapter(input io.Reader, output, diagnostics io.Writer) error {
 		cancel()
 	}
 	err = cmd.Wait()
+	timings["model_execution_ns"] = int64(time.Since(modelStarted))
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		code = "provider_timeout"
+	}
 	if err != nil || scanErr != nil || providerError || events > 1000 {
 		return errors.New("OpenCode provider execution failed; inspect bounded execution diagnostics")
 	}
+	code = "provider_invalid_response"
+	mutationStarted := time.Now()
 	info, err := os.Lstat(task.File)
 	if err != nil || !info.Mode().IsRegular() || info.Size() > maxResultBytes {
 		return errors.New("invalid OpenCode file result")
@@ -142,5 +161,28 @@ func RunOpenCodeAdapter(input io.Reader, output, diagnostics io.Writer) error {
 	if string(result) == task.Current {
 		return errors.New("OpenCode did not produce a file change")
 	}
-	return json.NewEncoder(output).Encode(map[string]any{"files": map[string]string{task.File: string(result)}})
+	timings["workspace_result_read_ns"] = int64(time.Since(mutationStarted))
+	timings["adapter_total_ns"] = int64(time.Since(started))
+	return json.NewEncoder(output).Encode(map[string]any{"files": map[string]string{task.File: string(result)}, "timings_ns": timings})
+}
+
+// Only structured status/name fields are used; provider messages may contain
+// secrets and are never copied into the failure protocol.
+func providerEventFailure(event map[string]any) string {
+	e, _ := event["error"].(map[string]any)
+	data, _ := e["data"].(map[string]any)
+	status, _ := data["statusCode"].(float64)
+	name, _ := e["name"].(string)
+	switch {
+	case status == 401 || status == 403:
+		return "provider_auth_failed"
+	case status == 429:
+		return "provider_rate_limited"
+	case status == 408 || status == 504:
+		return "provider_timeout"
+	case name == "StructuredOutputError":
+		return "provider_invalid_response"
+	default:
+		return "provider_request_failed"
+	}
 }

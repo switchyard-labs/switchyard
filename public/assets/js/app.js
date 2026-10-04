@@ -41,7 +41,7 @@
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok && !(path === "/api/auth/me" && res.status === 401)) {
-      throw new Error(data.error || ("HTTP " + res.status));
+      throw new Error(data.message || data.error || ("HTTP " + res.status));
     }
     return data;
   }

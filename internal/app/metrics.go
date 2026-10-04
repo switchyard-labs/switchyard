@@ -88,5 +88,5 @@ func (a *App) OperationalMetrics(w http.ResponseWriter, r *http.Request) {
 		states[collection] = counts
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, 200, map[string]any{"http": a.Metrics.Snapshot(), "trestle": a.Trestle.Metrics.Snapshot(), "artifacts": a.Artifacts.Metrics.Snapshot(), "states": states, "unavailable_collections": failures})
+	writeJSON(w, 200, map[string]any{"agent_policy": a.AgentPolicy, "http": a.Metrics.Snapshot(), "trestle": a.Trestle.Metrics.Snapshot(), "artifacts": a.Artifacts.Metrics.Snapshot(), "states": states, "unavailable_collections": failures})
 }

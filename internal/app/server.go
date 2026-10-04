@@ -43,6 +43,7 @@ type App struct {
 	Secrets        *agent.CredentialStore
 	Runner         agent.Runner
 	ProviderRunner func(AgentSelection) (agent.Runner, error)
+	AgentPolicy    map[string]any
 	Roles          []agent.Role
 	Actions        actions.Provider
 	Queue          *QueueConsumer
