@@ -199,6 +199,22 @@ func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, re
 			ex.Adapter = selection.Provider
 		}
 	}
+	// Snapshot relational context before execution, so later Work/PR changes do
+	// not rewrite the provenance of this run. These are identifiers, not bodies.
+	_, _, attemptContext, contextErr := a.Trestle.FindRecord("attempts", filterEq("id", attemptID))
+	if contextErr != nil {
+		return nil, fmt.Errorf("execution context unavailable: %w", contextErr)
+	}
+	prContext, contextErr := a.Trestle.ListRecords("prs", filterEq("attempt_id", attemptID))
+	if contextErr != nil {
+		return nil, fmt.Errorf("execution PR context unavailable: %w", contextErr)
+	}
+	prIDs := []string{}
+	for _, item := range prContext {
+		if id := strOf(item["id"]); id != "" {
+			prIDs = append(prIDs, id)
+		}
+	}
 	err := runner.Run(ctx, ex, task)
 	ex.Finished = time.Now().UTC()
 	status := ex.Status
@@ -215,7 +231,7 @@ func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, re
 		"finished_at": ex.Finished.Format(time.RFC3339),
 	}, "exec-"+ex.ID)
 	if persistErr == nil {
-		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"branch": branch, "source_sha": parent.Value(agentSourceSHAKey{}), "file": file, "status": ex.Status, "resource_usage": ex.ResourceUsage, "timings_ns": ex.TimingsNS, "failure_code": ex.FailureCode, "credential_profile": credentialProfile, "principal": principal, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": task.Provider != "" || ex.Adapter == "cli-sandbox", "provider": task.Provider, "model": task.Model, "role": role}}, "execution-meta-"+ex.ID)
+		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"attempt_id": attemptID, "work_id": strOf(attemptContext["work_id"]), "pr_ids": prIDs, "branch": branch, "source_sha": parent.Value(agentSourceSHAKey{}), "file": file, "status": ex.Status, "resource_usage": ex.ResourceUsage, "timings_ns": ex.TimingsNS, "failure_code": ex.FailureCode, "credential_profile": credentialProfile, "principal": principal, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": task.Provider != "" || ex.Adapter == "cli-sandbox", "provider": task.Provider, "model": task.Model, "role": role}}, "execution-meta-"+ex.ID)
 	}
 
 	if persistErr != nil {
