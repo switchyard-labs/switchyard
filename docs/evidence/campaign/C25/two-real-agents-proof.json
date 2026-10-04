@@ -1,0 +1,105 @@
+{
+  "environment": "local non-root preview, distinct Attempt branches/workspaces",
+  "agents": 2,
+  "host_memtotal_kib": 64088128,
+  "wall_seconds": 25.958,
+  "sampled_combined_memory_peak": 1292042240,
+  "sampled_combined_pids_peak": 76,
+  "two_groups_observed": true,
+  "results": [
+    {
+      "lane": "a",
+      "attempt": "wk_650f6829a3ce1218",
+      "branch": "event-competition-3cd04f1cf939-a",
+      "function": "describeRouteConcurrencyA",
+      "status": 200,
+      "seconds": 25.898,
+      "execution": "exe_9ebe31e2",
+      "new_sha": "ff2832c16a448ef87e7d74cbc9aa8e230b66c5f6",
+      "metadata": {
+        "branch": "event-competition-3cd04f1cf939-a",
+        "cpu_time_ns": 9099000,
+        "duration_ns": 16409239574,
+        "exit_code": 0,
+        "failure_code": "",
+        "file": "src/routes.mjs",
+        "model": "gpt-5.6-luna",
+        "output_truncated": false,
+        "provider": "opencode-go",
+        "resource_usage": {
+          "accounting": "sampled cgroup v2; last sample may precede exit",
+          "cpu.max": "200000 100000",
+          "cpu.stat": "usage_usec 11431611\nuser_usec 10081088\nsystem_usec 1350523\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 161\nnr_throttled 9\nthrottled_usec 1105027\nnr_bursts 0\nburst_usec 0",
+          "memory.current": "162877440",
+          "memory.current.sampled_peak": "642482176",
+          "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+          "memory.max": "1610612736",
+          "memory.peak": "643788800",
+          "memory.swap.max": "0",
+          "pids.current": "10",
+          "pids.current.sampled_peak": "38",
+          "pids.events": "max 0",
+          "pids.max": "128",
+          "pids.peak": "46"
+        },
+        "role": "implementer",
+        "sandbox": true,
+        "status": "succeeded"
+      },
+      "function_behavior": "PASS",
+      "workspace_crossover": "NONE",
+      "changed_against_main": [
+        "ATTEMPT.md",
+        "src/routes.mjs"
+      ]
+    },
+    {
+      "lane": "b",
+      "attempt": "wk_1f21a799aaaa2b4e",
+      "branch": "event-competition-3cd04f1cf939-b",
+      "function": "describeRouteConcurrencyB",
+      "status": 200,
+      "seconds": 22.784,
+      "execution": "exe_a30d0888",
+      "new_sha": "49c8ccef245e440a1471ba3b7f3c4c67c3f82492",
+      "metadata": {
+        "branch": "event-competition-3cd04f1cf939-b",
+        "cpu_time_ns": 7775000,
+        "duration_ns": 12860954845,
+        "exit_code": 0,
+        "failure_code": "",
+        "file": "src/routes.mjs",
+        "model": "gpt-5.6-luna",
+        "output_truncated": false,
+        "provider": "opencode-go",
+        "resource_usage": {
+          "accounting": "sampled cgroup v2; last sample may precede exit",
+          "cpu.max": "200000 100000",
+          "cpu.stat": "usage_usec 10835071\nuser_usec 9687103\nsystem_usec 1147967\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 128\nnr_throttled 9\nthrottled_usec 1290021\nnr_bursts 0\nburst_usec 0",
+          "memory.current": "14262272",
+          "memory.current.sampled_peak": "655278080",
+          "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+          "memory.max": "1610612736",
+          "memory.peak": "658243584",
+          "memory.swap.max": "0",
+          "pids.current": "4",
+          "pids.current.sampled_peak": "38",
+          "pids.events": "max 0",
+          "pids.max": "128",
+          "pids.peak": "46"
+        },
+        "role": "implementer",
+        "sandbox": true,
+        "status": "succeeded"
+      },
+      "function_behavior": "PASS",
+      "workspace_crossover": "NONE",
+      "changed_against_main": [
+        "ATTEMPT.md",
+        "src/routes.mjs"
+      ]
+    }
+  ],
+  "canonical_main_unchanged": "e2a22198d24faa843975adef7fe7ffde1b997aa5",
+  "process_leak_check": ""
+}

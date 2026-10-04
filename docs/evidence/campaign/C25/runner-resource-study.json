@@ -1,0 +1,447 @@
+{
+  "platform": "local Linux x86_64, uid 1000, OpenCode 1.18.34",
+  "runs": [
+    {
+      "environment": "local normal non-root, no RLIMIT_AS",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": 0,
+      "seconds": 7.062,
+      "response_confirmed": true,
+      "event_types": [
+        "step_start",
+        "text",
+        "step_finish"
+      ],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 135453956,
+        "VmSize": 76234344,
+        "VmHWM": 728728,
+        "VmRSS": 728728,
+        "Threads": 31,
+        "FDs": 37
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts"
+    },
+    {
+      "environment": "as2",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": -4,
+      "seconds": 5.853,
+      "response_confirmed": false,
+      "event_types": [],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 2079984,
+        "VmSize": 2079884,
+        "VmHWM": 344056,
+        "VmRSS": 344056,
+        "Threads": 12,
+        "FDs": 17
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts",
+      "cgroup_before": {
+        "memory.current": "6155845632",
+        "memory.peak": "6819946496",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "max",
+        "memory.swap.max": "max",
+        "pids.current": "383",
+        "pids.peak": "577",
+        "pids.max": "75050",
+        "cpu.stat": "usage_usec 7765520329\nuser_usec 6036474314\nsystem_usec 1729046015\nnice_usec 0\ncore_sched.force_idle_usec 0"
+      },
+      "cgroup_after": {
+        "memory.current": "6232227840",
+        "memory.peak": "6819946496",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "max",
+        "memory.swap.max": "max",
+        "pids.current": "382",
+        "pids.peak": "577",
+        "pids.max": "75050",
+        "cpu.stat": "usage_usec 7771507679\nuser_usec 6041311112\nsystem_usec 1730196566\nnice_usec 0\ncore_sched.force_idle_usec 0"
+      }
+    },
+    {
+      "environment": "as4",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": -6,
+      "seconds": 8.787,
+      "response_confirmed": false,
+      "event_types": [],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 4169848,
+        "VmSize": 4169748,
+        "VmHWM": 599512,
+        "VmRSS": 599512,
+        "Threads": 29,
+        "FDs": 28
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts",
+      "cgroup_before": {
+        "memory.current": "6237138944",
+        "memory.peak": "6819946496",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "max",
+        "memory.swap.max": "max",
+        "pids.current": "384",
+        "pids.peak": "577",
+        "pids.max": "75050",
+        "cpu.stat": "usage_usec 7771585189\nuser_usec 6041347748\nsystem_usec 1730237440\nnice_usec 0\ncore_sched.force_idle_usec 0"
+      },
+      "cgroup_after": {
+        "memory.current": "6191267840",
+        "memory.peak": "6819946496",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "max",
+        "memory.swap.max": "max",
+        "pids.current": "377",
+        "pids.peak": "577",
+        "pids.max": "75050",
+        "cpu.stat": "usage_usec 7777667860\nuser_usec 6045431823\nsystem_usec 1732236037\nnice_usec 0\ncore_sched.force_idle_usec 0"
+      }
+    },
+    {
+      "environment": "pids",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": -5,
+      "seconds": 2.424,
+      "response_confirmed": false,
+      "event_types": [],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 135453956,
+        "VmSize": 68484380,
+        "VmHWM": 102928,
+        "VmRSS": 102928,
+        "Threads": 1,
+        "FDs": 4
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts",
+      "cgroup_before": {
+        "memory.current": "6191214592",
+        "memory.peak": "6819946496",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "max",
+        "memory.swap.max": "max",
+        "pids.current": "377",
+        "pids.peak": "577",
+        "pids.max": "75050",
+        "cpu.stat": "usage_usec 7777726394\nuser_usec 6045474135\nsystem_usec 1732252258\nnice_usec 0\ncore_sched.force_idle_usec 0"
+      },
+      "cgroup_after": {
+        "memory.current": "6193053696",
+        "memory.peak": "6819946496",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "max",
+        "memory.swap.max": "max",
+        "pids.current": "375",
+        "pids.peak": "577",
+        "pids.max": "75050",
+        "cpu.stat": "usage_usec 7778388736\nuser_usec 6045547870\nsystem_usec 1732840865\nnice_usec 0\ncore_sched.force_idle_usec 0"
+      }
+    },
+    {
+      "environment": "fs",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": 0,
+      "seconds": 4.75,
+      "response_confirmed": true,
+      "event_types": [
+        "step_start",
+        "text",
+        "step_finish"
+      ],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 3768,
+        "VmSize": 3768,
+        "VmHWM": 2336,
+        "VmRSS": 2336,
+        "Threads": 1,
+        "FDs": 5
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts",
+      "cgroup_before": {
+        "memory.current": "7163904",
+        "memory.peak": "7163904",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "2",
+        "pids.peak": "2",
+        "pids.max": "75050",
+        "cpu.stat": "usage_usec 40866\nuser_usec 24918\nsystem_usec 15947\nnice_usec 0\ncore_sched.force_idle_usec 0"
+      },
+      "cgroup_after": {
+        "memory.current": "13713408",
+        "memory.peak": "557035520",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "1",
+        "pids.peak": "41",
+        "pids.max": "75050",
+        "cpu.stat": "usage_usec 5936224\nuser_usec 5250067\nsystem_usec 686157\nnice_usec 0\ncore_sched.force_idle_usec 0"
+      }
+    },
+    {
+      "environment": "final-1",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": 0,
+      "seconds": 4.873,
+      "response_confirmed": true,
+      "event_types": [
+        "step_start",
+        "text",
+        "step_finish"
+      ],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 135453960,
+        "VmSize": 76061924,
+        "VmHWM": 640248,
+        "VmRSS": 640248,
+        "Threads": 29,
+        "FDs": 5
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts",
+      "cgroup_before": {
+        "memory.current": "7065600",
+        "memory.peak": "7065600",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "2",
+        "pids.peak": "2",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 39413\nuser_usec 33501\nsystem_usec 5912\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      },
+      "cgroup_after": {
+        "memory.current": "8228864",
+        "memory.peak": "551448576",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "1",
+        "pids.peak": "40",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 5485770\nuser_usec 4862480\nsystem_usec 623290\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 49\nnr_throttled 8\nthrottled_usec 747685\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      }
+    },
+    {
+      "environment": "final-2",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": 0,
+      "seconds": 6.248,
+      "response_confirmed": true,
+      "event_types": [
+        "step_start",
+        "text",
+        "step_finish"
+      ],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 135453956,
+        "VmSize": 76233960,
+        "VmHWM": 656536,
+        "VmRSS": 656536,
+        "Threads": 31,
+        "FDs": 5
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts",
+      "cgroup_before": {
+        "memory.current": "6717440",
+        "memory.peak": "6721536",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "2",
+        "pids.peak": "2",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 50038\nuser_usec 33358\nsystem_usec 16679\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 1\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      },
+      "cgroup_after": {
+        "memory.current": "29437952",
+        "memory.peak": "577282048",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "1",
+        "pids.peak": "42",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 7017258\nuser_usec 6121502\nsystem_usec 895756\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 63\nnr_throttled 10\nthrottled_usec 859205\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      }
+    },
+    {
+      "environment": "final-3",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": 0,
+      "seconds": 4.298,
+      "response_confirmed": true,
+      "event_types": [
+        "step_start",
+        "text",
+        "step_finish"
+      ],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 135453960,
+        "VmSize": 76131624,
+        "VmHWM": 643524,
+        "VmRSS": 641836,
+        "Threads": 30,
+        "FDs": 5
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts",
+      "cgroup_before": {
+        "memory.current": "7299072",
+        "memory.peak": "7299072",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "2",
+        "pids.peak": "2",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 34065\nuser_usec 22042\nsystem_usec 12023\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 1\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      },
+      "cgroup_after": {
+        "memory.current": "9801728",
+        "memory.peak": "555696128",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "1",
+        "pids.peak": "41",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 4752575\nuser_usec 4195617\nsystem_usec 556958\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 44\nnr_throttled 6\nthrottled_usec 841567\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      }
+    },
+    {
+      "environment": "final-4",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": 0,
+      "seconds": 4.145,
+      "response_confirmed": true,
+      "event_types": [
+        "step_start",
+        "text",
+        "step_finish"
+      ],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 135453960,
+        "VmSize": 76061988,
+        "VmHWM": 641036,
+        "VmRSS": 641036,
+        "Threads": 29,
+        "FDs": 5
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts",
+      "cgroup_before": {
+        "memory.current": "7237632",
+        "memory.peak": "7241728",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "2",
+        "pids.peak": "2",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 35573\nuser_usec 23074\nsystem_usec 12498\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      },
+      "cgroup_after": {
+        "memory.current": "10895360",
+        "memory.peak": "551309312",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "1",
+        "pids.peak": "40",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 4680649\nuser_usec 4146472\nsystem_usec 534176\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 41\nnr_throttled 7\nthrottled_usec 566606\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      }
+    },
+    {
+      "environment": "final-5",
+      "uid": 1000,
+      "provider": "opencode-go",
+      "model": "gpt-5.6-luna",
+      "exit": 0,
+      "seconds": 4.576,
+      "response_confirmed": true,
+      "event_types": [
+        "step_start",
+        "text",
+        "step_finish"
+      ],
+      "error_names": [],
+      "peaks": {
+        "VmPeak": 135453956,
+        "VmSize": 76061920,
+        "VmHWM": 637780,
+        "VmRSS": 637780,
+        "Threads": 29,
+        "FDs": 5
+      },
+      "metric_units": "Vm* KiB; Threads/FDs counts",
+      "cgroup_before": {
+        "memory.current": "7233536",
+        "memory.peak": "7233536",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "2",
+        "pids.peak": "2",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 33314\nuser_usec 21556\nsystem_usec 11758\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      },
+      "cgroup_after": {
+        "memory.current": "8921088",
+        "memory.peak": "547897344",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1610612736",
+        "memory.swap.max": "0",
+        "pids.current": "1",
+        "pids.peak": "40",
+        "pids.max": "128",
+        "cpu.stat": "usage_usec 4923080\nuser_usec 4331835\nsystem_usec 591245\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 46\nnr_throttled 9\nthrottled_usec 519255\nnr_bursts 0\nburst_usec 0",
+        "cpu.max": "200000 100000"
+      }
+    }
+  ],
+  "notes": [
+    "Filesystem runs sample maximum individual-process RSS, not summed process-tree RSS.",
+    "Cgroup memory accounts charged memory; shared executable pages can differ from process RSS.",
+    "Provider first-request timestamp was not instrumented.",
+    "No Linode Agent capacity test yet."
+  ]
+}

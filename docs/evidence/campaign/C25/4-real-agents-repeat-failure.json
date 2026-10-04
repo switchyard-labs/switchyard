@@ -1,0 +1,55 @@
+{
+  "environment": "local desktop only",
+  "agents": 4,
+  "wall_seconds": 102.91,
+  "sampled_combined_memory_peak": 2454704128,
+  "sampled_combined_pids_peak": 155,
+  "max_groups_observed": 4,
+  "results": [
+    {
+      "error_code": "upstream_timeout",
+      "lane": "aN4RETRY",
+      "attempt": "wk_650f6829a3ce1218",
+      "branch": "event-competition-3cd04f1cf939-a",
+      "function": "describeRouteConcurrencyAN4RETRY",
+      "status": 502,
+      "seconds": 76.344,
+      "execution": null,
+      "new_sha": null
+    },
+    {
+      "error_code": "upstream_timeout",
+      "lane": "bN4RETRY",
+      "attempt": "wk_1f21a799aaaa2b4e",
+      "branch": "event-competition-3cd04f1cf939-b",
+      "function": "describeRouteConcurrencyBN4RETRY",
+      "status": 502,
+      "seconds": 75.356,
+      "execution": null,
+      "new_sha": null
+    },
+    {
+      "error_code": "Agent failed (runner_exit_nonzero, exit 1): exit status 1",
+      "lane": "cN4RETRY",
+      "attempt": "wk_84fd7634a82f8c27",
+      "branch": "event-competition-3cd04f1cf939-c",
+      "function": "describeRouteConcurrencyCN4RETRY",
+      "status": 502,
+      "seconds": 102.893,
+      "execution": null,
+      "new_sha": null
+    },
+    {
+      "error_code": "Agent failed (runner_exit_nonzero, exit 1): exit status 1",
+      "lane": "dN4RETRY",
+      "attempt": "wk_dea4f11e44205f09",
+      "branch": "event-competition-3cd04f1cf939-d",
+      "function": "describeRouteConcurrencyDN4RETRY",
+      "status": 502,
+      "seconds": 102.81,
+      "execution": null,
+      "new_sha": null
+    }
+  ],
+  "certification": "NOT CERTIFIED; API responses alone do not establish exact published output"
+}

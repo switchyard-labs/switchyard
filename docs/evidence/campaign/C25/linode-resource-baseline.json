@@ -1,0 +1,16 @@
+{
+  "scope": "read-only host baseline, no Agent execution",
+  "host_ram_mib": 961,
+  "available_ram_mib": 605,
+  "cpus": 1,
+  "swap_total_mib": 2543,
+  "swap_used_mib": 86,
+  "control_plane_service_user": "root",
+  "switchyard_memory_current_bytes": 9379840,
+  "switchyard_rss_kib": 21104,
+  "trestle_largest_process_rss_kib": 25340,
+  "caddy_rss_kib": 20648,
+  "bubblewrap_installed": false,
+  "capacity_verdict": "INSUFFICIENT EVIDENCE",
+  "note": "Identical 1536 MiB no-swap per-Agent certification budget exceeds host RAM. Local observed coding footprint is around the currently available host memory. No unsafe fallback, host resize or production concurrency change performed."
+}

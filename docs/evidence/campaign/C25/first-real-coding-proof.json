@@ -1,0 +1,18 @@
+{
+  "scope": "local preview; disposable real Artifacts Attempt branch",
+  "provider": "opencode-go",
+  "model": "gpt-5.6-luna",
+  "execution": "exe_b118d5eb",
+  "attempt": "wk_650f6829a3ce1218",
+  "branch": "event-competition-3cd04f1cf939-a",
+  "new_sha": "d2ec07077c8659885109dcff2b5b3d5f6a7cf319",
+  "duration_seconds": 33.148,
+  "main_sha_unchanged": "e2a22198d24faa843975adef7fe7ffde1b997aa5",
+  "changed_against_main": [
+    "ATTEMPT.md",
+    "src/routes.mjs"
+  ],
+  "note": "ATTEMPT.md was created when the Attempt fixture was prepared, before Agent execution.",
+  "existing_module_preserved": true,
+  "generated_function_behavior": "PASS"
+}

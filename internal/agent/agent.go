@@ -218,6 +218,8 @@ type Execution struct {
 	Output          string            `json:"output,omitempty"`
 	Stdout          string            `json:"stdout,omitempty"`
 	Stderr          string            `json:"stderr,omitempty"`
+	ResourceUsage   map[string]string `json:"resource_usage,omitempty"`
+	FailureCode     string            `json:"failure_code,omitempty"`
 	OutputTruncated bool              `json:"output_truncated"`
 	ExitCode        int               `json:"exit_code"`
 	CPUTime         time.Duration     `json:"cpu_time"`

@@ -9,6 +9,8 @@ import (
 )
 
 type Sample struct {
+	Current           int64   `json:"current,omitempty"`
+	MaxCurrent        int64   `json:"max_current,omitempty"`
 	Count             uint64  `json:"count"`
 	Errors            uint64  `json:"errors"`
 	RateLimited       uint64  `json:"rate_limited"`
@@ -70,4 +72,22 @@ func (t Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	t.Registry.Record(t.Name, time.Since(start), status)
 	return response, err
+}
+
+// Adjust records an instantaneous gauge without labels or secret-bearing values.
+func (r *Registry) Adjust(name string, delta int64) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.samples == nil {
+		r.samples = map[string]Sample{}
+	}
+	s := r.samples[name]
+	s.Current += delta
+	if s.Current < 0 {
+		s.Current = 0
+	}
+	if s.Current > s.MaxCurrent {
+		s.MaxCurrent = s.Current
+	}
+	r.samples[name] = s
 }

@@ -1,0 +1,8 @@
+{
+  "uid": 1000,
+  "real_uid_processes": 203,
+  "real_uid_threads_total": 2648,
+  "nproc_limit_under_test": 256,
+  "host_threads_max": "500335",
+  "host_pid_max": "4194304"
+}

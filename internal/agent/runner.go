@@ -2,6 +2,8 @@ package agent
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -45,28 +47,41 @@ type RunnerEvent struct {
 	At     time.Time `json:"at"`
 }
 type RunnerLimits struct {
-	Timeout     time.Duration
-	OutputBytes int
-	MemoryBytes uint64
-	CPUSeconds  int
+	Timeout         time.Duration
+	OutputBytes     int
+	MemoryBytes     uint64
+	CPUSeconds      int
+	Cgroup          bool
+	PIDs            int
+	CPUQuotaPercent int
 }
 
 // CLIRunner executes a configured adapter inside bubblewrap's private mount,
 // PID and user namespaces. Missing sandbox/limit tools fail closed. Its JSON
 // stdin request and JSON stdout result are an adapter protocol, not a shell.
 type CLIRunner struct {
-	gateOnce     sync.Once
-	gate         chan struct{}
-	Bin          string
-	Args         []string
-	WorkDir      string
-	Credential   func() (string, error)
-	Limits       RunnerLimits
-	AllowNetwork bool
-	OnEvent      func(RunnerEvent)
+	gateOnce      sync.Once
+	gate          chan struct{}
+	RuntimeBinary string
+	Bin           string
+	Args          []string
+	WorkDir       string
+	Credential    func() (string, error)
+	Limits        RunnerLimits
+	AllowNetwork  bool
+	OnEvent       func(RunnerEvent)
 }
 
 func (r *CLIRunner) Run(ctx context.Context, ex *Execution, task Task) (runErr error) {
+	defer func() {
+		if runErr != nil && ex.FailureCode == "" {
+			if ex.Adapter != "cli-sandbox" {
+				ex.FailureCode = "runner_start_failed"
+			} else {
+				ex.FailureCode = "runner_invalid_output"
+			}
+		}
+	}()
 	if err := task.Validate(); err != nil {
 		return err
 	}
@@ -154,7 +169,10 @@ func (r *CLIRunner) Run(ctx context.Context, ex *Execution, task Task) (runErr e
 	}
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	args := []string{"--as=" + fmt.Sprint(memory), "--cpu=" + fmt.Sprint(cpu), "--nofile=128", "--core=0", "--fsize=16777216", "--", bwrap, "--die-with-parent", "--new-session", "--unshare-all", "--clearenv"}
+	args := []string{"--cpu=" + fmt.Sprint(cpu), "--nofile=128", "--core=0", "--fsize=16777216", "--", bwrap, "--die-with-parent", "--new-session", "--unshare-all", "--clearenv"}
+	if !r.Limits.Cgroup {
+		args = append([]string{"--as=" + fmt.Sprint(memory)}, args...)
+	}
 	if r.AllowNetwork {
 		args = append(args, "--share-net")
 	}
@@ -171,17 +189,72 @@ func (r *CLIRunner) Run(ctx context.Context, ex *Execution, task Task) (runErr e
 			}
 		}
 	}
+	if r.RuntimeBinary != "" {
+		if !filepath.IsAbs(r.RuntimeBinary) {
+			return errors.New("OpenCode runtime must be an absolute configured path")
+		}
+		runtime, err := filepath.EvalSymlinks(r.RuntimeBinary)
+		if err != nil {
+			return err
+		}
+		args = append(args, "--ro-bind", runtime, "/runner/opencode", "--setenv", "SWITCHYARD_OPENCODE_BIN", "/runner/opencode")
+	}
 	if credential != "" {
 		args = append(args, "--ro-bind", credential, "/run/credential", "--setenv", "SWITCHYARD_CREDENTIAL_FILE", "/run/credential")
 	}
-	args = append(args, "--", limiter, "--nproc=256", "--", "/runner/agent")
+	if r.Limits.Cgroup {
+		args = append(args, "--", "/runner/agent")
+	} else {
+		args = append(args, "--", limiter, "--nproc=256", "--", "/runner/agent")
+	}
 	args = append(args, r.Args...)
-	cmd := exec.CommandContext(runCtx, limiter, args...)
+	command := limiter
+	unit := ""
+	if r.Limits.Cgroup {
+		pids := r.Limits.PIDs
+		if pids == 0 {
+			pids = 128
+		}
+		quota := r.Limits.CPUQuotaPercent
+		if quota == 0 {
+			quota = 200
+		}
+		if pids < 16 || pids > 1024 || quota < 10 || quota > 800 {
+			return errors.New("invalid cgroup PID/CPU policy")
+		}
+		systemdRun, lookupErr := exec.LookPath("systemd-run")
+		if lookupErr != nil {
+			return errors.New("cgroup runner requires systemd-run user service support")
+		}
+		random := make([]byte, 12)
+		if _, err := rand.Read(random); err != nil {
+			return err
+		}
+		unit = "switchyard-agent-" + hex.EncodeToString(random) + ".service"
+		args = append([]string{"--user", "--wait", "--pipe", "--quiet", "--collect", "--service-type=exec", "--unit=" + unit, "--property=MemoryMax=" + fmt.Sprint(memory), "--property=MemorySwapMax=0", "--property=TasksMax=" + fmt.Sprint(pids), "--property=CPUQuota=" + fmt.Sprint(quota) + "%", "--property=RuntimeMaxSec=" + fmt.Sprint(int(timeout.Seconds())+2), "--property=KillMode=control-group", "--property=Slice=app.slice", "--", limiter}, args...)
+		command = systemdRun
+	}
+	stopUnit := func() {
+		if unit == "" {
+			return
+		}
+		stopCtx, stopCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer stopCancel()
+		stop := exec.CommandContext(stopCtx, "systemctl", "--user", "stop", unit)
+		stop.Env = []string{"PATH=/usr/bin:/bin", "XDG_RUNTIME_DIR=/run/user/" + fmt.Sprint(os.Getuid()), "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/" + fmt.Sprint(os.Getuid()) + "/bus"}
+		_ = stop.Run()
+	}
+	defer stopUnit()
+	cmd := exec.CommandContext(runCtx, command, args...)
 	cmd.Dir = dir
 	cmd.Env = []string{"PATH=/usr/bin:/bin", "LANG=C.UTF-8"}
+	if unit != "" {
+		cmd.Env = append(cmd.Env, "XDG_RUNTIME_DIR=/run/user/"+fmt.Sprint(os.Getuid()), "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/"+fmt.Sprint(os.Getuid())+"/bus")
+	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	cmd.WaitDelay = time.Second
 	cmd.Cancel = func() error {
+		stopUnit()
 		if cmd.Process == nil {
 			return nil
 		}
@@ -214,7 +287,14 @@ func (r *CLIRunner) Run(ctx context.Context, ex *Execution, task Task) (runErr e
 		emit("finished", "", ex.Status)
 	}()
 	emit("started", "", "")
+	var finishAccounting func() map[string]string
+	if unit != "" {
+		finishAccounting = watchCgroup(unit)
+	}
 	err = cmd.Run()
+	if finishAccounting != nil {
+		ex.ResourceUsage = finishAccounting()
+	}
 	if cmd.Process != nil {
 		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	}
@@ -228,30 +308,41 @@ func (r *CLIRunner) Run(ctx context.Context, ex *Execution, task Task) (runErr e
 		ex.ExitCode = cmd.ProcessState.ExitCode()
 		ex.CPUTime = cmd.ProcessState.UserTime() + cmd.ProcessState.SystemTime()
 	}
+	if usec := resourceCounter(ex.ResourceUsage["cpu.stat"], "usage_usec"); usec > 0 {
+		ex.CPUTime = time.Duration(usec) * time.Microsecond
+	}
 	emit("output", "stdout", ex.Stdout)
 	emit("output", "stderr", ex.Stderr)
 	switch {
 	case errors.Is(runCtx.Err(), context.DeadlineExceeded):
 		ex.Status = "timed_out"
+		ex.FailureCode = "runner_timeout"
 		err = context.DeadlineExceeded
 	case errors.Is(runCtx.Err(), context.Canceled):
 		ex.Status = "cancelled"
+		ex.FailureCode = "runner_cancelled"
 		err = context.Canceled
 	case err != nil:
 		ex.Status = "failed"
+		ex.FailureCode = "runner_exit_nonzero"
+		if resourceCounter(ex.ResourceUsage["memory.events"], "oom_kill") > 0 {
+			ex.FailureCode = "runner_resource_memory"
+		}
 	default:
 		ex.Status = "succeeded"
 	}
 	if err != nil {
-		return fmt.Errorf("Agent %s (exit %d): %w", ex.Status, ex.ExitCode, err)
+		return fmt.Errorf("Agent %s (%s, exit %d): %w", ex.Status, ex.FailureCode, ex.ExitCode, err)
 	}
 	var result struct {
 		Files map[string]string `json:"files"`
 	}
 	if output.truncated {
+		ex.FailureCode = "runner_invalid_output"
 		return errors.New("agent result output was truncated")
 	}
 	if err := json.Unmarshal([]byte(output.rawStdout()), &result); err != nil {
+		ex.FailureCode = "runner_invalid_output"
 		return fmt.Errorf("invalid Agent JSON result: %w", err)
 	}
 	total := 0

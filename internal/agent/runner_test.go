@@ -143,3 +143,33 @@ func TestSandboxRunnerRejectsCredentialInFileResult(t *testing.T) {
 		t.Fatalf("unsafe result: %v %+v", err, ex)
 	}
 }
+
+func TestCgroupSandboxIsolationAndCancellation(t *testing.T) {
+	if os.Getenv("SWITCHYARD_TEST_CGROUP") != "1" {
+		t.Skip("requires a local systemd user manager; enable explicitly")
+	}
+	for _, timeout := range []bool{false, true} {
+		body := `test -z "${SWITCHYARD_HOST_SECRET-}"; printf '{"files":{"file.go":"cgroup result"}}'`
+		if timeout {
+			body = `sleep 20 & wait`
+		}
+		r := scriptRunner(t, body)
+		r.Limits.Cgroup = true
+		r.Limits.MemoryBytes = 256 << 20
+		r.Limits.Timeout = 2 * time.Second
+		if timeout {
+			r.Limits.Timeout = 200 * time.Millisecond
+		}
+		t.Setenv("SWITCHYARD_HOST_SECRET", "must not enter sandbox")
+		ex := &Execution{}
+		started := time.Now()
+		err := r.Run(context.Background(), ex, fixtureTask())
+		if timeout {
+			if err == nil || time.Since(started) > 6*time.Second {
+				t.Fatalf("cgroup timeout cleanup: %v", err)
+			}
+		} else if err != nil || ex.Result["file.go"] != "cgroup result" {
+			t.Fatalf("cgroup result: %v %+v", err, ex)
+		}
+	}
+}

@@ -1,0 +1,17 @@
+{
+  "scope": "real disposable Artifacts repo through isolated preview; sy repo archive",
+  "downloads": [
+    {
+      "format": "zip",
+      "bytes": 1868,
+      "sha256": "58af5f12d202b3ad872cfe15e1bce43a07d324d967b4a4fed32a6c2d2fe520dc",
+      "target_sha": "e2a22198d24faa843975adef7fe7ffde1b997aa5"
+    },
+    {
+      "format": "tar.gz",
+      "bytes": 924,
+      "sha256": "28c48102cae32d934e2f5bdd9bb3fe96735a6b0ffedbfd004ff04a4b014a2d40",
+      "target_sha": "e2a22198d24faa843975adef7fe7ffde1b997aa5"
+    }
+  ]
+}

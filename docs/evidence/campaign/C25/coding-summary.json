@@ -1,0 +1,19 @@
+{
+  "n": 5,
+  "http_total_seconds": {
+    "median": 21.638,
+    "min": 21.205,
+    "max": 24.013,
+    "p95": "not statistically reliable with five samples"
+  },
+  "sampled_cgroup_memory_peak_bytes": {
+    "min": 661213184,
+    "max": 708755456
+  },
+  "kernel_cgroup_pids_peak": {
+    "min": 45,
+    "max": 47
+  },
+  "provider_first_request_timing": "not instrumented",
+  "cpu_accounting_note": "resource_usage.cpu.stat is sampled cgroup tree accounting; old cpu_time_ns values in these runs measured systemd client CPU and were corrected in subsequent runner code."
+}

@@ -68,7 +68,24 @@ func (a *App) handleRunAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 	repo := attempt["repo"].(string)
 	branch := attempt["branch"].(string)
-	file := "ATTEMPT.md"
+	var input struct {
+		File   string `json:"file"`
+		Prompt string `json:"prompt"`
+	}
+	if r.ContentLength != 0 {
+		if err := readJSON(r, &input); err != nil {
+			writeJSON(w, 400, map[string]any{"error": "invalid agent task"})
+			return
+		}
+	}
+	file := input.File
+	if file == "" {
+		file = "ATTEMPT.md"
+	}
+	if refs.ValidatePath(file) != nil || len(input.Prompt) > 20000 {
+		writeJSON(w, 400, map[string]any{"error": "invalid agent file or prompt"})
+		return
+	}
 	if err := a.policyGateAgent("implementer", repo, file); err != nil {
 		writeJSON(w, 403, map[string]any{"error": err.Error()})
 		return
@@ -91,8 +108,11 @@ func (a *App) handleRunAttempt(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": err.Error()})
 		return
 	}
-	ex, res, err := a.runAgentStepContext(agentCtx, "implementer", attemptID, repo, branch, file, string(cur),
-		"\n// run by "+user+" at "+time.Now().UTC().Format(time.RFC3339)+"\n", head, "user:"+user)
+	prompt := input.Prompt
+	if prompt == "" {
+		prompt = "\n// run by " + user + " at " + time.Now().UTC().Format(time.RFC3339) + "\n"
+	}
+	ex, res, err := a.runAgentStepContext(agentCtx, "implementer", attemptID, repo, branch, file, string(cur), prompt, head, "user:"+user)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -149,6 +169,8 @@ func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, re
 		return nil, fmt.Errorf("Agent runner unavailable")
 	}
 	runner := a.Runner
+	credentialProfile := ""
+	principal, _ := parent.Value(agentUserKey{}).(string)
 	if user, _ := parent.Value(agentUserKey{}).(string); user != "" {
 		selection, selectionErr := a.agentSelection(user, role)
 		if override, ok := parent.Value(agentOverrideKey{}).(AgentSelection); ok {
@@ -166,6 +188,7 @@ func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, re
 				return nil, selectionErr
 			}
 			task.Provider, task.Model = selection.Provider, selection.Model
+			credentialProfile = selection.CredentialID
 			ex.Adapter = selection.Provider
 		}
 	}
@@ -185,7 +208,7 @@ func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, re
 		"finished_at": ex.Finished.Format(time.RFC3339),
 	}, "exec-"+ex.ID)
 	if persistErr == nil {
-		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"branch": branch, "file": file, "status": ex.Status, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": task.Provider != "" || ex.Adapter == "cli-sandbox", "provider": task.Provider, "model": task.Model, "role": role}}, "execution-meta-"+ex.ID)
+		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"branch": branch, "file": file, "status": ex.Status, "resource_usage": ex.ResourceUsage, "failure_code": ex.FailureCode, "credential_profile": credentialProfile, "principal": principal, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": task.Provider != "" || ex.Adapter == "cli-sandbox", "provider": task.Provider, "model": task.Model, "role": role}}, "execution-meta-"+ex.ID)
 	}
 
 	if persistErr != nil {
@@ -218,11 +241,11 @@ func (a *App) runAgentStepContext(ctx context.Context, role, attemptID, repo, br
 	if err := ctx.Err(); err != nil {
 		return nil, nil, err
 	}
-	msg := "attempt " + attemptID + " run (" + ex.Adapter + ")"
+	msg := "attempt " + attemptID + " run (" + ex.Adapter + ") execution " + ex.ID
 	res, err := a.Refs.Update(repo, branch, expectedHead, []refs.Change{{Path: file, Content: newContent}}, msg, provenance)
 	if err != nil {
-		// Idempotent recovery: if the branch head already carries our commit
-		// (crash between commit and step-record), treat as already applied.
+		// Recover an ambiguous publication only for this exact execution.
+		// A previous execution on the same Attempt is not evidence of success.
 		if head, e2 := a.repoHead(repo, branch); e2 == nil && a.commitHasMessage(repo, branch, head, msg) {
 			return ex, &refs.Result{Status: "ok", NewSHA: head}, nil
 		}
@@ -249,7 +272,7 @@ func (a *App) commitHasMessage(repo, branch, head, want string) bool {
 	}
 	for _, c := range logs {
 		if c.Hash == head {
-			return strings.Contains(c.Message, want)
+			return strings.TrimSpace(c.Message) == want
 		}
 	}
 	return false

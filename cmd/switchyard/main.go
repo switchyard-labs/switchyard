@@ -46,6 +46,14 @@ func envOr(key, def string) string {
 }
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "agent-adapter" {
+		if err := agent.RunOpenCodeAdapter(os.Stdin, os.Stdout, os.Stderr); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	if len(os.Args) == 2 && os.Args[1] == "version" {
 		printVersion()
 		return
@@ -162,7 +170,9 @@ func main() {
 	})
 	a.Roles = agent.BuiltinRoles
 	if adapter := strings.TrimSpace(os.Getenv("SWITCHYARD_AGENT_ADAPTER")); adapter != "" {
-		a.ConfigureProviderRunner(adapter, 2)
+		if err := a.ConfigureProviderRunner(adapter, 2); err != nil {
+			log.Fatal(err)
+		}
 	}
 	a.Runner = &agent.DeterministicRunner{
 		Apply: func(exec *agent.Execution, path, content string) (string, error) {
