@@ -512,3 +512,13 @@ No public demo reset, extra Linode Agent, live destructive rollback injection or
 abrupt-crash live certification is claimed. Queue/workflow crash tests remain
 separate evidence. Linode control-plane binary remains clean b66a92d; subsequent
 commits are Worker source/documentation.
+
+### C38 clipboard and generic Actions completion (2026-10-04)
+
+DONE for generic Actions UI controls/logs/provenance: real Copy→Ctrl+V into an
+unsaved multiline field verified 17 lines/257 bytes/exact repair SHA; field
+cleared without submission. C38/copy-paste-proof.json/png. Prior verified log
+download retained separately. Success/failure/manual/rerun/cancel C14, captured
+output/SSE C13, native CI C36/C25 and drain recovery C24 form distinct evidence.
+C37 Worker Builds/Preview remains CONDITIONAL on configured scoped deployment
+setup; generic Actions PASS. Final responsive regression remains C42.

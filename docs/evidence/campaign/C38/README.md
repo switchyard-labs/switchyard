@@ -42,3 +42,21 @@ log (346 bytes, exact repair SHA; C25 evidence). Copy again reports success but
 CUA clipboard reads empty; clipboard remains UNVERIFIED. Cancelled runs lacking
 a provider completion timestamp now show an unknown duration instead of an
 ever-growing elapsed time. The fix does not invent a cancellation timestamp.
+
+Final clipboard continuation: PASS. The real Copy control followed by a real
+Ctrl+V pasted the 17-line captured stdout into an unsaved multiline Release notes
+field. DOM read-back verified 257 bytes including the exact repair SHA; the field
+was cleared and closed without submission. `copy-paste-proof.json` records its
+SHA-256 and `copy-paste-proof.png` shows an initial search-field paste (that
+single-line field strips newlines, so multiline verification was separate).
+No clipboard was seeded and no application globals or mocks were read. The
+earlier empty CUA clipboard API results remain historical tooling limitations,
+not evidence of a broken Copy control.
+
+C38 is DONE for generic Actions UI: success/failure/failed-job rerun/manual/cancel
+controls (C14), exact captured output/search/reconnect/capture time (C13),
+verified download and clipboard, source provenance, and unknown cancelled
+duration. Actual generic native CI and coordinator recovery are independently
+verified by C36/C25/C24. Worker Build/Preview URLs remain CONDITIONAL on the
+genuine scoped deployment setup described in C37; no deployment URL is invented.
+Final whole-product responsive regression remains its separate C42 gate.

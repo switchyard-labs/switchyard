@@ -1,0 +1,10 @@
+{
+  "result": "PASS",
+  "run_id": "5f79219d-87a0-4009-b97e-7af5a5b96b00",
+  "source_sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+  "method": "Click Copy, real Control+V into an unsaved multiline release notes field; DOM read-back, no clipboard API substitute or seeded text",
+  "bytes": 257,
+  "sha256": "cde94494ba32543178963cb540c810a1a98190cba3fdc61402742000961bca98",
+  "lines": 17,
+  "submitted": false
+}
