@@ -2,6 +2,7 @@ import { CIWorkflow, type CiContext, type CiParams, type CloudflareArtifacts, ty
 import { type CiBindings, CiSandbox } from '@cloudflare/ci/worker';
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
 import { validateRun, signature, equalSignature, digest, boundedBody, validateRerunParent, redactSecrets, secretVariants } from './protocol.mjs';
+import { releaseAssetRequest } from './release-assets.mjs';
 import { inspectArtifactSource } from './artifacts-source.mjs';
 export { CiSandbox };
 type Step = {id:string; name?:string; command:string; timeout_ms:number};
@@ -78,6 +79,7 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
 export default {
  async fetch(request:Request,env:Env):Promise<Response> {
   const url=new URL(request.url);
+  const asset=await releaseAssetRequest(request,env);if(asset)return asset;
   if(url.pathname==='/health') return json({ok:true,engine:'cloudflare-ci',protocol:1});
   let body:string;
   try{body=await boundedBody(request);}catch(error){return json({error:'invalid_or_oversized_body'},413);}

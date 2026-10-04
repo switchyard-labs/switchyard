@@ -260,3 +260,19 @@ The explicitly approved Linode AppArmor/non-root sandbox passed startup, memory 
 Clean release **6baddcb** is live on Linode, with exact version/HTTP200 verified and an integrity-checked backup at `/opt/cp0/switchyard-backup-20261004-6baddcb`. C45 is therefore deployed; full browser download/content certification still remains. Nift source now preserves Download ZIP through clean rebuilds. Reconciliation shutdown cancellation was subsequently improved at cb5eb5f and awaits the next coherent deployment batch.
 
 C24 authenticated fresh local restore has passed login/session/credential metadata and encryption-key/config preservation; private repository owner/anonymous permission certification also passed. Reset/publication-drain/runbook gates remain open. C23 representative semantic/queue timings, C33/C37/C38 remaining browser/conditional gates, C41 full story, final C42/C43, C46 implementation, sy release/live dogfood and final brochure remain unfinished. Intermediate successful commits are not campaign completion.
+
+## C46 foundation — 4 October 2026
+
+Release metadata/API foundation and signed R2 streaming transport are implemented
+locally. Draft visibility, immutable source archive links, maintainer mutation
+checks, moved-tag publication rejection and published-release deletion protection
+are present. Worker tests cover conditional-upload replay without consuming the
+body, conflicting content, invalid size and integrity/conditional-put arguments.
+Full Go tests, vet, Worker tests/typechecking and whitespace checks pass.
+
+This is a foundation batch, not C46 completion: asset attachment/lifecycle and
+publication concurrency fencing, canonical UI, Actions release flow and sy release
+commands remain. No release asset endpoint is exposed by the app yet. No C46
+migration or Worker deployment has occurred. Linode remains at 6baddcb. Follow the
+accepted continuation in attachment 887ee67f-a529-4fa4-8528-5a6fa08bffde; preserve
+control-plane/worker separation and do not repeat certified host load tests.

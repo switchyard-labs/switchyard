@@ -100,7 +100,7 @@ func switchyardCollections() [][2]any {
 		{"drafts", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "path", Type: "text"}, {Name: "content", Type: "text"}, {Name: "user", Type: "text"}, {Name: "revision", Type: "text"}, {Name: "base_sha", Type: "text"}, {Name: "last_agent_execution", Type: "text"}, {Name: "last_agent_prompt", Type: "text"}, {Name: "updated_at", Type: "text"}, {Name: "committed_at", Type: "text"}}},
 		{"escalations", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "packet", Type: "json"}, {Name: "status", Type: "text"}, {Name: "created_by", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "decision", Type: "text"}, {Name: "decided_by", Type: "text"}, {Name: "decided_at", Type: "text"}}},
 	}
-	for _, additional := range [][][2]any{repositorySettingsCollections(), collaborationCollections(), profileCollections(), policyCollections(), workflowCollections()} {
+	for _, additional := range [][][2]any{repositorySettingsCollections(), collaborationCollections(), profileCollections(), releaseCollections(), policyCollections(), workflowCollections()} {
 		collections = append(collections, additional...)
 	}
 	return collections
@@ -146,6 +146,11 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("DELETE /api/repositories/{owner}/{repo}/stars", a.authorizeHandler(a.handleRepositoryStars))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}", a.authorizeHandler(a.handleGetRepositoryMeta))
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/git-credential", a.authorizeHandler(a.handleGitCredential))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/releases", a.authorizeHandler(a.handleReleases))
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/releases", a.authorizeHandler(a.handleReleases))
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/releases/{tag...}", a.authorizeHandler(a.handleRelease))
+	mux.HandleFunc("PATCH /api/repositories/{owner}/{repo}/releases/{tag...}", a.authorizeHandler(a.handleRelease))
+	mux.HandleFunc("DELETE /api/repositories/{owner}/{repo}/releases/{tag...}", a.authorizeHandler(a.handleRelease))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions", a.authorizeHandler(a.handleActions))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions/{id}", a.authorizeHandler(a.handleActionRun))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/actions/{id}/logs", a.authorizeHandler(a.handleActionLogs))
