@@ -460,3 +460,18 @@ Releases browser smoke passed. Evidence: C46/linode-deployment-c8f98d6.json and
 C46/linode-public-releases-c8f98d6.png. No Linode Agent load. A real local review
 certified the new immutable context snapshot: C25/live-context-snapshot-review.json.
 C24 operations and final browser/runtime/CLI/demo/brochure gates remain open.
+
+C24 reset implementation follow-up: the placeholder now performs private Git/state
+baseline capture, dry-run planning and leased resumable reset for exactly the five
+curated demos. Schema 8 adds durable demo-only Actions run exclusions, preventing
+external manifest discovery from repopulating reset records. Protected collections,
+non-demo relationships, shared Work, active effects, schema identity, stopped PIDs
+and open database writers are checked before mutation. A full-state backup and
+five pre-reset mirrors precede publication; SQLite restoration is transactional.
+Full Go tests/vet, affected Actions/schema races and five Python scope/state tests
+passed. C24/operator-reset-proof.json records the actual full-command proof on
+five isolated bare Git repositories and synthetic SQLite state on Linode, including
+repeat reset, credential/non-demo preservation and idempotency restoration. No
+public demo reset, production record mutation, Agent load or resize occurred.
+Switchyard/Caddy remained active. C24 is still PARTIAL: actual in-flight queue,
+workflow and Actions drain/recovery proofs remain. Schema 8 is not yet deployed.

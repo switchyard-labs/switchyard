@@ -8,7 +8,11 @@ from pathlib import Path
 p=argparse.ArgumentParser();sub=p.add_subparsers(dest='operation',required=True)
 b=sub.add_parser('backup');b.add_argument('--trestle-db',required=True);b.add_argument('--data',required=True);b.add_argument('--config',required=True);b.add_argument('--target',required=True)
 r=sub.add_parser('restore');r.add_argument('--source',required=True);r.add_argument('--target',required=True)
-a=p.parse_args();os.umask(0o077);target=Path(a.target);target.mkdir(mode=0o700)
+a=p.parse_args();os.umask(0o077);target=Path(a.target)
+sources = [Path(a.trestle_db).resolve().parent, Path(a.data).resolve()] if a.operation == 'backup' else [Path(a.source).resolve()]
+if any(target.resolve().is_relative_to(source) for source in sources):
+ raise RuntimeError('Backup/restore target must be outside its source trees')
+target.mkdir(mode=0o700)
 def manifest(root):
  result={}
  for path in sorted(root.rglob('*')):

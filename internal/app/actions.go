@@ -69,6 +69,18 @@ func (a *App) syncActionSnapshotContext(ctx context.Context, snapshot actions.Sn
 	if snapshot.ID != run.ID || !eventSHA.MatchString(run.SHA) || run.Owner != a.Artifacts.Namespace || run.ProviderData["namespace"] != a.Artifacts.Namespace {
 		return fmt.Errorf("Actions snapshot identity mismatch")
 	}
+	// Offline curated-demo reset retains terminal external logs, but suppresses
+	// rediscovery of explicitly reset run identities. It never hides other repos.
+	switch run.Repo {
+	case "demo-basic", "demo-agents", "demo-conflict", "demo-semantic", "demo-workflow":
+		_, _, excluded, err := a.Trestle.FindRecord("demo_action_exclusions", filterEq("repo", run.Repo)+" && "+filterEq("run_id", run.ID))
+		if err != nil {
+			return err
+		}
+		if excluded != nil {
+			return nil
+		}
+	}
 	if source := manifest.Source; source != nil {
 		if source.Repo != run.Repo || source.SHA != run.SHA || !source.CommitPresent || source.Inspection != "artifacts-worker-binding" {
 			return fmt.Errorf("Actions source inspection identity mismatch")

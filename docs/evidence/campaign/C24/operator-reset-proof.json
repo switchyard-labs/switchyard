@@ -1,0 +1,21 @@
+{
+  "result": "PASS",
+  "date": "2026-10-04",
+  "environment": "isolated /tmp bare Git and synthetic SQLite fixtures on existing Linode; no production reset or Agent",
+  "repositories": 5,
+  "git_baseline_restored": true,
+  "extra_branches_removed": true,
+  "state_roundtrip": true,
+  "credentials_and_non_demo_activity_preserved": true,
+  "idempotency_restored": true,
+  "actions_rediscovery_exclusion_created": true,
+  "repeat_reset_idempotent": true,
+  "private_full_backup": true,
+  "sqlite_integrity": "ok",
+  "quiescence_guard": "initial fixture attempt rejected its still-open inspection connection; closed connection before successful run",
+  "limitations": [
+    "synthetic Trestle physical schema fixture, not a reset of production records",
+    "Go test separately verifies exclusion prevents Actions rediscovery",
+    "in-flight publication/workflow/Actions drain proofs remain outstanding"
+  ]
+}

@@ -70,6 +70,37 @@ func TestActionsExactSHAAndQueuedRerunFence(t *testing.T) {
 		t.Fatal("old success authorized queued rerun")
 	}
 }
+
+func TestDemoResetExcludesOnlyNamedDemoRun(t *testing.T) {
+	a, store, snapshot := actionFixture(t)
+	_, _, err := a.Trestle.CreateRecord("demo_action_exclusions", map[string]any{
+		"id": "reset-fixture", "repo": "demo-basic", "run_id": "run1",
+	}, "reset-fixture")
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot.Manifest.Run.Repo = "demo-basic"
+	if err := a.syncActionSnapshot(snapshot); err != nil {
+		t.Fatal(err)
+	}
+	if len(store.records["action_runs"]) != 0 || len(store.records["action_checks"]) != 0 {
+		t.Fatal("reset demo run was rediscovered")
+	}
+	// An exclusion cannot suppress a same-ID run in another repository.
+	snapshot.Manifest.Run.Repo = "repo"
+	_, _, err = a.Trestle.CreateRecord("demo_action_exclusions", map[string]any{
+		"id": "non-demo-fixture", "repo": "repo", "run_id": "run1",
+	}, "non-demo-fixture")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := a.syncActionSnapshot(snapshot); err != nil {
+		t.Fatal(err)
+	}
+	if len(store.records["action_runs"]) != 1 {
+		t.Fatal("non-demo run was suppressed")
+	}
+}
 func TestActionsRejectDefinitionAndTerminalRegression(t *testing.T) {
 	a, _, s := actionFixture(t)
 	if err := a.syncActionSnapshot(s); err != nil {

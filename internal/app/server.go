@@ -65,6 +65,7 @@ func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App
 // Provision creates the Switchyard coordination collections if missing.
 func switchyardCollections() [][2]any {
 	collections := [][2]any{
+		{"demo_action_exclusions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text", Required: true}, {Name: "run_id", Type: "text", Required: true}, {Name: "created_at", Type: "text"}}},
 		{"users", []trestle.CollectionField{{Name: "username", Type: "text", Unique: true}, {Name: "password_hash", Type: "text", Required: true}, {Name: "display_name", Type: "text"}}},
 		{"sessions", []trestle.CollectionField{{Name: "token", Type: "text", Unique: true}, {Name: "username", Type: "text"}, {Name: "expires_at", Type: "text"}}},
 		{"repos", []trestle.CollectionField{{Name: "name", Type: "text", Unique: true}, {Name: "default_branch", Type: "text"}, {Name: "remote", Type: "text"}, {Name: "registered_at", Type: "text"}}},
