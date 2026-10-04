@@ -316,7 +316,7 @@ func (r *CLIRunner) Run(ctx context.Context, ex *Execution, task Task) (runErr e
 	switch {
 	case errors.Is(runCtx.Err(), context.DeadlineExceeded):
 		ex.Status = "timed_out"
-		ex.FailureCode = "runner_timeout"
+		ex.FailureCode = "runner_wall_timeout"
 		err = context.DeadlineExceeded
 	case errors.Is(runCtx.Err(), context.Canceled):
 		ex.Status = "cancelled"
@@ -324,10 +324,7 @@ func (r *CLIRunner) Run(ctx context.Context, ex *Execution, task Task) (runErr e
 		err = context.Canceled
 	case err != nil:
 		ex.Status = "failed"
-		ex.FailureCode = "runner_exit_nonzero"
-		if resourceCounter(ex.ResourceUsage["memory.events"], "oom_kill") > 0 {
-			ex.FailureCode = "runner_resource_memory"
-		}
+		ex.FailureCode = resourceFailureCode(ex.ResourceUsage)
 	default:
 		ex.Status = "succeeded"
 	}

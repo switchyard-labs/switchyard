@@ -217,13 +217,36 @@ C45 resolves branch/tag once to a SHA, streams bounded archives through canonica
 authorized routes and adds Download ZIP to Code. C46 keeps immutable target SHA,
 authorized draft/publish lifecycle and audited metadata in Trestle; binary assets
 are separate R2 objects with SHA256/size metadata. Actions integration and later
-sy archive/release commands use the same contracts. Neither checkpoint is yet
-implemented or certified. SSH remains deferred; no fake tab is added.
+sy archive/release commands use the same contracts. C45 server ZIP/tar.gz and browser Download ZIP are implemented locally at
+67b1992; immutable archive and CLI checksum evidence passed. `sy repo archive`
+is implemented locally at d6dbd16. Linode deployment remains pending. C46 is
+not implemented or certified. SSH remains deferred; no fake tab is added.
 
 ## C25 addition — personal providers and task models
 
-Implemented personal provider/model/credential defaults, independent implementation, review and conflict-resolution selections, and per-invocation pickers in the editor and Work Attempt controls. Workflow implementation inherits the initiating user's selection. Overrides do not overwrite saved defaults; credential ownership and provider matching are enforced server-side. Full Go tests and vet pass; isolated Chromium saved/reloaded distinct role choices and opened the inherited review picker. Evidence and explicit execution limits: `docs/evidence/campaign/C25/provider-settings.md`. Real provider execution remains CONDITIONAL pending a configured coding adapter, non-root production service and legitimate personal credential. This addition does not mark the remaining C23–C46 campaign complete.
+Implemented personal provider/model/credential defaults, independent implementation, review and conflict-resolution selections, and per-invocation pickers in the editor and Work Attempt controls. Workflow implementation inherits the initiating user's selection. Overrides do not overwrite saved defaults; credential ownership and provider matching are enforced server-side. Full Go tests and vet pass; isolated Chromium saved/reloaded distinct role choices and opened the inherited review picker. Evidence and explicit execution limits: `docs/evidence/campaign/C25/provider-settings.md`. Real provider authentication and coding execution now pass locally with the candidate cgroup adapter; non-root production execution and full multi-role certification remain pending. This addition does not mark the remaining C23–C46 campaign complete.
 
 ## C25 runner investigation — 4 October 2026
 
-C25 remains PARTIAL / blocked on complete real runner certification. A genuine OpenCode Go credential now exists privately. Local non-root baseline and five harmless filesystem/cgroup sandbox requests returned actual model responses. RLIMIT_AS 2/4 GiB failures were independently reproduced despite a much smaller resident footprint; per-user RLIMIT_NPROC 256 independently fails on the desktop. Candidate cgroup-backed execution preserves filesystem/credential/time/output boundaries. Six sequential coding tasks and two- and three-Agent concurrent runs published verified edits on disposable branches. Four-Agent certification exposed an ambiguous-publication recovery bug; execution-specific recovery is fixed and its repeat is being certified. No Linode capacity conclusion is justified. Evidence: `docs/evidence/campaign/C25/real-agent-runner.md` and `runner-resource-study.json`. Remaining coding/concurrency/Linode/full-flow gates must pass before C25 DONE.
+C25 remains PARTIAL / blocked on complete real runner certification. A genuine OpenCode Go credential now exists privately. Local non-root baseline and five harmless filesystem/cgroup sandbox requests returned actual model responses. RLIMIT_AS 2/4 GiB failures were independently reproduced despite a much smaller resident footprint; per-user RLIMIT_NPROC 256 independently fails on the desktop. Candidate cgroup-backed execution preserves filesystem/credential/time/output boundaries. Six sequential coding tasks and two- and three-Agent concurrent runs published verified edits on disposable branches. Four-Agent certification exposed an ambiguous-publication recovery bug; execution-specific recovery is fixed and repeats remain NOT CERTIFIED due to explicit runner failures/upstream timeouts. No Linode capacity conclusion is justified. Evidence: `docs/evidence/campaign/C25/real-agent-runner.md` and `runner-resource-study.json`. Remaining coding/concurrency/Linode/full-flow gates must pass before C25 DONE.
+
+## Accepted continuation — runner stage diagnosis and final campaign gates
+
+Preserve runner commit `80c7de0` and sy archive commit `d6dbd16` without squashing. C25 = **PARTIAL**.
+
+| Gate | Current evidence |
+|---|---|
+| Real provider authentication | PASS, local |
+| One Agent | PASS, six sequential coding tasks |
+| Two concurrent Agents | PASS, exact outputs and branch isolation |
+| Three concurrent Agents | PASS, exact outputs and branch isolation |
+| Four concurrent Agents | NOT CERTIFIED; publication bug fixed, later failures recorded |
+| Linode Agent execution | NOT TESTED |
+| Full multi-role dogfood | NOT COMPLETE |
+| C45 server/browser archives | Implemented and isolated certification passed; Linode pending |
+| sy repo archive | Implemented locally, real immutable checksum proof passed |
+| C46 releases/R2/CLI | NOT IMPLEMENTED |
+
+Next order: classify failures and instrument stage timings before further stress tests; test 768/896/1024 MiB real-memory budgets with comparable repeated tasks; establish a safe non-root Linode execution boundary and reserved control-plane budget before exactly one Agent test. Do not resize or change production concurrency from local failures. Complete real role-separated review/conflict/re-preview/re-review/queue/Actions flow. Continue C23 genuine semantic timing and C24 restore/reset/drain independently. Deploy only verified committed builds with backup/version/integrity/rollback checks. Complete C46 server/R2/Actions then sy releases; final C42/C43 and brochure refresh certify the final product, not an intermediate state.
+
+The accepted full continuation is the user attachment dated 4 October, `2af2c5c1-fbb8-4d2d-856f-491ed9316c3b/Pasted text.txt`. Final report must cover A–R from that brief, including failure analysis, capacity evidence, complete checkpoint ledger and remaining blockers.

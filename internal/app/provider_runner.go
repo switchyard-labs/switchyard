@@ -75,7 +75,7 @@ func (p *personalProviderRunner) Run(ctx context.Context, ex *agent.Execution, t
 	}
 	p.a.Metrics.Record("agent_execution", time.Since(started), status)
 	switch ex.FailureCode {
-	case "runner_timeout", "runner_cancelled", "runner_resource_memory", "runner_exit_nonzero", "runner_invalid_output", "runner_start_failed":
+	case "runner_wall_timeout", "runner_cancelled", "runner_memory_limit", "runner_pid_limit", "runner_exit_nonzero", "runner_invalid_output", "runner_start_failed":
 		p.a.Metrics.Record("agent_"+ex.FailureCode, time.Since(started), 500)
 	}
 	ex.Adapter = task.Provider + "/" + task.Model

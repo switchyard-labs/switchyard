@@ -60,3 +60,15 @@ func resourceCounter(text, key string) uint64 {
 	}
 	return 0
 }
+
+// Classify only observed kernel limit events; virtual reservations and high
+// resource usage alone do not prove that a resource limit caused an exit.
+func resourceFailureCode(usage map[string]string) string {
+	if resourceCounter(usage["memory.events"], "oom_kill") > 0 {
+		return "runner_memory_limit"
+	}
+	if resourceCounter(usage["pids.events"], "max") > 0 {
+		return "runner_pid_limit"
+	}
+	return "runner_exit_nonzero"
+}
