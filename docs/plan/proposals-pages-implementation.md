@@ -54,3 +54,56 @@ Nick confirmed `switchyard.cx` has not yet been purchased/configured and request
 Deployment: all of these changes remain local; no push, Linode deployment or hostname routing change.
 
 Follow-up to `5c052c4` (app) / `d40c420` (sy): Finding conversion entry point added to PR Findings, with the server continuing to resolve and authorize evidence. Superseded lifecycle updates now return an explicit conflict; metadata/discussion remain independent. Trusted static export anchors traversal to Linux open directory descriptors with `O_NOFOLLOW`, including output ancestors and nested directories. App regressions and Worker/export tests pass after these changes. Native DNS **and TLS** remain conditional on purchase/configuration; broader independent campaign items above remain unfinished.
+
+## Actions integration and product surfaces — local checkpoint in progress
+
+Implemented since `c330ad4` (not pushed or deployed):
+
+- Schema 11 adds permanent mount reservations, versioned explicit site configs and SHA-bound deployment records. Owner-root approval requires owner/org authority; project config requires repo administration. Private source requires explicit public-output acknowledgement and promotion rechecks it.
+- Pages uses typed static output on approved Actions jobs. A generated trusted exporter produces a grant-scoped, checksum-bound bundle; the signed Actions control plane verifies successful job/run/source identity before immutable publication. Builds cannot choose destination keys or production mappings.
+- Manual build intents freeze exact source SHA; branch completion uses the existing Actions reconciliation path. Deployment identity binds site/run/job/definition. Saved deployment config survives settings edits. Failed/cancelled runs never publish.
+- Publication verifies the entire bounded bundle before writes, immutable payload checksums, then a manifest written last. Publication retries repair partial upload and converge. Production remains a separate conditional owner-map pointer.
+- Configuration/history/view/build/promote/rollback APIs and Pages project/owner UI; `sy pages` status/deployments/view/configure/deploy/promote/rollback. Explicit generation/version/operation IDs, no unsafe automatic mutation retries.
+- Qualified branch and tag refs resolve once, including peeled annotated tags. Raw SHA config is deliberately unsupported. Tag Pages can preserve an existing tag-only Release definition; branch Pages cannot silently broaden that policy.
+- Existing activity events record deployment states and promotion/rollback provenance. No automatic artifact deletion is implemented: production, rollback and all previews are conservatively retained.
+- Proposal intake and metadata UI, explicit Agent generation UI, and completed-execution recovery with stable Proposal identity and delegated-principal checks. This does not certify provider completion across a crash before execution evidence was saved.
+
+Validation so far: full app Go tests PASS; CLI command tests PASS; Actions typecheck PASS; Pages/export/control-plane Worker tests PASS; 12 Proposal and 12 Pages browser **fixture** checks PASS at 1600/1280/1024/768/430/390. A control-plane Worker fixture traces Action receipt → preview A → production A → B → rollback A with unchanged artifact/SHA and audit actor/action. Fixture evidence lives under `/tmp/switchyard-{proposal,pages}-browser`.
+
+Still required before final acceptance: API permission/concurrent recovery certification, CLI Pages mutation dogfood, generated-export drift check, real isolated-runtime combined flow and broader viewport checks, shared-origin browser certification, naming/base-path/Nift matrix, final build/vet/race/Worker regression and release instructions. Agent discussion support remains pending. Public DNS/TLS remains CONDITIONAL; no public hosting claim, domain purchase, new paid resources, push or deployment.
+
+Additional certification: actual app session issuance test verifies host-only, Secure, HttpOnly cookies. Chromium interception verifies no app session cookie on owner/preview hosts and confirms owner project localStorage is shared. Static responses have no Set-Cookie or Service-Worker-Allowed override and preserve nosniff/MIME/HEAD lengths across HTML, CSS, JS/MJS, JSON, SVG, PNG, JPEG, WebP, WOFF/WOFF2, TXT, XML and WASM. This is explicitly a same-owner content trust boundary, not per-project CSP/storage isolation.
+
+## Final local certification — 2026-10-05
+
+This checkpoint supersedes the pending implementation lists above. Proposal and Pages locally testable product implementation is complete. Public activation remains **CONDITIONAL**. No push, Linode deployment, domain purchase, DNS mutation or paid resource creation occurred.
+
+### Finished product behavior
+
+- Proposal intake settings, metadata, relationships/supersession, discussion/moderation, checked Finding evidence, multiple optional Work links, proposer generation and Agent discussion are implemented. Completed-execution recovery preserves identity and principal without invoking the model again. UI and CLI expose saved proposer defaults and explicit per-request provider/model/personal credential references.
+- Pages configuration, deployment list/view, manual build, approved branch completion, immutable publication, preview links, production promotion and rollback are implemented through existing Actions. Site approval history preserves builds completing after settings change. Deployment states are finite; uploading intent precedes remote publication; delayed snapshots cannot regress it. Production is a separate conditional mapping, never a mutable deployment state.
+- Exact ref/SHA, run/job/revision, artifact identity, approver and actor provenance are retained. Stable operation identities and CAS protect manual replay, concurrent completions and promotion. Creation/state/promotion events use the existing events store and replay repairs missing audit records.
+- Owner root and repository paths select the backing repository explicitly. Prefixes are permanently reserved; dotted/hyphenated/underscored repository names are covered. SPA fallback is explicit in UI/config/CLI and remains inside the output. Project 404s never fall into the owner root. No HTML rewriting, arbitrary raw-SHA configuration or magic repository name.
+- Export is descriptor-anchored, bounded and rejects symlinks/nonregular/traversal. Worker publication verifies the bounded bundle before immutable writes and writes the manifest last. All artifacts are retained; no deletion can remove production or rollback targets.
+
+### Evidence and boundaries
+
+`docs/evidence/proposals-pages/` holds final browser JSON and representative screenshots. Reproduction: `scripts/proposals-browser-regression.mjs`, `pages-browser-regression.mjs`, `work-pages-browser-regression.mjs`, `pages-origin-certification.mjs`, `pages-service-worker-certification.mjs` (set the installed Playwright module path when needed).
+
+- Final full app and sy tests/build/vet PASS. Affected app tests PASS with the race detector. Actions 28 Node tests and typecheck PASS; Pages 15 Node tests PASS. Both Worker dry-run builds PASS. Nift app generation PASS.
+- Chromium fixture rendering: 12 Proposal list/detail, 12 Pages owner/project, six Work preview checks PASS at 1600/1280/1024/768/430/390. Pages checks include card-internal width, not just document overflow. Mutation controls and direct deployment View routing are exercised against controlled API responses. These are rendering/contract checks, not live cloud browser certification.
+- Actual application HTTP handlers plus disposable real bare Git and queue integration trace Proposal acceptance → Work → two deterministic Agent candidates → exact-SHA Action completion → Pages previews → review → selected candidate → real Git integration → production-branch deployment creation. Standalone Work and manual builds bypass Proposal; branch completion bypasses Agents. Proposer model transport is controlled but uses the normal execution substrate; recovery and discussion are verified. Worker control tests separately trace artifact publication → promote A → B → rollback A. This is composed local certification, **not** one live provider/Trestle/R2 production run.
+- Naming matrix checks n-ham/strut-labs and foo-bar/foo.js/foo_bar/foo-1.2 across routing, Proposal, Pages, Releases/archive and real Git clone/fetch/push. Existing full suites cover broader product handlers and CLI. The index.html route check found and fixed ServeFile's redirect behavior for application source routes.
+- Real app cookie issuance verifies host-only Secure/HttpOnly attributes; browser interception confirms no app auth cookie reaches Pages/preview hosts. Real loopback browser service-worker test denies a project scope of `/` and proves a sibling is uncontrolled. LocalStorage and IndexedDB sharing between owner project paths is explicitly demonstrated. Authored scripts/CSP do **not** isolate same-owner projects. Owner-root scripts remain trusted across that owner origin.
+
+### Remaining release prerequisites and intentional limits
+
+- Native switchyard.cx purchase, authoritative DNS/wildcard routes and TLS: **CONDITIONAL**, not attempted. Public preview URLs remain planned addresses until activation.
+- Live signed Actions/Pages transport and real R2 conditional-write semantics, live Trestle metadata recovery, and commercial-provider runtime/quality must be smoke-tested after explicit release authorization. Local substitutes cannot certify their production behavior.
+- Actions has an existing restricted repository allowlist. Release must explicitly approve the intended repositories; dry-run success does not widen it. Use existing configured bucket/resources. Follow `workers/pages/ACTIVATION.md` and deploy coherent app/Actions/Pages versions together.
+- Generation cannot promise exactly-once provider completion if the process dies before execution evidence is saved. Recover only completed saved execution evidence.
+- Conservative retention only; quota/billing/cleanup, imports, custom domains, confidential Security intake on public repos and rename migration are later scope. Bounded Proposal history (1,000), discussion (200), relationship graph (10,000) and site approval history (1,000) require archival before exceeding their limits.
+
+### Release sequence (prepared, not executed)
+
+Review local app and sy commits; rerun environment-specific signed transport smoke; authorize intended Actions repositories; migrate app schema and deploy compatible Actions control/Pages serving/app/CLI; verify local-host owner/project/preview routing and rollback; acquire/configure domain only under separate authorization; verify app host-only cookies and native wildcard TLS before announcing public Pages. Preserve existing production mappings throughout. Never promote from an unverified or failed deployment.

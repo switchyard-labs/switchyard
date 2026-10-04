@@ -4,8 +4,9 @@ import {constants} from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 const ID=/^[A-Za-z0-9_-]{8,100}$/;
-const MIME={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif','.webp':'image/webp','.ico':'image/x-icon','.txt':'text/plain; charset=utf-8','.woff2':'font/woff2','.wasm':'application/wasm','.pdf':'application/pdf'};
-export async function exportStatic({workspace,output,siteID,deploymentID,basePath='/',spaFallback,bucket}){
+const MIME={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif','.webp':'image/webp','.ico':'image/x-icon','.txt':'text/plain; charset=utf-8','.woff':'font/woff','.woff2':'font/woff2','.xml':'application/xml','.wasm':'application/wasm','.pdf':'application/pdf'};
+export async function exportStatic({workspace,output,siteID,deploymentID,basePath='/',spaFallback,bucket,maxTotalBytes=256*1024*1024}){
+ if(!Number.isSafeInteger(maxTotalBytes)||maxTotalBytes<1||maxTotalBytes>256*1024*1024)throw Error('invalid_export_limit');
  if(!ID.test(siteID)||!ID.test(deploymentID)||!/^\/(?:[a-z0-9_][a-z0-9._-]{0,99}\/)?$/.test(basePath)||basePath==='/.git/')throw Error('invalid_export_identity');
  if(!output||path.isAbsolute(output)||output.split(/[\\/]/).some(x=>!x||x==='.'||x==='..'||x==='.git')||output.includes('\\'))throw Error('invalid_output_directory');
  const workspaceRoot=await realpath(workspace),directories=[];
@@ -28,7 +29,7 @@ export async function exportStatic({workspace,output,siteID,deploymentID,basePat
    if(!entry.isFile())throw Error('non_regular_output');
    if(payloads.length>=10000)throw Error('static_file_limit');
    const handle=await open(full,constants.O_RDONLY|constants.O_NOFOLLOW);let bytes;
-   try{const before=await handle.stat();if(!before.isFile()||before.size>64*1024*1024||total+before.size>256*1024*1024)throw Error('static_size_limit');bytes=await handle.readFile();const after=await handle.stat();if(before.size!==after.size||before.mtimeMs!==after.mtimeMs||bytes.length!==before.size)throw Error('output_changed_during_export');}finally{await handle.close();}
+   try{const before=await handle.stat();if(!before.isFile()||before.size>64*1024*1024||total+before.size>maxTotalBytes)throw Error('static_size_limit');bytes=await handle.readFile();const after=await handle.stat();if(before.size!==after.size||before.mtimeMs!==after.mtimeMs||bytes.length!==before.size)throw Error('output_changed_during_export');}finally{await handle.close();}
    total+=bytes.length;const hash=createHash('sha256').update(bytes).digest('hex'),key=`pages/${siteID}/${deploymentID}/files/${hash}`;
    files[name]={key,sha256:hash,size:bytes.length,mime:MIME[path.extname(entry.name).toLowerCase()]||'application/octet-stream'};payloads.push({key,bytes});
   }

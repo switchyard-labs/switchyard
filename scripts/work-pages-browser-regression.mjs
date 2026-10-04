@@ -1,0 +1,12 @@
+// Render the real Work surface with candidate deployment links; API/Git behavior
+// is certified separately by TestProposalWorkAttemptsPagesLocalDogfood.
+import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+const {chromium}=await import(process.env.SWITCHYARD_PLAYWRIGHT_MODULE||'playwright');
+const browser=await chromium.launch({headless:true,executablePath:process.env.SWITCHYARD_CHROMIUM_EXECUTABLE||undefined});
+const output='/tmp/switchyard-work-pages-browser';await mkdir(output,{recursive:true});const results=[];
+try {for(const width of [1600,1280,1024,768,430,390]) {
+ const page=await browser.newPage({viewport:{width,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('http://work.test/**',async route=>{const u=new URL(route.request().url());if(u.pathname.startsWith('/api/')){let value={};if(u.pathname==='/api/work/wk_fixture')value={title:'Candidate site',status:'open',owner:'alice',repo:'alice/foo.js',body:'Consider both candidates.',attempts:[{id:'att_a',branch:'candidate-a',status:'ready'}],pages_previews:[{attempt_id:'att_a',source_sha:'a'.repeat(40),run_id:'run_candidate_a',preview_url:'https://dpl-'+ 'b'.repeat(32)+'.switchyard.cx/foo.js/',pages_path:'/alice/foo.js/pages'}]};if(u.pathname.endsWith('/comments'))value={items:[]};return route.fulfill({contentType:'application/json',body:JSON.stringify(value)});}const file=u.pathname.startsWith('/assets/')?u.pathname.slice(1):'work-detail.html';try{return route.fulfill({body:await readFile(path.resolve('public',file)),contentType:file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html'});}catch{return route.fulfill({status:404,body:''});}});
+ await page.goto('http://work.test/work/wk_fixture');await page.getByRole('link',{name:'View deployment'}).waitFor();const bounds=await page.evaluate(()=>({width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight}));if(bounds.scrollWidth>width||bounds.scrollHeight>bounds.height)throw Error(width+' overflow '+JSON.stringify(bounds));if(errors.length)throw Error(errors.join('; '));await page.screenshot({path:path.join(output,width+'.png')});results.push({width,bounds});await page.close();
+}await writeFile(path.join(output,'results.json'),JSON.stringify(results,null,2));console.log(JSON.stringify({passed:results.length,output}));}finally{await browser.close();}

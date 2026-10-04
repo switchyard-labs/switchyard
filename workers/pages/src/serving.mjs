@@ -32,7 +32,7 @@ export async function serve(request,env){
  let mapping,site,immutable=false;
  try{
  if(owner.startsWith('dpl-')){
-  const id=owner.slice(4);if(!ID.test(id))return missing();
+  const token=owner.slice(4),id=/^[a-f0-9]{32}$/.test(token)?'dpl_'+token:token;if(!ID.test(id))return missing();
   site=await json(env.PAGES_BUCKET,'pages-previews/'+id+'.json');immutable=true;
   if(!site)return missing();
   if(path==='/'&&site.base_path!=='/')return Response.redirect(url.origin+site.base_path,308);
@@ -78,11 +78,11 @@ export async function serve(request,env){
 }
 export default {fetch:serve};
 
-export async function promote(bucket,owner,siteKey,target,expectedGeneration,operationID){
+export async function promote(bucket,owner,siteKey,target,expectedGeneration,operationID,audit={}){
  if(!OWNER.test(owner)||owner.startsWith('dpl-')||!ID.test(target.site_id)||!ID.test(target.deployment_id))throw new Error('invalid_mapping');
  const key='pages-hosts/'+owner+'.json',old=await bucket.get(key);
  const map=old?JSON.parse(await old.text()):{generation:0,root:null,projects:{},operations:[]};
- const input=await digest(JSON.stringify([siteKey,target.site_id,target.deployment_id,target.base_path,target.manifest_hash,Boolean(target.disabled)]));
+ const input=await digest(JSON.stringify([siteKey,target.site_id,target.deployment_id,target.base_path,target.manifest_hash,Boolean(target.disabled),audit.actor||'',audit.action||'promote']));
  const prior=(map.operations||[]).find(x=>x.id===operationID);
  if(prior){if(prior.input!==input)throw new Error('operation_input_conflict');return map;}
  if(map.generation!==expectedGeneration)throw new Error('promotion_conflict');
@@ -94,7 +94,7 @@ export async function promote(bucket,owner,siteKey,target,expectedGeneration,ope
  if(!manifest||manifest.base_path!==mount)throw new Error('deployment_not_ready');
  for(const entry of Object.values(manifest.files||{})){if((await bucket.head(entry.key))?.size!==entry.size)throw new Error('deployment_incomplete');}
  if(siteKey==='/')map.root=target;else map.projects[siteKey]=target;
- map.generation++;map.operations=[...(map.operations||[]).slice(-99),{id:operationID,input,site:siteKey,deployment:target.deployment_id,previous:existing?.deployment_id||null}];
+ map.generation++;map.operations=[...(map.operations||[]).slice(-99),{id:operationID,input,actor:audit.actor||'',action:audit.action||'promote',at:new Date().toISOString(),site:siteKey,deployment:target.deployment_id,previous:existing?.deployment_id||null}];
  const written=await bucket.put(key,JSON.stringify(map),{onlyIf:old?{etagMatches:old.etag}:{etagDoesNotMatch:'*'}});
  if(!written)throw new Error('promotion_conflict');return map;
 }

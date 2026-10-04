@@ -170,7 +170,10 @@ func (a *App) syncActionSnapshotContext(ctx context.Context, snapshot actions.Sn
 	if err = a.actionRecord("external_executions", run.ID, map[string]any{"id": run.ID, "repo": run.Repo, "run_id": run.ID, "provider": "cloudflare-workflows", "provider_id": run.ID, "state": map[string]any{"status": status}}); err != nil {
 		return err
 	}
-	return a.syncActionRelease(ctx, manifest, strOf(definition["approved_by"]), status)
+	if err := a.syncActionRelease(ctx, manifest, strOf(definition["approved_by"]), status); err != nil {
+		return err
+	}
+	return a.syncActionPages(ctx, manifest, status)
 }
 func (a *App) reconcileActions(ctx context.Context) error {
 	if a.Actions == nil {

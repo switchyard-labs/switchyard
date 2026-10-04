@@ -77,3 +77,28 @@ func TestDefinitionCannotConfigurePrivilegedRunnerInputs(t *testing.T) {
 		}
 	}
 }
+
+func TestStaticDirectoryOutputDoesNotRequireRelease(t *testing.T) {
+	source := `export default {refs:["refs/heads/website"],jobs:[{id:"pages",steps:[{id:"build",command:"nift build",timeout_ms:120000}],static:{directory:"public",base_path:"/foo.js/"}}]}`
+	d, err := CompileDefinition(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.Release != nil || d.Jobs[0].Static == nil {
+		t.Fatal("static artifact became a release")
+	}
+	for _, directory := range []string{"../secret", "/public", "foo//bar", "foo/.git", "foo\\bar"} {
+		output := *d.Jobs[0].Static
+		output.Directory = directory
+		if output.Validate() == nil {
+			t.Fatal("unsafe directory", directory)
+		}
+	}
+	for _, base := range []string{"foo", "/../", "/x/y/", "/.git/", "/foo%2fbar/"} {
+		output := *d.Jobs[0].Static
+		output.BasePath = base
+		if output.Validate() == nil {
+			t.Fatal("unsafe base", base)
+		}
+	}
+}

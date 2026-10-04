@@ -31,6 +31,7 @@ var BuiltinRoles = []Role{
 	{Name: "implementer", Capabilities: []string{"read", "edit-draft", "create-branch", "commit"}, Profile: "default"},
 	{Name: "reviewer", Capabilities: []string{"read", "review", "findings"}, Profile: "default"},
 	{Name: "conflict-resolver", Capabilities: []string{"read", "compare", "create-attempt"}, Profile: "default"},
+	{Name: "proposer", Capabilities: []string{"read", "consider", "discussion"}, Profile: "default"},
 }
 
 // CredentialMetadata is the only representation of a credential exposed to the

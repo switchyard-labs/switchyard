@@ -39,6 +39,11 @@
       "name": "proposals",
       "title": "templates/template.html",
       "template": "templates/template.html"
+    },
+    {
+      "name": "pages",
+      "title": "Pages",
+      "template": "templates/template.html"
     }
   ]
 }

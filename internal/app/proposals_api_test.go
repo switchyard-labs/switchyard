@@ -206,3 +206,73 @@ func TestProposalIntakeAndAuthorBoundaries(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+func TestProposalCompletedAgentRecoveryKeepsIdentityAndPrincipal(t *testing.T) {
+	records := map[string][]map[string]any{
+		"repository_meta":    {{"id": "pub", "full_name": "alice/public", "owner_type": "user", "owner_id": "alice", "artifact_name": "public", "visibility": "public"}},
+		"executions":         {{"id": "exe_completed", "role": "proposer", "status": "succeeded", "finished_at": "2026-10-05T01:00:00Z"}},
+		"execution_metadata": {{"execution_id": "exe_completed", "repo": "public", "metadata": map[string]any{"principal": "alice", "role": "proposer", "status": "succeeded", "source_sha": strings.Repeat("a", 40), "branch": "main", "proposal_result": `{"title":"Provider consideration","type":"Question","description":"Evidence"}`}}},
+	}
+	a := securityFixture(t, records)
+	call := func(actor string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("POST", "/generate", strings.NewReader(`{"execution_id":"exe_completed"}`))
+		r = r.WithContext(contextWithUser(r.Context(), actor))
+		r.SetPathValue("owner", "alice")
+		r.SetPathValue("repo", "public")
+		w := httptest.NewRecorder()
+		a.handleGenerateProposal(w, r)
+		return w
+	}
+	first := call("alice")
+	if first.Code != 201 {
+		t.Fatal(first.Code, first.Body.String())
+	}
+	second := call("alice")
+	if second.Code != 201 || first.Body.String() != second.Body.String() {
+		t.Fatal(second.Code, second.Body.String())
+	}
+	if len(records["proposals"]) != 1 {
+		t.Fatal("recovery duplicated proposal")
+	}
+	if records["proposals"][0]["author_principal"] != "agent:exe_completed" {
+		t.Fatal("agent principal missing")
+	}
+	if call("bob").Code == 201 {
+		t.Fatal("another principal recovered execution")
+	}
+}
+
+func TestAgentDiscussionRecoveryDoesNotDuplicateOrCrossTarget(t *testing.T) {
+	records := map[string][]map[string]any{
+		"repository_meta":    {{"id": "pub", "full_name": "alice/public", "owner_type": "user", "owner_id": "alice", "artifact_name": "public", "visibility": "public"}},
+		"proposals":          {{"id": "target", "repository_id": "pub", "title": "Consider this", "description": "Evidence", "state": "open"}, {"id": "other", "repository_id": "pub", "title": "Other"}},
+		"executions":         {{"id": "exe_discuss", "finished_at": "2026-10-05T01:00:00Z"}},
+		"execution_metadata": {{"execution_id": "exe_discuss", "repo": "public", "metadata": map[string]any{"principal": "alice", "role": "proposer", "status": "succeeded", "source_sha": strings.Repeat("a", 40), "branch": "main", "proposal_id": "target", "proposal_result": `{"description":"Agent discussion consideration"}`}}},
+	}
+	a := securityFixture(t, records)
+	call := func(target string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("POST", "/generate", strings.NewReader(`{"proposal_id":"`+target+`","execution_id":"exe_discuss"}`))
+		r = r.WithContext(contextWithUser(r.Context(), "alice"))
+		r.SetPathValue("owner", "alice")
+		r.SetPathValue("repo", "public")
+		w := httptest.NewRecorder()
+		a.handleGenerateProposal(w, r)
+		return w
+	}
+	if first := call("target"); first.Code != 201 {
+		t.Fatal(first.Code, first.Body.String())
+	}
+	if call("target").Code != 200 {
+		t.Fatal("comment replay failed")
+	}
+	comments := records["proposals"][0]["discussion"].([]any)
+	if len(comments) != 1 || comments[0].(map[string]any)["author_principal"] != "agent:exe_discuss" {
+		t.Fatal(comments)
+	}
+	if call("other").Code != 404 {
+		t.Fatal("cross-target recovery accepted")
+	}
+	if len(records["proposals"]) != 2 {
+		t.Fatal("discussion created extra proposal")
+	}
+}

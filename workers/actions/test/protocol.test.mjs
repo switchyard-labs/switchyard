@@ -40,3 +40,9 @@ test('credential redaction covers encoded values and a truncated boundary',async
  assert.equal(redactSecrets('before '+secret.slice(0,18),[secret]),'before [redacted]');
  assert.equal(redactSecrets('ordinary diagnostic',[secret]),'ordinary diagnostic');
 });
+
+test('static directory artifacts are explicit and cannot select another prefix',()=>{
+ const value=run();value.jobs[0].static={directory:'public',base_path:'/foo.js/'};assert.equal(validateRun(value,'test',['repo']),value);
+ for(const directory of ['../secret','/public','.git','a//b','a\\b'])assert.throws(()=>validateRun({...value,jobs:[{...value.jobs[0],static:{directory,base_path:'/'}}]},'test',['repo']));
+ for(const base_path of ['/../','/x/y/','/.git/','/foo%2fbar/'])assert.throws(()=>validateRun({...value,jobs:[{...value.jobs[0],static:{directory:'public',base_path}}]},'test',['repo']));
+});

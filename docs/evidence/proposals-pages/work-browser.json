@@ -1,0 +1,56 @@
+[
+  {
+    "width": 1600,
+    "bounds": {
+      "width": 1600,
+      "height": 1000,
+      "scrollWidth": 1585,
+      "scrollHeight": 1000
+    }
+  },
+  {
+    "width": 1280,
+    "bounds": {
+      "width": 1280,
+      "height": 1000,
+      "scrollWidth": 1265,
+      "scrollHeight": 1000
+    }
+  },
+  {
+    "width": 1024,
+    "bounds": {
+      "width": 1024,
+      "height": 1000,
+      "scrollWidth": 1009,
+      "scrollHeight": 1000
+    }
+  },
+  {
+    "width": 768,
+    "bounds": {
+      "width": 768,
+      "height": 1000,
+      "scrollWidth": 753,
+      "scrollHeight": 1000
+    }
+  },
+  {
+    "width": 430,
+    "bounds": {
+      "width": 430,
+      "height": 1000,
+      "scrollWidth": 415,
+      "scrollHeight": 1000
+    }
+  },
+  {
+    "width": 390,
+    "bounds": {
+      "width": 390,
+      "height": 1000,
+      "scrollWidth": 375,
+      "scrollHeight": 1000
+    }
+  }
+]

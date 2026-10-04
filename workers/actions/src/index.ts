@@ -5,11 +5,13 @@ import { validateRun, signature, equalSignature, digest, boundedBody, validateRe
 import { releaseAssetRequest } from './release-assets.mjs';
 import { inspectArtifactSource } from './artifacts-source.mjs';
 import {buildAssetRequest,issueBuildAssetGrant,buildAssetKey} from './build-asset-grants.mjs';
+import {pagesControl} from './pages-control.mjs';
+import {pagesExportCommand} from './pages-export.mjs';
 import {buildExportCommand} from './build-export.mjs';
 import {recoverSandbox} from './sandbox-recovery.mjs';
 export { CiSandbox };
 type Step = {id:string; name?:string; command:string; timeout_ms:number};
-type Run = CiParams<CloudflareArtifacts> & {run_id:string; definition_revision:string; jobs:{id:string; name?:string; steps:Step[];assets?:{name:string;path:string}[]}[];rerun_of?:string;selected_jobs?:string[];release?:{publish:boolean;prerelease:boolean}};
+type Run = CiParams<CloudflareArtifacts> & {run_id:string; definition_revision:string; jobs:{id:string; name?:string; steps:Step[];assets?:{name:string;path:string}[];static?:{directory:string;base_path:string;spa_fallback?:string}}[];rerun_of?:string;selected_jobs?:string[];release?:{publish:boolean;prerelease:boolean}};
 type Env = CiBindings & { CONTROL_SECRET:string; ARTIFACTS_NAMESPACE:string; ALLOWED_REPOS:string };
 const json = (value:unknown, status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 const privilegedSecrets=(env:Env)=>[env.CONTROL_SECRET,env.CF_TOKEN,env.R2_ACCESS_KEY_ID,env.R2_SECRET_ACCESS_KEY];
@@ -62,7 +64,7 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
    // the immutable checkout; chained steps restore only that job's snapshot.
    for(const job of run.jobs) {
     if(parent&&!run.selected_jobs!.includes(job.id)){manifest.jobs.push({...parent.jobs.find((view:any)=>view.id===job.id),reused_from:parent.jobs.find((view:any)=>view.id===job.id).reused_from||run.rerun_of});await save();continue;}
-    const view={id:job.id,name:job.name||job.id,status:'running',steps:[] as any[],assets:[] as any[]};manifest.jobs.push(view);let prior:CiRunnerResult|undefined;
+    const view={id:job.id,name:job.name||job.id,status:'running',steps:[] as any[],assets:[] as any[],static:undefined as any};manifest.jobs.push(view);let prior:CiRunnerResult|undefined;
     for(const [commandIndex,command] of job.steps.entries()) {
      const label=`${job.id}-${command.id}`;
      const state={id:command.id,name:command.name||command.id,status:'running',started_at:await step.do(`start-${label}`,async()=>new Date().toISOString()),finished_at:'',log_key:`runs/${run.run_id}/${label}.json`,truncated:false};view.steps.push(state);
@@ -77,8 +79,16 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
        return {...asset,scope,limit:scope.limit,url:definition.upload_origin+grant.path,token:grant.token};
       }));
      }):[];
-     const captureSecrets=[...privilegedSecrets(this.env),...outputs.map(output=>output.token)];
-     const opts={name:label,command:outputs.length?`(${command.command}) && ${buildExportCommand}`:command.command,...(outputs.length?{env:{SWITCHYARD_BUILD_OUTPUTS:JSON.stringify(outputs)}}:{}),config:{retries:{limit:0,delay:1000},timeout:command.timeout_ms+(outputs.length?130000:10000),commandTimeoutMs:outputs.length?command.timeout_ms+120000:command.timeout_ms,snapshotRetentionSeconds:3600},cloudflareCredentials:false,sourceControlCredentials:false};
+     const staticOutput=job.static&&commandIndex===job.steps.length-1?await step.do(`prepare-static-${job.id}`,async()=>{
+      const stored=await this.env.BACKUP_BUCKET.get(`definitions/${run.repo}.json`),definition=stored?await stored.json<any>():null;
+      if(!definition||definition.revision!==run.definition_revision||typeof definition.upload_origin!=='string'||new URL(definition.upload_origin).protocol!=='https:')throw Error('Approved upload origin unavailable');
+      const scope={run:run.run_id,repo:run.repo,job:job.id,name:'pages-static.bundle.json',sha:run.sha,expires:Math.floor(Date.now()/1000)+600,limit:64*1024*1024},grant=await issueBuildAssetGrant(this.env.CONTROL_SECRET,scope);
+      return {...job.static,limit:scope.limit,url:definition.upload_origin+grant.path,token:grant.token};
+     }):null;
+     const captureSecrets=[...privilegedSecrets(this.env),...outputs.map(output=>output.token),...(staticOutput?[staticOutput.token]:[])];
+     const exportCommands=[...(outputs.length?[buildExportCommand]:[]),...(staticOutput?[pagesExportCommand]:[])];
+     const exportsEnv={...(outputs.length?{SWITCHYARD_BUILD_OUTPUTS:JSON.stringify(outputs)}:{}),...(staticOutput?{SWITCHYARD_STATIC_OUTPUT:JSON.stringify(staticOutput)}:{})};
+     const opts={name:label,command:exportCommands.length?`(${command.command}) && ${exportCommands.join(' && ')}`:command.command,...(exportCommands.length?{env:exportsEnv}:{}),config:{retries:{limit:0,delay:1000},timeout:command.timeout_ms+(exportCommands.length?exportCommands.length*120000+10000:10000),commandTimeoutMs:exportCommands.length?command.timeout_ms+exportCommands.length*120000:command.timeout_ms,snapshotRetentionSeconds:3600},cloudflareCredentials:false,sourceControlCredentials:false};
      try {prior=await (prior?prior.runner(opts):ci.runner(opts));const stdout=await logText(prior.logs.stdout,captureSecrets),stderr=await logText(prior.logs.stderr,captureSecrets);state.truncated=stdout.truncated||stderr.truncated;
       await step.do(`logs-${label}`,async()=>{await this.env.BACKUP_BUCKET.put(state.log_key,JSON.stringify({stdout,stderr,kind:'captured',sha:run.sha}));});state.status='succeeded';
      } catch(error) {state.status='failed';view.status='failed';const diagnostic=redactSecrets(isCiRunnerFailure(error)?error.output:'Runner failed; inspect Cloudflare execution',captureSecrets);state.truncated=diagnostic.length>=20000;
@@ -90,6 +100,11 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
      if(!stored||stored.customMetadata?.source_sha!==run.sha||stored.customMetadata?.name!==asset.name||!/^[a-f0-9]{64}$/.test(stored.customMetadata?.sha256||''))throw new Error('Build output receipt unavailable');
      return {name:asset.name,size:stored.size,sha256:stored.customMetadata.sha256,source_sha:run.sha,key,job_id:job.id};
     })));
+    if(job.static)view.static=await step.do(`record-static-${job.id}`,async()=>{
+     const key=await buildAssetKey({repo:run.repo,run:run.run_id,job:job.id,name:'pages-static.bundle.json'}),stored=await this.env.BACKUP_BUCKET.head(key);
+     if(!stored||stored.customMetadata?.source_sha!==run.sha||stored.customMetadata?.name!=='pages-static.bundle.json'||!/^[a-f0-9]{64}$/.test(stored.customMetadata?.sha256||''))throw Error('Static output receipt unavailable');
+     return {name:'pages-static.bundle.json',size:stored.size,sha256:stored.customMetadata.sha256,source_sha:run.sha,key,job_id:job.id};
+    });
     view.status='succeeded';await save();
    }
    manifest.status='succeeded';
@@ -107,6 +122,7 @@ export default {
   const timestamp=request.headers.get('X-Switchyard-Time')||'',given=request.headers.get('X-Switchyard-Signature')||'';
   if(!env.CONTROL_SECRET||!/^\d{10}$/.test(timestamp)||Math.abs(Date.now()/1000-Number(timestamp))>300||!equalSignature(given,await signature(env.CONTROL_SECRET,timestamp,request.method,url.pathname+url.search,body)))return json({error:'unauthorized'},401);
   try {
+   if(['/pages/publish','/pages/promote','/pages/mapping'].includes(url.pathname)&&request.method==='POST')return json(await pagesControl(url.pathname,JSON.parse(body),env));
    if(url.pathname==='/sandbox-recovery'&&request.method==='POST'){
     const result=await recoverSandbox(JSON.parse(body),env,async(id:string)=>{const object=await env.BACKUP_BUCKET.get(key(id));return object?await object.json():null;});
     return json(result,result.status);

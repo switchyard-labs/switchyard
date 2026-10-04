@@ -105,6 +105,7 @@ func switchyardCollections() [][2]any {
 		collections = append(collections, additional...)
 	}
 	collections = append(collections, proposalCollections()...)
+	collections = append(collections, pagesCollections()...)
 	return collections
 }
 
@@ -205,6 +206,12 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals/{id}/links", a.handleProposalLinks)
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals/{id}/work", a.handleProposalWork)
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals/generate", a.handleGenerateProposal)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/pages/deployments", a.handlePagesDeployments)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/pages/deployments/{id}", a.handlePagesDeployments)
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/pages/deploy", a.handlePagesDeploy)
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/pages/deployments/{id}/{action}", a.handlePagesPromote)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/pages/config", a.handlePagesConfig)
+	mux.HandleFunc("PATCH /api/repositories/{owner}/{repo}/pages/config", a.handlePagesConfig)
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/proposal-settings", a.handleProposalSettings)
 	mux.HandleFunc("PATCH /api/repositories/{owner}/{repo}/proposal-settings", a.handleProposalSettings)
 	// work
@@ -410,6 +417,10 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		a.handleRepositoryArchive(w, r)
 		return
 	}
+	if len(parts) == 3 && parts[2] == "pages" && validOwnerSlug(parts[0]) && validRepoSlug(parts[1]) {
+		a.serveAsset(w, r, "pages.html")
+		return
+	}
 	if (len(parts) == 3 || len(parts) == 4) && parts[2] == "proposals" && validOwnerSlug(parts[0]) && validRepoSlug(parts[1]) {
 		a.serveAsset(w, r, "proposals.html")
 		return
@@ -532,7 +543,20 @@ func readJSON(r *http.Request, out any) error {
 // directory is configured. Canonical route identity is preserved in the URL.
 func (a *App) serveAsset(w http.ResponseWriter, r *http.Request, name string) {
 	if a.StaticDir != "" {
-		http.ServeFile(w, r, filepath.Join(a.StaticDir, name))
+		file, err := os.Open(filepath.Join(a.StaticDir, name))
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		defer file.Close()
+		info, err := file.Stat()
+		if err != nil || info.IsDir() {
+			http.NotFound(w, r)
+			return
+		}
+		// The route may end in a repository's index.html, rather than the
+		// shell asset's name. ServeFile would redirect that route to its parent.
+		http.ServeContent(w, r, name, info.ModTime(), file)
 		return
 	}
 	file, err := webassets.Files.Open(name)

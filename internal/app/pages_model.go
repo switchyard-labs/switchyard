@@ -17,6 +17,7 @@ type PagesConfig struct {
 	WorkingDirectory   string `json:"working_directory"`
 	BuildCommand       string `json:"build_command"`
 	OutputDirectory    string `json:"output_directory"`
+	SPAFallback        string `json:"spa_fallback,omitempty"`
 	PublicAcknowledged bool   `json:"public_acknowledged"`
 }
 
@@ -48,7 +49,10 @@ func (p PagesConfig) validate(privateSource bool) error {
 	if p.Project != "" && (!pagesProject.MatchString(p.Project) || p.Project == ".git") {
 		return fmt.Errorf("pages_project_invalid")
 	}
-	if p.RepositoryID == "" || p.Ref == "" || len(p.Ref) > 255 || strings.ContainsAny(p.Ref, "\x00\r\n") || strings.HasPrefix(p.Ref, "-") {
+	if p.SPAFallback != "" && !pagesRelativePath(p.SPAFallback, false) {
+		return fmt.Errorf("pages_spa_fallback_invalid")
+	}
+	if p.RepositoryID == "" || !pagesSourceRefValid(p.Ref) {
 		return fmt.Errorf("pages_source_invalid")
 	}
 	if !pagesRelativePath(p.WorkingDirectory, true) || !pagesRelativePath(p.OutputDirectory, false) {
@@ -67,4 +71,34 @@ func (p PagesConfig) basePath() string {
 		return "/"
 	}
 	return "/" + p.Project + "/"
+}
+
+// Configured sources are branches or qualified branch/tag refs, never a mutable
+// interpretation of a raw commit ID. Each build resolves this ref once.
+func pagesSourceRefValid(value string) bool {
+	ref := pagesRef(value)
+	if len(ref) > 255 || (!strings.HasPrefix(ref, "refs/heads/") && !strings.HasPrefix(ref, "refs/tags/")) || strings.ContainsAny(ref, " ~^:?*[\\\x00\r\n\t") || strings.Contains(ref, "..") || strings.Contains(ref, "@{") || strings.HasSuffix(ref, "/") || strings.HasSuffix(ref, ".") {
+		return false
+	}
+	for _, part := range strings.Split(ref, "/") {
+		if part == "" || strings.HasPrefix(part, ".") || strings.HasPrefix(part, "-") || strings.HasSuffix(part, ".lock") {
+			return false
+		}
+	}
+	return !workspaceSHA.MatchString(value)
+}
+func pagesResolvedSource(refs map[string]string, ref string) (string, error) {
+	if !pagesSourceRefValid(ref) {
+		return "", fmt.Errorf("pages_source_invalid")
+	}
+	key := pagesRef(ref)
+	sha := refs[key]
+	// Annotated tags resolve to their peeled commit, not the tag object.
+	if peeled := refs[key+"^{}"]; peeled != "" {
+		sha = peeled
+	}
+	if !workspaceSHA.MatchString(sha) {
+		return "", fmt.Errorf("pages_source_unavailable")
+	}
+	return sha, nil
 }

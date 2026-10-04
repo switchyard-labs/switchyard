@@ -1,0 +1,9 @@
+{
+  "$schema": "../actions/node_modules/wrangler/config-schema.json",
+  "name": "switchyard-pages",
+  "main": "src/serving.mjs",
+  "compatibility_date": "2026-10-05",
+  "workers_dev": false,
+  "r2_buckets": [{"binding": "PAGES_BUCKET", "bucket_name": "switchyard-actions-probe-20261003"}],
+  "vars": {"PAGES_DOMAIN": "switchyard.cx"}
+}

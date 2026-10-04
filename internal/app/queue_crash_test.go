@@ -29,6 +29,8 @@ type queueStore struct {
 	records            map[string][]*queueRecord
 	next               int
 	failStepCompletion bool
+	enforceUnique      bool
+	idempotency        map[string]*queueRecord
 }
 
 func (f *queueStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -94,9 +96,31 @@ func (f *queueStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == "POST" {
+		key := collection + "/" + r.Header.Get("Idempotency-Key")
+		if f.enforceUnique {
+			if old := f.idempotency[key]; old != nil && r.Header.Get("Idempotency-Key") != "" {
+				w.Header().Set("Idempotency-Replayed", "true")
+				json.NewEncoder(w).Encode(map[string]any{"id": old.id, "version": old.version, "values": old.values})
+				return
+			}
+			if id, ok := body.Values["id"].(string); ok && id != "" {
+				for _, old := range f.records[collection] {
+					if old.values["id"] == id {
+						w.WriteHeader(409)
+						return
+					}
+				}
+			}
+		}
 		f.next++
 		record := &queueRecord{id: strconv.Itoa(f.next), version: 1, values: body.Values}
 		f.records[collection] = append(f.records[collection], record)
+		if f.enforceUnique && r.Header.Get("Idempotency-Key") != "" {
+			if f.idempotency == nil {
+				f.idempotency = map[string]*queueRecord{}
+			}
+			f.idempotency[key] = record
+		}
 		w.WriteHeader(201)
 		json.NewEncoder(w).Encode(map[string]any{"id": record.id, "version": record.version, "values": record.values})
 		return

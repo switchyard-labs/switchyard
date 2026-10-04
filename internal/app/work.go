@@ -121,6 +121,28 @@ func (a *App) handleGetWork(w http.ResponseWriter, r *http.Request) {
 	} else {
 		out["pull_requests"] = []map[string]any{}
 	}
+	previews := []map[string]any{}
+	if attempts, ok := out["attempts"].([]map[string]any); ok {
+		for _, attempt := range attempts {
+			meta := a.repositoryMetaByArtifact(strOf(attempt["repo"]))
+			if !a.CanRepository(meta, a.currentUser(r), ReadRepo) {
+				continue
+			}
+			deployments, e := a.Trestle.ListRecords("pages_deployments", filterEq("repository_id", strOf(meta["id"])))
+			if e != nil {
+				continue
+			}
+			for _, deployment := range deployments {
+				state, _ := deployment["state"].(map[string]any)
+				if state["status"] != "ready" || deployment["source_ref"] != pagesRef(strOf(attempt["branch"])) {
+					continue
+				}
+				artifact, _ := state["artifact"].(map[string]any)
+				previews = append(previews, map[string]any{"attempt_id": attempt["id"], "deployment_id": deployment["id"], "source_sha": deployment["source_sha"], "run_id": deployment["run_id"], "pages_path": "/" + strOf(meta["full_name"]) + "/pages?deployment=" + strOf(deployment["id"]) + "&kind=" + map[bool]string{true: "owner", false: "project"}[artifact["base_path"] == "/"], "preview_url": "https://dpl-" + strings.TrimPrefix(strOf(deployment["id"]), "dpl_") + ".switchyard.cx" + strOf(artifact["base_path"]), "hosting": "conditional_dns_tls"})
+			}
+		}
+	}
+	out["pages_previews"] = previews
 	writeJSON(w, 200, out)
 }
 

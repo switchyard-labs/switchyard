@@ -21,6 +21,7 @@ type JobState struct {
 	Status     string              `json:"status"`
 	Steps      []StepState         `json:"steps"`
 	Assets     []BuildAssetReceipt `json:"assets,omitempty"`
+	Static     *BuildAssetReceipt  `json:"static,omitempty"`
 }
 type BuildAssetReceipt struct {
 	Name      string `json:"name"`

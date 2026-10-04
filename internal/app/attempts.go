@@ -230,8 +230,12 @@ func (a *App) runViaSubstrateContext(parent context.Context, role, attemptID, re
 		"status": status, "output": ex.Output, "started_at": ex.Started.Format(time.RFC3339),
 		"finished_at": ex.Finished.Format(time.RFC3339),
 	}, "exec-"+ex.ID)
+	proposalResult := ""
+	if role == "proposer" {
+		proposalResult = ex.Result["PROPOSAL.json"]
+	}
 	if persistErr == nil {
-		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"attempt_id": attemptID, "work_id": strOf(attemptContext["work_id"]), "pr_ids": prIDs, "branch": branch, "source_sha": parent.Value(agentSourceSHAKey{}), "file": file, "status": ex.Status, "resource_usage": ex.ResourceUsage, "timings_ns": ex.TimingsNS, "failure_code": ex.FailureCode, "credential_profile": credentialProfile, "principal": principal, "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": task.Provider != "" || ex.Adapter == "cli-sandbox", "provider": task.Provider, "model": task.Model, "role": role}}, "execution-meta-"+ex.ID)
+		_, _, persistErr = a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"attempt_id": attemptID, "work_id": strOf(attemptContext["work_id"]), "pr_ids": prIDs, "branch": branch, "source_sha": parent.Value(agentSourceSHAKey{}), "file": file, "status": ex.Status, "resource_usage": ex.ResourceUsage, "timings_ns": ex.TimingsNS, "failure_code": ex.FailureCode, "credential_profile": credentialProfile, "principal": principal, "proposal_result": proposalResult, "proposal_id": parent.Value(agentProposalTargetKey{}), "exit_code": ex.ExitCode, "cpu_time_ns": int64(ex.CPUTime), "output_truncated": ex.OutputTruncated, "duration_ns": int64(ex.Finished.Sub(ex.Started)), "sandbox": task.Provider != "" || ex.Adapter == "cli-sandbox", "provider": task.Provider, "model": task.Model, "role": role}}, "execution-meta-"+ex.ID)
 	}
 
 	if persistErr != nil {

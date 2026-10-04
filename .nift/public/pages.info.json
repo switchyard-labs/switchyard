@@ -1,0 +1,33 @@
+{
+  "name": "pages",
+  "title": "Pages",
+  "template": "templates/template.html",
+  "content": "content/pages.html",
+  "output": "public/pages.html",
+  "minify": false,
+  "minify-version": 0,
+  "pagination": false,
+  "pagination-items-per-page": 0,
+  "pagination-template": "",
+  "pagination-separator": "",
+  "pagination-pages": 0,
+  "project-fingerprint": "",
+  "hierarchy-fingerprint": "",
+  "dependencies": [
+    "content/pages.html",
+    "templates/head.html",
+    "templates/template.html"
+  ],
+  "reqs": [
+    "public/assets/css/app.css",
+    "public/assets/css/components.css",
+    "public/assets/css/identity.css",
+    "public/assets/css/theme.css",
+    "public/assets/images/favicon.webp",
+    "public/assets/js/app.js",
+    "public/assets/js/code-blocks.js",
+    "public/assets/js/code-surface.js",
+    "public/assets/js/markdown.js",
+    "public/index.html"
+  ]
+}

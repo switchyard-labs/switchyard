@@ -250,3 +250,21 @@ html[data-density="compact"] .panel { padding: 14px; }
 #agent-role-preferences legend { padding: 0 8px; }
 #agent-role-preferences fieldset select:last-child { grid-column: 1 / -1; }
 @media (max-width: 540px) { #agent-role-preferences fieldset { grid-template-columns: 1fr; } }
+
+/* Bounded intake/deployment cards must not grow to a long URL's min-content width. */
+#pages-page > .work-list, #proposal-page > .work-list { grid-template-columns: minmax(0, 1fr); }
+#pages-page .form-stack, #pages-page .form-stack label,
+#proposal-page .form-stack, #proposal-page .form-stack label { min-width: 0; }
+#pages-page input, #proposal-page input, #proposal-page textarea { min-width: 0; }
+#pages-url, #pages-production, #pages-backing { overflow-wrap: anywhere; }
+#pages-page label:has(input[type=checkbox]) { display: flex; align-items: flex-start; gap: 8px; }
+#pages-page input[type=checkbox] { width: auto; flex-shrink: 0; }
+@media (max-width: 600px) {
+ #pages-page > .page-head { flex-wrap: wrap; gap: 12px; }
+ #pages-page > .page-head > div { width: 100%; }
+}
+#pages-page h2 { font-size: 17px; margin: 12px 0; }
+#pages-page > .work-list > p { padding: 0; margin: 0 0 12px; }
+#pages-page .form-stack { gap: 12px; }
+#pages-config > p { margin: 0; font-size: 13px; color: var(--text-dim); }
+#pages-history { min-width: 0; }

@@ -92,8 +92,13 @@ func (d Definition) Validate() error {
 			return fmt.Errorf("invalid or duplicate Actions job")
 		}
 		jobs[job.ID] = true
+		if job.Static != nil {
+			if err := job.Static.Validate(); err != nil {
+				return err
+			}
+		}
 		for _, asset := range job.Assets {
-			if d.Release == nil || !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$`).MatchString(asset.Name) || assetNames[asset.Name] || asset.Path == "" || len(asset.Path) > 500 || strings.HasPrefix(asset.Path, "/") || strings.Contains(asset.Path, "\\") {
+			if d.Release == nil || !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$`).MatchString(asset.Name) || assetNames[asset.Name] || asset.Name == "pages-static.bundle.json" || asset.Path == "" || len(asset.Path) > 500 || strings.HasPrefix(asset.Path, "/") || strings.Contains(asset.Path, "\\") {
 				return fmt.Errorf("invalid or duplicate Actions release asset")
 			}
 			for _, part := range strings.Split(asset.Path, "/") {

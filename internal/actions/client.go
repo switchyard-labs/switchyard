@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -25,11 +26,50 @@ type Step struct {
 	TimeoutMS int    `json:"timeout_ms"`
 }
 type Job struct {
-	ID     string       `json:"id"`
-	Name   string       `json:"name,omitempty"`
-	Steps  []Step       `json:"steps"`
-	Assets []BuildAsset `json:"assets,omitempty"`
+	ID     string        `json:"id"`
+	Name   string        `json:"name,omitempty"`
+	Steps  []Step        `json:"steps"`
+	Assets []BuildAsset  `json:"assets,omitempty"`
+	Static *StaticOutput `json:"static,omitempty"`
 }
+
+// StaticOutput is an approved directory artifact, not publication authority.
+type StaticOutput struct {
+	Directory   string `json:"directory"`
+	BasePath    string `json:"base_path"`
+	SPAFallback string `json:"spa_fallback,omitempty"`
+}
+
+func (s StaticOutput) Validate() error {
+	if s.Directory == "" || len(s.Directory) > 500 || strings.ContainsAny(s.Directory, "\\\x00\r\n") {
+		return fmt.Errorf("invalid static output directory")
+	}
+	for _, part := range strings.Split(s.Directory, "/") {
+		if part == "" || part == "." || part == ".." || part == ".git" {
+			return fmt.Errorf("unsafe static output directory")
+		}
+	}
+	if s.BasePath != "/" {
+		part := strings.Trim(s.BasePath, "/")
+		if s.BasePath != "/"+part+"/" || part == ".git" || !staticProject.MatchString(part) {
+			return fmt.Errorf("invalid static base path")
+		}
+	}
+	if s.SPAFallback != "" {
+		if !strings.HasPrefix(s.SPAFallback, "/") || strings.ContainsAny(s.SPAFallback, "\\%") {
+			return fmt.Errorf("invalid static fallback")
+		}
+		for _, part := range strings.Split(s.SPAFallback[1:], "/") {
+			if part == "" || part == "." || part == ".." || part == ".git" {
+				return fmt.Errorf("invalid static fallback")
+			}
+		}
+	}
+	return nil
+}
+
+var staticProject = regexp.MustCompile(`^[a-z0-9_][a-z0-9._-]{0,99}$`)
+
 type BuildAsset struct {
 	Name string `json:"name"`
 	Path string `json:"path"`

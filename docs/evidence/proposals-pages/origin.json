@@ -1,0 +1,12 @@
+{
+  "hostOnlyAppCookie": true,
+  "appCookieSentToPages": false,
+  "ownerProjectsShareLocalStorage": true,
+  "ownerProjectsShareIndexedDB": true,
+  "notes": [
+    "IndexedDB sharing was exercised across project paths; authored scripts share the owner origin.",
+    "Project service-worker scope defaults to its script directory; serving never grants Service-Worker-Allowed: /. Owner root remains same-owner trusted content.",
+    "Pages preserves authored scripts, including inline code; it does not claim a sandboxed CSP boundary.",
+    "Live DNS/TLS activation remains conditional."
+  ]
+}

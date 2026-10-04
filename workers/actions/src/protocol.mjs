@@ -16,11 +16,16 @@ export function validateRun(value, namespace, allowedRepos) {
  if(value.release!==undefined && (!value.release||typeof value.release.publish!=='boolean'||typeof value.release.prerelease!=='boolean'||Object.keys(value.release).some(key=>!['publish','prerelease'].includes(key))||!value.ref.startsWith('refs/tags/')))throw new Error('invalid_release_policy');
  for (const job of value.jobs) {
   if (!/^[a-zA-Z0-9_-]{1,40}$/.test(job.id) || ids.has(job.id) || !Array.isArray(job.steps) || job.steps.length < 1 || job.steps.length > 16) throw new Error('invalid_job');
+  if(job.static!==undefined){
+   const output=job.static;
+   if(!output||typeof output.directory!=='string'||output.directory.length>500||/[\\\x00\r\n]/.test(output.directory)||!output.directory.split('/').every(part=>part&&!['.','..','.git'].includes(part))||typeof output.base_path!=='string'||!/^\/(?:[a-z0-9_][a-z0-9._-]{0,99}\/)?$/.test(output.base_path)||output.base_path==='/.git/'||Object.keys(output).some(key=>!['directory','base_path','spa_fallback'].includes(key)))throw Error('invalid_static_output');
+   if(output.spa_fallback!==undefined&&(typeof output.spa_fallback!=='string'||!output.spa_fallback.startsWith('/')||/[\\%]/.test(output.spa_fallback)||!output.spa_fallback.slice(1).split('/').every(part=>part&&!['.','..','.git'].includes(part))))throw Error('invalid_static_fallback');
+  }
   ids.add(job.id); const stepIDs = new Set();
   if(job.assets!==undefined){
    if(!value.release||!Array.isArray(job.assets))throw new Error('invalid_release_assets');
    for(const asset of job.assets){
-    if(!asset||typeof asset.name!=='string'||!/^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(asset.name)||assets.has(asset.name)||typeof asset.path!=='string'||asset.path.length>500||!asset.path.split('/').every(part=>/^[A-Za-z0-9._-]+$/.test(part)&&!['.','..','.git'].includes(part)))throw new Error('invalid_release_asset');
+    if(!asset||typeof asset.name!=='string'||!/^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(asset.name)||assets.has(asset.name)||asset.name==='pages-static.bundle.json'||typeof asset.path!=='string'||asset.path.length>500||!asset.path.split('/').every(part=>/^[A-Za-z0-9._-]+$/.test(part)&&!['.','..','.git'].includes(part)))throw new Error('invalid_release_asset');
     assets.add(asset.name);
    }
   }
@@ -50,7 +55,7 @@ export function equalSignature(a, b) {
 }
 
 export function validateRerunParent(run, previous) {
- const jobIdentity=jobs=>jobs.map(job=>[job.id,job.name||'',job.steps.map(step=>[step.id,step.name||'',step.command,step.timeout_ms]),job.assets||[]]);
+ const jobIdentity=jobs=>jobs.map(job=>[job.id,job.name||'',job.steps.map(step=>[step.id,step.name||'',step.command,step.timeout_ms]),job.assets||[],job.static||null]);
  if(!previous||previous.run.repo!==run.repo||previous.run.sha!==run.sha||previous.run.definition_revision!==run.definition_revision||JSON.stringify(previous.run.release)!==JSON.stringify(run.release)||JSON.stringify(jobIdentity(previous.run.jobs))!==JSON.stringify(jobIdentity(run.jobs))||!['succeeded','failed'].includes(previous.status))throw new Error('parent_identity_mismatch');
  const failed=run.jobs.filter(job=>previous.jobs.find(view=>view.id===job.id)?.status!=='succeeded').map(job=>job.id);
  if(JSON.stringify(failed)!==JSON.stringify(run.selected_jobs))throw new Error('invalid_failed_job_selection');
