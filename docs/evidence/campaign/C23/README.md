@@ -73,3 +73,16 @@ nearest-rank p95/max11554.50ms, min6108.78ms. Server-Timing Git-preview median
 This is not evidence for large contracts or Nick's internet. Raw samples:
 semantic-contract-preview-12.json. Durable queue stage timing is now implemented;
 repeated actual publication samples remain open.
+
+### Queue measurements — 2026-10-04 (partial)
+
+Eight exact-SHA integrations completed with the genuine two-rule semantic
+contract. Median Git revalidation was 8.159 s; publication 4.018 s; semantic
+validation 0.139 ms. Raw samples and nearest-rank p95/min/max are recorded in
+`queue-semantic-timing-partial.json`. At n=8, nearest-rank p95 is the maximum.
+The ninth source passed push but native CI failed twice before enqueue with
+`RPCTransportError: RPC session was shut down by disposing the main stub`.
+The first interruption was a 600-second disposable Git credential expiry;
+renewal resumed existing state without duplicate Work/Attempts. The CI retry
+kept the exact source SHA. The requested twelve-sample queue matrix remains
+partial; the provider failures are not represented as queue samples.

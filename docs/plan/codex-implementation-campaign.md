@@ -398,3 +398,23 @@ Other providers remain process-timed. Full Go tests and Agent race tests passed.
 C45 is DONE within documented bounded archive support; final `sy` live dogfood
 is its separate gate. C38 clipboard remains unverified by the available browser
 tool. Actions-to-Releases automation and remaining campaign gates continue.
+
+### Current continuation checkpoint — 2026-10-04
+
+This checkpoint supersedes earlier present-tense status statements while
+preserving their historical evidence. Linode runs clean `fcda4e7` (full SHA
+fcda4e72ee9585f0f376278ddc8f410dfc6f1c54), build 07:21:27Z.
+Switchyard and Caddy are active. Private integrity-checked backup:
+`/opt/cp0/switchyard-backup-20261004-fcda4e7`. No additional Agents ran on Linode.
+Local `0b0da9e` adds pre-execution Work/PR context snapshots; full Go suite, vet
+and affected race test pass. This change is not yet deployed. C25 actual clean
+multi-role flow and direct OpenCode Go HTTP timing pass; final context live
+proof and walkthrough capture remain partial. C45 is DONE within documented
+archive bounds. C46 manual lifecycle/UI/CLI/R2 foundation is deployed; Actions
+release automation remains PARTIAL. A scoped build-upload grant module passes
+Worker tests and typecheck but is not wired into the Worker or deployed.
+C23 has twelve semantic-preview samples and eight successful queue samples;
+two native CI RPC failures interrupted the requested twelve queue samples.
+Evidence: `C23/queue-semantic-timing-partial.json`. C24 safe reset/drain, final
+C33/C38 browser checks, final C42/C43 regression, sy live dogfood and brochure
+refresh remain outstanding. The campaign is not complete.

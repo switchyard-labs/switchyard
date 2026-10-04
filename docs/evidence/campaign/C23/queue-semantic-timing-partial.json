@@ -1,0 +1,157 @@
+{
+  "repository": "alice/railway",
+  "physical_repository": "codex-actions-probe-20261003",
+  "status": "partial",
+  "requested_samples": 12,
+  "completed_samples": 8,
+  "statistics": {
+    "git_preview": {
+      "n": 8,
+      "median_seconds": 8.158506861500001,
+      "p95_nearest_rank_seconds": 16.243568781,
+      "min_seconds": 6.791599305,
+      "max_seconds": 16.243568781
+    },
+    "semantic": {
+      "n": 8,
+      "median_seconds": 0.00013896200000000002,
+      "p95_nearest_rank_seconds": 0.000231177,
+      "min_seconds": 0.000115026,
+      "max_seconds": 0.000231177
+    },
+    "publication": {
+      "n": 8,
+      "median_seconds": 4.0181983185,
+      "p95_nearest_rank_seconds": 15.615449334,
+      "min_seconds": 3.382163635,
+      "max_seconds": 15.615449334
+    }
+  },
+  "samples": [
+    {
+      "index": 0,
+      "sha": "c2e5a0a019a03f4f5b61cad6e18b5bb6499a7c75",
+      "attempt": {
+        "id": "wk_c36cfa12fef12bac",
+        "branch": "event-queue-perf-1791097912-00"
+      },
+      "queue_id": "iq_a100765cae42a67bbbf9d68d",
+      "timings_ns": {
+        "git_preview": 13878922423,
+        "publication": 3977042562,
+        "semantic": 121116
+      }
+    },
+    {
+      "index": 1,
+      "sha": "f16979c77aa52f7989874675909b2f2a5ccfb404",
+      "attempt": {
+        "id": "wk_010cc89cd4d3213f",
+        "branch": "event-queue-perf-1791097923-01"
+      },
+      "queue_id": "iq_3220bb6b735e9d55b2cc95a1",
+      "timings_ns": {
+        "git_preview": 9800899799,
+        "publication": 4059354075,
+        "semantic": 227493
+      }
+    },
+    {
+      "index": 2,
+      "sha": "8290482abf5a27bac94fa8827f8217762797b19b",
+      "attempt": {
+        "id": "wk_e1497cef5428d291",
+        "branch": "event-queue-perf-1791097932-02"
+      },
+      "queue_id": "iq_e2acc121e8bf27b3cc5ef3ea",
+      "timings_ns": {
+        "git_preview": 16243568781,
+        "publication": 15615449334,
+        "semantic": 115128
+      }
+    },
+    {
+      "index": 3,
+      "sha": "487757dbb9ac2f7081f9b838bd92b760a4833124",
+      "attempt": {
+        "id": "wk_2514edda4ba2b8db",
+        "branch": "event-queue-perf-1791097942-03"
+      },
+      "queue_id": "iq_8a20940387e2868cb804e35a",
+      "timings_ns": {
+        "git_preview": 6821773460,
+        "publication": 3382163635,
+        "semantic": 201433
+      }
+    },
+    {
+      "index": 4,
+      "sha": "b3b38f776241b8af0d8c102b848a5bf45703f649",
+      "attempt": {
+        "id": "wk_bda639c83814d39f",
+        "branch": "event-queue-perf-1791097952-04"
+      },
+      "queue_id": "iq_0d7b43091999bd1beef4fa5b",
+      "timings_ns": {
+        "git_preview": 6791599305,
+        "publication": 3797812184,
+        "semantic": 116915
+      }
+    },
+    {
+      "index": 5,
+      "sha": "98b5ac8a80606364a0f422b215aea240dcbf54fa",
+      "attempt": {
+        "id": "wk_a50da0ac5489e69e",
+        "branch": "event-queue-perf-1791097963-05"
+      },
+      "queue_id": "iq_b3549051487260828f74e045",
+      "timings_ns": {
+        "git_preview": 7209957909,
+        "publication": 3595513456,
+        "semantic": 115026
+      }
+    },
+    {
+      "index": 6,
+      "sha": "9eaa3698bcf011814c4744861aed45dbbae4fecd",
+      "attempt": {
+        "id": "wk_9d0233e69bcac717",
+        "branch": "event-queue-perf-1791097972-06"
+      },
+      "queue_id": "iq_0689793b60e28f7261f7906a",
+      "timings_ns": {
+        "git_preview": 9107055814,
+        "publication": 7464683504,
+        "semantic": 231177
+      }
+    },
+    {
+      "index": 7,
+      "sha": "9f858301e75c06eac99714dff0202a52d2dd2cf6",
+      "attempt": {
+        "id": "wk_a9c91d106803e0bb",
+        "branch": "event-queue-perf-1791097983-07"
+      },
+      "queue_id": "iq_b4e08ea322839a96d5746b65",
+      "timings_ns": {
+        "git_preview": 6945218511,
+        "publication": 4232915834,
+        "semantic": 156808
+      }
+    }
+  ],
+  "interruption": {
+    "index": 8,
+    "sha": "2fc62e600200aa64b178d940cac12885338adb54",
+    "native_run": "e5566ddd-120c-4da7-a3de-1b809400b0b9",
+    "retry_run": "manual-720c8a9065247c5c25bc2181f497050281fee31d1964dee109a531587555adda",
+    "diagnostic": "RPCTransportError: RPC session was shut down by disposing the main stub",
+    "queue_started": false
+  },
+  "limitations": [
+    "Eight successful sequential integrations; not a population performance claim.",
+    "Nearest-rank p95 equals the maximum at this sample size.",
+    "CI transport failures precede queue timing and are retained separately."
+  ]
+}
