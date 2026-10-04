@@ -230,6 +230,21 @@ func (a *App) handleUpdateProposal(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "proposal_version_conflict"})
 		return
 	}
+	if in.State != nil || in.ClosureOutcome != nil {
+		_, _, graph, graphErr := a.Trestle.FindRecord("proposal_graphs", filterEq("repository_id", strOr(meta["id"])))
+		if graphErr != nil {
+			writeJSON(w, 502, map[string]any{"error": "proposal_links_unavailable"})
+			return
+		}
+		edges, _ := graph["edges"].([]any)
+		for _, raw := range edges {
+			edge, _ := raw.(map[string]any)
+			if edge["relation"] == "supersedes" && edge["target_id"] == values["id"] {
+				writeJSON(w, 409, map[string]any{"error": "proposal_superseded_lifecycle_locked"})
+				return
+			}
+		}
+	}
 	data, _ := json.Marshal(values)
 	var p Proposal
 	_ = json.Unmarshal(data, &p)

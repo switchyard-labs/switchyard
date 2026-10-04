@@ -52,3 +52,5 @@ Nick confirmed `switchyard.cx` has not yet been purchased/configured and request
 - Pages APIs/schema, approved Actions integration, persistent deployment/projection/recovery coordinator, preview publication, UI/CLI, rename reservations, retention and full combined dogfood remain pending. Custom domains remain phase 2.
 
 Deployment: all of these changes remain local; no push, Linode deployment or hostname routing change.
+
+Follow-up to `5c052c4` (app) / `d40c420` (sy): Finding conversion entry point added to PR Findings, with the server continuing to resolve and authorize evidence. Superseded lifecycle updates now return an explicit conflict; metadata/discussion remain independent. Trusted static export anchors traversal to Linux open directory descriptors with `O_NOFOLLOW`, including output ancestors and nested directories. App regressions and Worker/export tests pass after these changes. Native DNS **and TLS** remain conditional on purchase/configuration; broader independent campaign items above remain unfinished.

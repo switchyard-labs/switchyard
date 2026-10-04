@@ -38,7 +38,7 @@ async function load(){
  linkForm.onsubmit=async e=>{e.preventDefault();const values=Object.fromEntries(new FormData(linkForm));try{const graph=await api('/'+current.id+'/links');await api('/'+current.id+'/links','POST',{...values,target_kind:values.relation==='work'?'work':'proposal',version:graph.version});await load();}catch(e){await load();error(e);}};actions.after(linkForm);
 
  for(const [label,state,outcome] of [['Accept','accepted',''],['Defer','deferred',''],['Reject','closed','rejected'],['Answer','closed','answered'],['Complete','closed','completed'],['Reopen','open','']]){
- if(current.state===state&&current.closure_outcome===outcome||label==='Reopen'&&current.state!=='closed')continue;
+ if(current.closure_outcome==='superseded'||current.state===state&&current.closure_outcome===outcome||label==='Reopen'&&current.state!=='closed')continue;
  const b=document.createElement('button');b.className='btn';b.textContent=label;b.onclick=async()=>{try{await api('/'+current.id,'PATCH',{version:current.version,state,closure_outcome:outcome});await load();}catch(e){error(e);}};actions.append(b);
  }
  const b=document.createElement('button');b.className='btn';b.textContent='Create Work';const workOperation=Array.from(crypto.getRandomValues(new Uint8Array(16)),x=>x.toString(16).padStart(2,'0')).join('');b.onclick=async()=>{b.disabled=true;try{const key=workOperation;const result=await api('/'+current.id+'/work','POST',{version:current.version,operation_id:key,title:current.title,body:current.description});location.href='/work/'+encodeURIComponent(result.work.id);}catch(e){error(e);b.disabled=false;}};actions.append(b);
@@ -52,10 +52,11 @@ async function load(){
  }catch(e){error(e);}
 }
 $('proposal-new').onclick=()=>$('proposal-dialog').showModal();$('proposal-close').onclick=()=>$('proposal-dialog').close();
-$('proposal-form').onsubmit=async e=>{e.preventDefault();try{const result=await api('','POST',Object.fromEntries(new FormData(e.target)));location.href=base+'/proposals/'+encodeURIComponent(result.id);}catch(e){error(e);}};
+$('proposal-form').onsubmit=async e=>{e.preventDefault();try{const input=Object.fromEntries(new FormData(e.target));const findingID=new URLSearchParams(location.search).get('finding');if(findingID)input.provenance={finding_id:findingID};const result=await api('','POST',input);location.href=base+'/proposals/'+encodeURIComponent(result.id);}catch(e){error(e);}};
 $('proposal-search').onclick=()=>{page=1;load();};$('proposal-previous').onclick=()=>{page--;load();};$('proposal-next').onclick=()=>{page++;load();};
 try{const response=await fetch('/api/auth/me');if(response.ok){const auth=await response.json();me=auth.username||auth.user||'';}const responseMeta=await fetch('/api/repositories/'+parts.slice(0,2).map(encodeURIComponent).join('/'));if(responseMeta.ok){const meta=await responseMeta.json();canWrite=!!meta.can_write;if(meta.visibility==='private'){for(const id of ['proposal-type','proposal-create-type'])$(id).add(new Option('Security','Security'));}}}catch{}
 try{const response=await fetch('/api/repositories/'+parts.slice(0,2).map(encodeURIComponent).join('/')+'/proposal-settings');if(response.ok){const settings=await response.json();canCreate=!!settings.can_create;}}catch{}
 $('proposal-new').hidden=!canCreate;
 await load();
+if(canCreate&&new URLSearchParams(location.search).has('finding')){$('proposal-dialog').showModal();$('proposal-form').elements.title.focus();}
 })();
