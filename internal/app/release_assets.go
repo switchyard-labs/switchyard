@@ -19,6 +19,7 @@ import (
 // and can be retried with the identical name/content, never silently published.
 type releaseAsset struct {
 	ID          string `json:"id"`
+	StorageKey  string `json:"storage_key"`
 	Name        string `json:"name"`
 	Size        int64  `json:"size"`
 	SHA256      string `json:"sha256"`
@@ -109,6 +110,7 @@ func (a *App) handleReleaseAssetUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	checksum := hex.EncodeToString(hash.Sum(nil))
 	asset := releaseAsset{ID: "ast_" + sha256Hex([]byte(strOf(record["id"]) + "\x00" + name + "\x00" + checksum))[:24], Name: name, Size: size, SHA256: checksum, ContentType: "application/octet-stream", CreatedAt: nowStr(), State: "pending"}
+	asset.StorageKey = "release-assets/" + repo + "/" + asset.ID
 	if err = a.audit(strOf(meta["owner_slug"]), "release.asset.upload", asset.ID, "allowed", "asset upload intent", user); err != nil {
 		writeJSON(w, 502, map[string]any{"error": "release_audit_failed"})
 		return
