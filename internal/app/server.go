@@ -104,6 +104,7 @@ func switchyardCollections() [][2]any {
 	for _, additional := range [][][2]any{repositorySettingsCollections(), collaborationCollections(), profileCollections(), releaseCollections(), policyCollections(), workflowCollections()} {
 		collections = append(collections, additional...)
 	}
+	collections = append(collections, proposalCollections()...)
 	return collections
 }
 
@@ -188,6 +189,12 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repos/{name}", a.authorizeHandler(a.handleGetRepo))
 	mux.HandleFunc("GET /api/repos/{name}/tree", a.authorizeHandler(a.handleRepoTree))
 	mux.HandleFunc("GET /api/repos/{name}/content", a.authorizeHandler(a.handleRepoContent))
+
+	// Proposal handlers enforce repository permissions directly, including public reads.
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/proposals", a.handleProposals)
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals", a.handleProposals)
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/proposals/{id}", a.handleProposals)
+	mux.HandleFunc("PATCH /api/repositories/{owner}/{repo}/proposals/{id}", a.handleUpdateProposal)
 
 	// work
 	mux.HandleFunc("GET /api/work", a.authorizeHandler(a.handleListWork))
