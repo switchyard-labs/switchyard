@@ -13,3 +13,9 @@ Implemented and verified locally on 4 October 2026:
 Remaining C24 certification: Linode restore and in-flight cloud shutdown proof, deployment/systemd resource limits, domain/TLS installation and verification, demo reset execution, full dependency provenance/release upgrade rehearsal and operational scale limits. Do not mark C24 complete from these local results.
 
 Git transport credentials now move from transient `-c http.extraHeader` construction to `GIT_CONFIG_COUNT/KEY/VALUE` in the child environment before process creation. They are absent from OS-visible argv and clone config options; real publication/preview Git tests and the full race suite pass. No stored repository credential is introduced.
+
+### 2026-10-04 deployment/drain observation
+
+Clean Nift/build release 6baddcb was deployed with SQLite integrity-checked private backup `/opt/cp0/switchyard-backup-20261004-6baddcb`; exact version and live HTTP 200 were verified. The first stop command exceeded its 45-second wrapper timeout before any migration/binary mutation; the old service subsequently drained in 133 seconds and restarted. The retry respected the existing five-minute application drain and completed. This is an operating-procedure timeout correction, not a claim of publication/drain certification.
+
+Reconciliation now checks cancellation before entering each repository, while an admitted repository finishes its durable observation/event boundary. Regression coverage proves a pre-cancelled sweep never contacts dependencies; affected race tests pass. It does not cancel a Git command already running, and that operation's bounded timeout still applies. This improvement awaits the next deployment batch.

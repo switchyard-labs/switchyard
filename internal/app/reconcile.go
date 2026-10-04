@@ -26,7 +26,7 @@ func (a *App) StartReconciler(ctx context.Context, interval time.Duration) {
 			case <-ctx.Done():
 				return
 			case <-t.C:
-				if err := a.reconcileOnce(); err != nil {
+				if err := a.reconcileOnceContext(ctx); err != nil {
 					log.Printf("reconcile: %v", err)
 				}
 			}
@@ -34,7 +34,13 @@ func (a *App) StartReconciler(ctx context.Context, interval time.Duration) {
 	})
 }
 
-func (a *App) reconcileOnce() (resultErr error) {
+func (a *App) reconcileOnce() error {
+	return a.reconcileOnceContext(context.Background())
+}
+
+// Cancellation stops the next repository, after an already admitted repository
+// has finished its durable observation/event boundary.
+func (a *App) reconcileOnceContext(ctx context.Context) (resultErr error) {
 	started := time.Now()
 	defer func() {
 		status := 200
@@ -43,11 +49,17 @@ func (a *App) reconcileOnce() (resultErr error) {
 		}
 		a.Metrics.Record("reconciliation", time.Since(started), status)
 	}()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	repos, err := a.Artifacts.ListRepos()
 	if err != nil {
 		return err
 	}
 	for _, repo := range repos {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		if err := a.reconcileRepo(repo.Name); err != nil {
 			log.Printf("reconcile %s: %v", repo.Name, err)
 		}
