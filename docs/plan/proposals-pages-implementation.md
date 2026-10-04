@@ -107,3 +107,5 @@ This checkpoint supersedes the pending implementation lists above. Proposal and 
 ### Release sequence (prepared, not executed)
 
 Review local app and sy commits; rerun environment-specific signed transport smoke; authorize intended Actions repositories; migrate app schema and deploy compatible Actions control/Pages serving/app/CLI; verify local-host owner/project/preview routing and rollback; acquire/configure domain only under separate authorization; verify app host-only cookies and native wildcard TLS before announcing public Pages. Preserve existing production mappings throughout. Never promote from an unverified or failed deployment.
+
+Local commit record: app `dbfcb0e` (implementation, tests, browser evidence); sy `85f7683` (Pages CLI, proposer generation/recovery contract). Both remain unpushed and undeployed. This ledger-only follow-up records their final identities.
