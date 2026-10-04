@@ -56,7 +56,7 @@ func (a *App) handleReviewAttempt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, f := range findings {
-		if err := a.addFinding(attemptID, f["severity"].(string), f["message"].(string), f["file"].(string)); err != nil {
+		if err := a.addReviewFinding(attemptID, f["severity"].(string), f["message"].(string), f["file"].(string), strOr(f["source_sha"]), providerExecution, user); err != nil {
 			writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
 			return
 		}

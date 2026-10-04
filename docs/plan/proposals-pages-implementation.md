@@ -20,3 +20,13 @@ This is **not** a completed Proposal release. Collections for discussion/links/s
 Pages remains unimplemented. Continue through the approved checkpoints, including naming inventory, explicit build configuration, artifact exporter, Worker prefix serving, promotion/rollback, UI/CLI and final certification. No production deployment or DNS changes in this checkpoint.
 
 Validation: lifecycle/metadata tests and full app regression tests; HTTP fixtures use disposable loopback servers and require execution outside the restricted filesystem sandbox's socket policy. Do not interpret a socket denial as an application regression.
+
+## Discussion, relationships and Work checkpoint — PARTIAL
+
+- Repository graph is one CAS record per repository, allowing transitive supersession-cycle checks across competing processes. Superseded closure is derived from this graph; it does not require two atomic Proposal writes. Graph entries carry actor/time. One replacement per superseded Proposal.
+- Discussion create/edit/delete uses Proposal CAS with same-write audit, own-author editing and maintainer deletion. Deleted text is removed; audit preserves its hash instead of exposing removed text.
+- Explicit Work creation persists an input-bound operation intent first. Replays repair missing Work/details without duplicate identity; changed replay input conflicts. Multiple independent Work requests preserve Proposal state.
+- Canonical list/detail UI, initial relationship controls and `sy proposal` list/view/create/decision/work commands implemented locally. Browser matrix and complete CLI surface still pending.
+- New provider review Findings now snapshot the reviewed SHA and execution ID. Proposal creation can attach checked Finding evidence without closing/deleting that Finding; historical unknown SHA remains unknown.
+- Tests cover reader discussion versus own-comment moderation, private-repo evidence denial, cycle denial, Work replay/input conflict/partial-write repair, and multiple Work items. Full app regression and vet passed before the final supersession additions; rerun required for checkpoint commit.
+- No deployment or push. Agent-generated output adapters, restricted Security intake, intake settings, browser certification and Pages remain pending.

@@ -46,3 +46,118 @@ func TestProposalGuestCannotForgePrincipal(t *testing.T) {
 		t.Fatal("anonymous forged mutation accepted")
 	}
 }
+
+func TestProposalDiscussionVersionAndOwnership(t *testing.T) {
+	a := securityFixture(t, map[string][]map[string]any{
+		"repository_meta": {{"id": "pub", "full_name": "alice/public", "owner_type": "user", "owner_id": "alice", "artifact_name": "public", "visibility": "public"}},
+		"sessions":        {{"token": "bob-token", "username": "bob", "expires_at": "2099-01-01T00:00:00Z"}},
+		"proposals":       {{"id": "p", "repository_id": "pub", "discussion": []any{map[string]any{"id": "c", "author_principal": "alice", "body": "original"}}}},
+	})
+	for _, tc := range []struct {
+		method, comment, body string
+		status                int
+	}{
+		{"POST", "", `{"version":"0","body":"stale"}`, 409},
+		{"PATCH", "c", `{"version":"1","body":"forged edit"}`, 403},
+		{"DELETE", "c", `{"version":"1"}`, 403},
+		{"POST", "", `{"version":"1","body":"reader discussion"}`, 200},
+	} {
+		r := httptest.NewRequest(tc.method, "/api/repositories/alice/public/proposals/p/comments", strings.NewReader(tc.body))
+		r = r.WithContext(contextWithUser(r.Context(), "bob"))
+		r.SetPathValue("owner", "alice")
+		r.SetPathValue("repo", "public")
+		r.SetPathValue("id", "p")
+		r.SetPathValue("comment", tc.comment)
+		w := httptest.NewRecorder()
+		a.handleProposalDiscussion(w, r)
+		if w.Code != tc.status {
+			t.Fatalf("%s: %d %s", tc.method, w.Code, w.Body.String())
+		}
+	}
+}
+
+func TestProposalWorkRetryAndStandaloneDecision(t *testing.T) {
+	records := map[string][]map[string]any{
+		"repository_meta": {{"id": "pub", "full_name": "alice/public", "owner_type": "user", "owner_id": "alice", "artifact_name": "public", "visibility": "public"}},
+		"proposals":       {{"id": "p", "repository_id": "pub", "title": "Question", "type": "Question", "state": "accepted", "author_principal": "alice", "history": []any{}}},
+	}
+	a := securityFixture(t, records)
+	call := func(body string) int {
+		r := httptest.NewRequest("POST", "/api/repositories/alice/public/proposals/p/work", strings.NewReader(body))
+		r = r.WithContext(contextWithUser(r.Context(), "alice"))
+		r.SetPathValue("owner", "alice")
+		r.SetPathValue("repo", "public")
+		r.SetPathValue("id", "p")
+		w := httptest.NewRecorder()
+		a.handleProposalWork(w, r)
+		return w.Code
+	}
+	body := `{"version":"1","operation_id":"retry-key-123","title":"Investigate","body":"Evidence","kind":"investigation"}`
+	if got := call(body); got != 200 {
+		t.Fatalf("first request: %d", got)
+	}
+	if got := call(body); got != 200 {
+		t.Fatalf("retry: %d", got)
+	}
+	if len(records["work"]) != 1 || len(records["work_details"]) != 1 {
+		t.Fatal("retry duplicated Work")
+	}
+	// Repair a failed second write without another Work identity.
+	records["work_details"] = nil
+	if got := call(body); got != 200 {
+		t.Fatalf("repair: %d", got)
+	}
+	if len(records["work"]) != 1 || len(records["work_details"]) != 1 {
+		t.Fatal("partial write not repaired")
+	}
+	if got := call(strings.Replace(body, "Evidence", "Changed", 1)); got != 409 {
+		t.Fatalf("input-changing replay: %d", got)
+	}
+	if got := call(strings.Replace(body, "retry-key-123", "second-key-123", 1)); got != 200 {
+		t.Fatalf("second Work: %d", got)
+	}
+	if len(records["work"]) != 2 {
+		t.Fatal("Proposal cannot have multiple Work items")
+	}
+	if records["proposals"][0]["state"] != "accepted" {
+		t.Fatal("Work creation changed Proposal lifecycle")
+	}
+}
+
+func TestProposalGraphIsolationAndSupersession(t *testing.T) {
+	records := map[string][]map[string]any{
+		"repository_meta": {{"id": "pub", "full_name": "alice/public", "owner_type": "user", "owner_id": "alice", "artifact_name": "public", "visibility": "public"}},
+		"proposals":       {{"id": "a", "repository_id": "pub", "state": "open"}, {"id": "b", "repository_id": "pub", "state": "open"}, {"id": "private", "repository_id": "other"}},
+		"proposal_graphs": {{"repository_id": "pub", "edges": []any{}}},
+	}
+	a := securityFixture(t, records)
+	post := func(source, target string) int {
+		body := `{"version":"1","relation":"supersedes","target_kind":"proposal","target_id":"` + target + `"}`
+		r := httptest.NewRequest("POST", "/links", strings.NewReader(body))
+		r = r.WithContext(contextWithUser(r.Context(), "alice"))
+		r.SetPathValue("owner", "alice")
+		r.SetPathValue("repo", "public")
+		r.SetPathValue("id", source)
+		w := httptest.NewRecorder()
+		a.handleProposalLinks(w, r)
+		return w.Code
+	}
+	if got := post("a", "private"); got != 400 {
+		t.Fatalf("cross-repo link: %d", got)
+	}
+	if got := post("a", "b"); got != 201 {
+		t.Fatalf("supersession: %d", got)
+	}
+	if got := post("b", "a"); got != 409 {
+		t.Fatalf("cycle: %d", got)
+	}
+	r := httptest.NewRequest("GET", "/proposal", nil)
+	r.SetPathValue("owner", "alice")
+	r.SetPathValue("repo", "public")
+	r.SetPathValue("id", "b")
+	w := httptest.NewRecorder()
+	a.handleProposals(w, r)
+	if w.Code != 200 || !strings.Contains(w.Body.String(), `"closure_outcome":"superseded"`) {
+		t.Fatal(w.Code, w.Body.String())
+	}
+}

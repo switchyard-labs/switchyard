@@ -83,7 +83,8 @@ func proposalCollections() [][2]any {
 	text := func(name string) trestle.CollectionField { return trestle.CollectionField{Name: name, Type: "text"} }
 	id := trestle.CollectionField{Name: "id", Type: "text", Unique: true}
 	return [][2]any{
-		{"proposals", []trestle.CollectionField{id, text("repository_id"), text("type"), text("title"), text("description"), text("state"), text("closure_outcome"), text("author_principal"), text("priority"), text("severity"), {Name: "labels", Type: "json"}, {Name: "provenance", Type: "json"}, text("created_at"), text("updated_at"), {Name: "history", Type: "json"}}},
+		{"proposal_graphs", []trestle.CollectionField{{Name: "repository_id", Type: "text", Unique: true}, {Name: "edges", Type: "json"}}},
+		{"proposals", []trestle.CollectionField{id, text("repository_id"), text("type"), text("title"), text("description"), text("state"), text("closure_outcome"), text("author_principal"), text("priority"), text("severity"), {Name: "labels", Type: "json"}, {Name: "provenance", Type: "json"}, text("created_at"), text("updated_at"), {Name: "history", Type: "json"}, {Name: "discussion", Type: "json"}, {Name: "work_intents", Type: "json"}}},
 		{"proposal_comments", []trestle.CollectionField{id, text("proposal_id"), text("author_principal"), text("body"), text("created_at"), {Name: "source", Type: "json"}}},
 		{"proposal_links", []trestle.CollectionField{id, text("proposal_id"), text("relation"), text("target_kind"), text("target_id"), text("created_by"), text("created_at"), {Name: "idempotency_key", Type: "text", Unique: true}, {Name: "evidence", Type: "json"}}},
 		{"proposal_settings", []trestle.CollectionField{{Name: "repository_id", Type: "text", Unique: true}, text("intake"), text("updated_by"), text("updated_at")}},

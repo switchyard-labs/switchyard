@@ -51,6 +51,19 @@ func securityFixture(t *testing.T, records map[string][]map[string]any) *App {
 			json.NewEncoder(w).Encode(map[string]any{"items": out})
 			return
 		}
+		if r.Method == "POST" && len(parts) == 5 {
+			var body struct {
+				Values map[string]any `json:"values"`
+			}
+			if json.NewDecoder(r.Body).Decode(&body) != nil {
+				w.WriteHeader(400)
+				return
+			}
+			records[collection] = append(records[collection], body.Values)
+			w.WriteHeader(201)
+			json.NewEncoder(w).Encode(map[string]any{"id": strconv.Itoa(len(records[collection]) - 1), "version": 1, "values": body.Values})
+			return
+		}
 		if len(parts) == 6 {
 			index, err := strconv.Atoi(parts[5])
 			if err != nil || index >= len(records[collection]) {

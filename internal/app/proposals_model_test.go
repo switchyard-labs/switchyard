@@ -49,3 +49,20 @@ func TestProposalBoundedMetadata(t *testing.T) {
 		}
 	}
 }
+
+func TestProposalSupersessionCycle(t *testing.T) {
+	edges := []any{
+		map[string]any{"proposal_id": "a", "target_id": "b", "relation": "supersedes"},
+		map[string]any{"proposal_id": "b", "target_id": "c", "relation": "supersedes"},
+		map[string]any{"proposal_id": "c", "target_id": "d", "relation": "related"},
+	}
+	if !proposalCycle(edges, "c", "a") {
+		t.Fatal("transitive cycle accepted")
+	}
+	if !proposalCycle(edges, "a", "a") {
+		t.Fatal("self supersession accepted")
+	}
+	if proposalCycle(edges, "d", "a") {
+		t.Fatal("ordinary related links became dependencies")
+	}
+}

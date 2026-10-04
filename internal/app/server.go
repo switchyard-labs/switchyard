@@ -95,7 +95,7 @@ func switchyardCollections() [][2]any {
 		{"credentials", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "name", Type: "text"}, {Name: "provider", Type: "text"}, {Name: "scope", Type: "text"}, {Name: "ciphertext", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "last_used", Type: "text"}}},
 		{"execution_metadata", []trestle.CollectionField{{Name: "execution_id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "metadata", Type: "json"}}},
 		{"executions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "role", Type: "text"}, {Name: "attempt_id", Type: "text"}, {Name: "adapter", Type: "text"}, {Name: "status", Type: "text"}, {Name: "output", Type: "text"}, {Name: "started_at", Type: "text"}, {Name: "finished_at", Type: "text"}}},
-		{"findings", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "target", Type: "text"}, {Name: "severity", Type: "text"}, {Name: "message", Type: "text"}, {Name: "file", Type: "text"}, {Name: "status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "resolved_at", Type: "text"}}},
+		{"findings", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "target", Type: "text"}, {Name: "severity", Type: "text"}, {Name: "message", Type: "text"}, {Name: "file", Type: "text"}, {Name: "status", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "resolved_at", Type: "text"}, {Name: "source_sha", Type: "text"}, {Name: "review_execution_id", Type: "text"}, {Name: "principal", Type: "text"}}},
 		{"integration_effects", []trestle.CollectionField{{Name: "queue_id", Type: "text", Unique: true}, {Name: "state", Type: "json"}}},
 		{"iq", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "pr_id", Type: "text"}, {Name: "repo", Type: "text"}, {Name: "base", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "status", Type: "text"}, {Name: "risk", Type: "text"}, {Name: "policy", Type: "text"}, {Name: "attempts", Type: "text"}, {Name: "error", Type: "text"}, {Name: "created_at", Type: "text"}, {Name: "updated_at", Type: "text"}}},
 		{"drafts", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text"}, {Name: "branch", Type: "text"}, {Name: "path", Type: "text"}, {Name: "content", Type: "text"}, {Name: "user", Type: "text"}, {Name: "revision", Type: "text"}, {Name: "base_sha", Type: "text"}, {Name: "last_agent_execution", Type: "text"}, {Name: "last_agent_prompt", Type: "text"}, {Name: "updated_at", Type: "text"}, {Name: "committed_at", Type: "text"}}},
@@ -196,6 +196,14 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/proposals/{id}", a.handleProposals)
 	mux.HandleFunc("PATCH /api/repositories/{owner}/{repo}/proposals/{id}", a.handleUpdateProposal)
 
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/proposals/{id}/comments", a.handleProposalDiscussion)
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals/{id}/comments", a.handleProposalDiscussion)
+	mux.HandleFunc("PATCH /api/repositories/{owner}/{repo}/proposals/{id}/comments/{comment}", a.handleProposalDiscussion)
+	mux.HandleFunc("DELETE /api/repositories/{owner}/{repo}/proposals/{id}/comments/{comment}", a.handleProposalDiscussion)
+
+	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/proposals/{id}/links", a.handleProposalLinks)
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals/{id}/links", a.handleProposalLinks)
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/proposals/{id}/work", a.handleProposalWork)
 	// work
 	mux.HandleFunc("GET /api/work", a.authorizeHandler(a.handleListWork))
 	mux.HandleFunc("POST /api/work", a.authorizeHandler(a.handleCreateWork))
@@ -397,6 +405,10 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		r.SetPathValue("repo", parts[1])
 		r.SetPathValue("archive", strings.Join(parts[3:], "/"))
 		a.handleRepositoryArchive(w, r)
+		return
+	}
+	if (len(parts) == 3 || len(parts) == 4) && parts[2] == "proposals" && validOwnerSlug(parts[0]) && validRepoSlug(parts[1]) {
+		a.serveAsset(w, r, "proposals.html")
 		return
 	}
 	if len(parts) == 1 && validOwnerSlug(parts[0]) {

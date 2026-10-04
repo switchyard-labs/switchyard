@@ -41,11 +41,21 @@ func (a *App) handleProposals(w http.ResponseWriter, r *http.Request) {
 		}
 		// Lifecycle and provenance are server-owned on creation. Import/Agent
 		// adapters will need authenticated evidence, not arbitrary JSON claims.
+		findingID := strOr(p.Provenance["finding_id"])
 		p.ID = "prop_" + randHex(12)
 		p.RepositoryID = repoID
 		p.AuthorPrincipal = user
 		p.State, p.ClosureOutcome = "open", ""
 		p.Provenance = map[string]any{"source": "human", "principal": user}
+		if findingID != "" {
+			evidence, err := a.proposalFindingEvidence(meta, user, findingID)
+			if err != nil {
+				writeJSON(w, proposalErrorStatus(err), map[string]any{"error": err.Error()})
+				return
+			}
+			p.Provenance = evidence
+		}
+
 		p.CreatedAt, p.UpdatedAt = nowStr(), nowStr()
 		if p.Type == "" {
 			p.Type = "Other"
@@ -75,16 +85,33 @@ func (a *App) handleProposals(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": "proposals_unavailable"})
 		return
 	}
+	_, _, graph, graphErr := a.Trestle.FindRecord("proposal_graphs", filterEq("repository_id", repoID))
+	if graphErr != nil {
+		writeJSON(w, 502, map[string]any{"error": "proposal_links_unavailable"})
+		return
+	}
+	applySupersession := func(item map[string]any) {
+		edges, _ := graph["edges"].([]any)
+		for _, raw := range edges {
+			edge, ok := raw.(map[string]any)
+			if ok && edge["relation"] == "supersedes" && edge["target_id"] == item["id"] {
+				item["state"] = "closed"
+				item["closure_outcome"] = "superseded"
+				item["superseded_by"] = edge["proposal_id"]
+			}
+		}
+	}
 	if id := r.PathValue("id"); id != "" {
 		for _, item := range items {
 			if strOr(item["id"]) == id {
-				_, version, _, findErr := a.Trestle.FindRecord("proposals", filterEq("id", id))
+				_, version, current, findErr := a.Trestle.FindRecord("proposals", filterEq("id", id))
 				if findErr != nil {
 					writeJSON(w, 502, map[string]any{"error": "proposals_unavailable"})
 					return
 				}
-				item["version"] = version
-				writeJSON(w, 200, item)
+				applySupersession(current)
+				current["version"] = version
+				writeJSON(w, 200, current)
 				return
 			}
 		}
@@ -93,6 +120,7 @@ func (a *App) handleProposals(w http.ResponseWriter, r *http.Request) {
 	}
 	out := []map[string]any{}
 	for _, item := range items {
+		applySupersession(item)
 		matches := true
 		for _, key := range []string{"state", "type", "author_principal", "priority"} {
 			if wanted := r.URL.Query().Get(key); wanted != "" && strOr(item[key]) != wanted {

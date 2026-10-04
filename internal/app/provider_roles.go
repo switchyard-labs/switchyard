@@ -112,6 +112,9 @@ func (a *App) providerReview(ctx context.Context, repo, branch, attempt string) 
 			}
 		}
 	}
+	for _, finding := range findings {
+		finding["source_sha"] = head
+	}
 	return findings, ex, nil
 }
 
