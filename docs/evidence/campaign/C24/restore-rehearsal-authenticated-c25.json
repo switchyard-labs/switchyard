@@ -1,0 +1,24 @@
+{
+  "/api/users/alice/repositories": {
+    "status": 200,
+    "items": 2,
+    "total": null
+  },
+  "/api/users/alice/contributions": {
+    "status": 200,
+    "items": 10,
+    "total": 51
+  },
+  "/api/owners/alice": {
+    "status": 200,
+    "items": 0,
+    "total": null
+  },
+  "restored_session": "PASS",
+  "credential_metadata_access": "PASS",
+  "credential_secret_excluded": true,
+  "private_repo_count": 0,
+  "private_repo_access": "NOT EXERCISED",
+  "credential_key_preserved": true,
+  "private_config_preserved": true
+}
