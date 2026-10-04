@@ -286,3 +286,18 @@ proves publication and a conflicting name are denied while the writer is in flig
 Full Go tests/vet and affected race checks passed. Schema version7 adds the asset
 reservation metadata. Automatic abandoned-upload cleanup, real R2/app round-trip,
 UI/Actions/CLI and final lifecycle certification remain open; not deployed.
+
+C46 canonical Releases UI now implements list/detail/new/edit, draft/prerelease
+controls, manual publication, raw asset upload, deletion/download and immutable
+source links. Nift owns its source and generated output. Actual Chromium on the
+isolated preview created a draft from disposable tag c46-proof-20261004 at
+SHA e2a22198d24faa843975adef7fe7ffde1b997aa5; Markdown script injection rendered
+as text, archive links retained the SHA, and desktop document overflow was absent.
+Browser testing exposed Artifacts full-ref log resolution returning no commit;
+release resolution now reads the exact Git tag/peeled ref and logs its SHA, with
+an annotated-tag/branch-collision regression. Screenshot: C46/release-draft.jpg.
+
+The local preview was backed up before additive schema migration to7. No C46
+Linode/Worker deployment yet. R2 live round-trip, complete lifecycle/concurrency
+certification, Actions tag flow, sy release commands and final responsive browser
+matrix remain open. Draft UI proof does not mark C46 DONE.

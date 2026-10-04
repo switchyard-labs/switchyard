@@ -29,6 +29,11 @@
       "name": "actions",
       "title": "Actions",
       "template": "templates/template.html"
+    },
+    {
+      "name": "releases",
+      "title": "Releases",
+      "template": "templates/template.html"
     }
   ]
 }

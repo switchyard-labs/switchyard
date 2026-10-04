@@ -350,6 +350,10 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		a.serveAsset(w, r, "repo-settings.html")
 		return
 	}
+	if len(parts0) >= 3 && parts0[2] == "releases" && validOwnerSlug(parts0[0]) && validRepoSlug(parts0[1]) {
+		a.serveAsset(w, r, "releases.html")
+		return
+	}
 	if len(parts0) == 3 && parts0[2] == "pulls" {
 		a.serveAsset(w, r, "pulls.html")
 		return

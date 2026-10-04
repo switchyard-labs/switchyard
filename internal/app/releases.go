@@ -1,11 +1,13 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
+	"switchyard/internal/artifacts"
 	"switchyard/internal/trestle"
 )
 
@@ -94,7 +96,7 @@ func (a *App) handleReleases(w http.ResponseWriter, r *http.Request) {
 	}
 	// Existing Git tags are authoritative. Resolve once and retain the commit
 	// identity independently of subsequent tag movement.
-	commits, err := a.Artifacts.LogContext(r.Context(), repo, "refs/tags/"+in.Tag)
+	commits, err := a.releaseTagCommit(r.Context(), repo, in.Tag)
 	if err != nil {
 		writeArtifactsError(w, err)
 		return
@@ -200,7 +202,7 @@ func (a *App) handleRelease(w http.ResponseWriter, r *http.Request) {
 				writeJSON(w, 409, map[string]any{"error": "release_assets_pending"})
 				return
 			}
-			commits, e := a.Artifacts.LogContext(r.Context(), repo, "refs/tags/"+strOf(record["tag"]))
+			commits, e := a.releaseTagCommit(r.Context(), repo, strOf(record["tag"]))
 			if e != nil {
 				writeArtifactsError(w, e)
 				return
@@ -235,4 +237,36 @@ func (a *App) handleRelease(w http.ResponseWriter, r *http.Request) {
 		record[key] = value
 	}
 	writeJSON(w, 200, a.releaseView(meta, record))
+}
+
+// The Artifacts log API accepts a short ref, which can collide with a branch.
+// Read the exact Git tag ref first, peel annotated tags, then request its SHA.
+func (a *App) releaseTagCommit(ctx context.Context, repo, tag string) ([]artifacts.Commit, error) {
+	backend, err := a.Artifacts.GetRepo(repo)
+	if err != nil {
+		return nil, err
+	}
+	token, err := a.Refs.GitToken(repo)
+	if err != nil {
+		return nil, err
+	}
+	refs, err := a.Artifacts.LsRemoteWithToken(backend.Remote, token)
+	if err != nil {
+		return nil, err
+	}
+	sha := releaseTagSHA(refs, tag)
+	if !workspaceSHA.MatchString(sha) {
+		return nil, nil
+	}
+	return a.Artifacts.LogContext(ctx, repo, sha)
+}
+func releaseTagSHA(refs map[string]string, tag string) string {
+	ref := "refs/tags/" + tag
+	if refs[ref] == "" {
+		return ""
+	}
+	if peeled := refs[ref+"^{}"]; peeled != "" {
+		return peeled
+	}
+	return refs[ref]
 }

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Switchyard</title>
+		<link rel="icon" type="image/webp" href="/assets/images/favicon.webp">
+		<link rel="stylesheet" href="/assets/css/theme.css?v=c22d">
+		<link rel="stylesheet" href="/assets/css/components.css?v=avatar-fill-c42">
+		<link rel="stylesheet" href="/assets/css/app.css?v=c22d">
+		<link rel="stylesheet" href="/assets/css/identity.css?v=profile-c42">
+	<link rel="stylesheet" href="/assets/css/operations.css?v=c21"></head>
+	<body>
+		<a class="skip-link" href="#main-content">Skip to content</a>
+		<header class="site-header">
+			<div class="header-inner">
+				<a class="brand" href="/./"><img class="brand-mark-img" src="/assets/images/favicon.webp" alt="" width="26" height="26"><span class="brand-name">Switchyard</span></a>
+				<div class="header-right">
+					<span class="auth-state" id="auth-state"></span>
+					<button class="hamburger" id="hamburger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">☰</button>
+				</div>
+			</div>
+		</header>
+		<main class="site-main" id="main-content">
+			<section class="releases-page">
+			 <div class="page-head"><div><a id="release-repository">Repository</a><h1 id="release-heading">Releases</h1></div><a class="btn primary" id="release-new" hidden>New release</a></div>
+			 <div id="release-status" role="status" class="muted">Loading releases…</div>
+			 <div class="release-scroll" id="release-content"></div>
+			</section>
+			<link rel="stylesheet" href="/assets/css/releases.css?v=c46">
+			<script defer src="/assets/js/app-releases.js?v=c46"></script>
+		</main>
+		<script src="/assets/js/code-surface.js?v=c18"></script>
+		<script src="/assets/js/markdown.js?v=c18"></script>
+		<script src="/assets/js/code-blocks.js"></script>
+		<script src="/assets/js/app.js?v=repo-heading-c42b"></script>
+	</body>
+</html>

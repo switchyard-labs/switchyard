@@ -111,3 +111,17 @@ func TestReleaseAssetReservationValidation(t *testing.T) {
 		t.Fatal("ready assets rejected")
 	}
 }
+
+func TestReleaseTagUsesExactRefAndPeelsAnnotatedTags(t *testing.T) {
+	refs := map[string]string{"refs/heads/v1": strings.Repeat("a", 40), "refs/tags/v1": strings.Repeat("b", 40), "refs/tags/v1^{}": strings.Repeat("c", 40)}
+	if releaseTagSHA(refs, "v1") != strings.Repeat("c", 40) {
+		t.Fatal("annotated tag was not peeled")
+	}
+	if releaseTagSHA(refs, "missing") != "" {
+		t.Fatal("missing tag resolved")
+	}
+	delete(refs, "refs/tags/v1^{}")
+	if releaseTagSHA(refs, "v1") != strings.Repeat("b", 40) {
+		t.Fatal("branch collision changed tag")
+	}
+}
