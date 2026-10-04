@@ -375,3 +375,15 @@ draft mutation controls disappeared, Markdown HTML stayed inert, browser source
 ZIP and R2 binary downloads completed. Asset bytes4096 and SHA256c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193
 matched. Screenshot: C46/release-published.jpg. Releases Actions automation and
 full lifecycle/live/responsive gates are still open.
+
+### 2026-10-04 — clean deployment 3586cb5
+
+Release recovery and durable queue-stage timing shipped in clean embedded commit
+`3586cb58ced2ecb86dc87ee956714ef71e03799b`. Full Go tests/vet, affected
+release/queue race tests, Worker tests/typecheck and diff checks passed. Linode
+backup `/opt/cp0/switchyard-backup-20261004-3586cb5` passed SQLite integrity;
+service version matches, Switchyard/Caddy are active, public Releases API returns
+HTTP 200 and anonymous browser renders “No releases yet.” Browser evidence:
+`docs/evidence/campaign/C46/linode-public-releases-3586cb5.jpg`. No additional
+Agent load was run on Linode. Actions-to-Releases automation, reset/drain gates,
+remaining browser/CLI certification and final brochure remain incomplete.
