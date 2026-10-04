@@ -112,6 +112,22 @@ func (a *App) handleListQueue(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
+	effects, err := a.Trestle.ListRecords("integration_effects", "")
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "queue_timings_unavailable"})
+		return
+	}
+	byID := map[string]map[string]int64{}
+	for _, record := range effects {
+		if effect, err := decodeQueueEffect(record); err == nil {
+			byID[effect.QueueID] = effect.TimingsNS
+		}
+	}
+	for _, item := range items {
+		if timings := byID[strOr(item["id"])]; len(timings) > 0 {
+			item["timings_ns"] = timings
+		}
+	}
 	writeJSON(w, 200, map[string]any{"items": items})
 }
 
@@ -246,7 +262,15 @@ func (a *App) pumpQueue() {
 	}
 }
 
-func (a *App) processQueueItem(it *queueItem) error {
+func (a *App) processQueueItem(it *queueItem) (resultErr error) {
+	started := time.Now()
+	defer func() {
+		status := 200
+		if resultErr != nil {
+			status = 500
+		}
+		a.Metrics.Record("integration_total", time.Since(started), status)
+	}()
 	lane, err := a.claimQueue(queueLane(it.repo, it.base))
 	if err != nil || lane == nil {
 		return err
@@ -291,7 +315,9 @@ func (a *App) processQueueItem(it *queueItem) error {
 			if err := claim.save("publishing"); err != nil {
 				return err
 			}
+			publicationStarted := time.Now()
 			result, err := a.Refs.PublishPrepared(candidate)
+			claim.recordTiming("publication", publicationStarted, err)
 			if err != nil {
 				return err
 			}
@@ -319,11 +345,13 @@ func (a *App) processQueueItem(it *queueItem) error {
 	}
 	a.queueCheckpoint("after_checks")
 	// policy gate 2: preview integration must be clean (structural/semantic)
+	previewStarted := time.Now()
 	candidate, err := a.Refs.PrepareMerge(it.repo, it.base, it.branch, "integration queue "+it.prID)
 	if err != nil {
 		a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "preview_failed: " + err.Error(), "updated_at": nowStr()})
 		return err
 	}
+	claim.recordTiming("git_preview", previewStarted, err)
 	a.queueCheckpoint("after_preview")
 	defer func() {
 		if claim.effect.Phase == "done" || claim.effect.Phase == "blocked" || claim.effect.Candidate != candidate {
@@ -336,7 +364,9 @@ func (a *App) processQueueItem(it *queueItem) error {
 
 	// git merge is textually clean: validate repo contracts on the merged tree.
 	// A clean merge can still be a semantic conflict -> block.
+	semanticStarted := time.Now()
 	sem, err := semanticFindingsInTree(candidate.Dir)
+	claim.recordTiming("semantic", semanticStarted, err)
 	if err != nil {
 		return err
 	}
@@ -387,7 +417,9 @@ func (a *App) processQueueItem(it *queueItem) error {
 		return err
 	}
 	a.queueCheckpoint("before_publication")
+	publicationStarted := time.Now()
 	res, err := a.Refs.PublishPrepared(candidate)
+	claim.recordTiming("publication", publicationStarted, err)
 	if err != nil {
 		if strings.Contains(err.Error(), "CONFLICT") {
 			// canonical moved between preview and merge (or an external push):

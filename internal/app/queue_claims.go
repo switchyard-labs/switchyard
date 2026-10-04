@@ -17,6 +17,7 @@ type queueEffect struct {
 	Candidate    *refs.PreparedMerge `json:"candidate,omitempty"`
 	CandidateDir string              `json:"candidate_dir,omitempty"`
 	PublishedSHA string              `json:"published_sha,omitempty"`
+	TimingsNS    map[string]int64    `json:"timings_ns,omitempty"`
 }
 
 type queueClaim struct {
@@ -109,4 +110,18 @@ func (c *queueClaim) release() error {
 	current.Owner = ""
 	current.LeaseUntil = ""
 	return c.a.Trestle.PatchRecord(c.collection, rid, ver, map[string]any{"state": current})
+}
+
+// recordTiming uses fixed operation names, preserving per-candidate stage costs.
+func (c *queueClaim) recordTiming(name string, started time.Time, err error) {
+	if c.effect.TimingsNS == nil {
+		c.effect.TimingsNS = map[string]int64{}
+	}
+	elapsed := time.Since(started)
+	c.effect.TimingsNS[name] = int64(elapsed)
+	status := 200
+	if err != nil {
+		status = 500
+	}
+	c.a.Metrics.Record("integration_"+name, elapsed, status)
 }

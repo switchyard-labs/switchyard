@@ -67,7 +67,7 @@ This document describes the new deployment procedure. It does not certify a
 production service-user migration, release publication, TLS deployment, or
 brochure refresh; those have separate evidence gates.
 
-### Release assets (C46 local implementation)
+### Release assets (C46)
 
 Assets use the signed Actions Worker R2 transport, independently of a CI job.
 The canonical upload API is `POST /api/repositories/{owner}/{repo}/release-assets?tag={tag}&name={filename}` with a raw body and explicit Content-Length.
@@ -85,8 +85,16 @@ Downloads enforce repository/draft visibility and check remote size/checksum hea
 Draft asset deletion persists a deletion reservation before the R2 effect, then
 removes metadata. Interrupted deletion can be retried. Pending uploads must be
 retried to completion before deletion, to avoid racing a still-running writer.
-Automatic abandoned-upload cleanup remains an outstanding operational gate.
+When R2 upload succeeded but metadata completion was interrupted, a maintainer
+can use `POST /api/repositories/{owner}/{repo}/release-assets/{asset-id}/recover?tag={tag}`
+or **Recover attachment** in the draft UI. Recovery reads the actual immutable
+payload and verifies its size and full SHA-256 before completing metadata. It
+does not require the original local file. A missing object requires retrying the
+original upload; corrupt bytes remain pending. Automatic abandoned-upload
+cleanup remains an outstanding operational gate.
 
-These endpoints are local implementation only until a clean verified deployment
-of the app/schema and Worker. The release browser UI, Actions tag automation and
-CLI remain separate unfinished gates.
+The foundation API/schema and signed R2 Worker transport are deployed. The UI
+has local browser publication/download proof, and `sy release` has real API/R2
+proof. Recovery requires the next application deployment. Actions tag automation
+and final live browser/CLI certification remain unfinished gates; consult the
+campaign ledger for the deployed commit and evidence.

@@ -147,6 +147,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}", a.authorizeHandler(a.handleGetRepositoryMeta))
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/git-credential", a.authorizeHandler(a.handleGitCredential))
 	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/release-assets", a.authorizeHandler(a.handleReleaseAssetUpload))
+	mux.HandleFunc("POST /api/repositories/{owner}/{repo}/release-assets/{asset}/recover", a.authorizeHandler(a.handleReleaseAssetRecover))
 	mux.HandleFunc("DELETE /api/repositories/{owner}/{repo}/release-assets/{asset}", a.authorizeHandler(a.handleReleaseAssetDelete))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/release-assets/{asset}", a.authorizeHandler(a.handleReleaseAssetDownload))
 	mux.HandleFunc("GET /api/repositories/{owner}/{repo}/releases", a.authorizeHandler(a.handleReleases))

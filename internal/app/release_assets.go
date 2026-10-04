@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"switchyard/internal/actions"
+	"time"
 )
 
 // Asset reservations live in the release record: the same CAS which publishes
@@ -371,4 +372,115 @@ func (a *App) handleReleaseAssetDelete(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, 502, map[string]any{"error": "asset_deletion_pending", "retryable": true})
+}
+
+// handleReleaseAssetRecover completes an interrupted attachment from immutable R2
+// bytes. It never deletes a pending object or assumes an upload stopped. A missing
+// object still requires retrying the identical upload; a recovered ready asset can
+// then be deleted through the normal draft lifecycle.
+func (a *App) handleReleaseAssetRecover(w http.ResponseWriter, r *http.Request) {
+	meta, repo, ok := a.resolveCanonicalRepository(w, r)
+	if !ok {
+		return
+	}
+	user := a.currentUser(r)
+	if user == "" || a.isDemoGuest(r) || !a.CanRepository(meta, user, WriteRepo) {
+		writeJSON(w, 403, map[string]any{"error": "release_maintainer_required"})
+		return
+	}
+	store, ok := a.Actions.(releaseAssetStore)
+	if !ok {
+		writeJSON(w, 503, map[string]any{"error": "release_storage_unavailable"})
+		return
+	}
+	identity := releaseIdentity(strOf(meta["id"]), r.URL.Query().Get("tag"))
+	_, _, record, err := a.Trestle.FindRecord("releases", filterEq("identity", identity))
+	if err != nil || record == nil {
+		writeJSON(w, 404, map[string]any{"error": "release_not_found"})
+		return
+	}
+	assets, err := releaseAssets(record)
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "assets_unavailable"})
+		return
+	}
+	var selected *releaseAsset
+	for i := range assets {
+		if assets[i].ID == r.PathValue("asset") {
+			selected = &assets[i]
+			break
+		}
+	}
+	if selected == nil {
+		writeJSON(w, 404, map[string]any{"error": "asset_not_found"})
+		return
+	}
+	if selected.State == "ready" {
+		writeJSON(w, 200, selected)
+		return
+	}
+	if strOf(record["draft"]) != "true" || selected.State != "pending" {
+		writeJSON(w, 409, map[string]any{"error": "asset_not_recoverable"})
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Minute)
+	defer cancel()
+	response, err := store.GetReleaseAsset(ctx, repo, selected.ID)
+	if err != nil || response == nil || response.Body == nil {
+		writeJSON(w, 502, map[string]any{"error": "asset_recovery_unavailable", "retryable": true})
+		return
+	}
+	defer response.Body.Close()
+	hash := sha256.New()
+	size, err := io.Copy(hash, io.LimitReader(response.Body, actions.ReleaseAssetLimit+1))
+	if err != nil || size != selected.Size || hex.EncodeToString(hash.Sum(nil)) != selected.SHA256 {
+		writeJSON(w, 502, map[string]any{"error": "asset_integrity_mismatch"})
+		return
+	}
+	if err := a.audit(strOf(meta["owner_slug"]), "release.asset.recover", selected.ID, "allowed", "verified immutable R2 payload", user); err != nil {
+		writeJSON(w, 502, map[string]any{"error": "release_audit_failed"})
+		return
+	}
+	for tries := 0; tries < 8; tries++ {
+		rid, version, current, err := a.Trestle.FindRecord("releases", filterEq("identity", identity))
+		if err != nil || rid == "" {
+			break
+		}
+		currentAssets, err := releaseAssets(current)
+		if err != nil {
+			break
+		}
+		found := false
+		for i := range currentAssets {
+			asset := &currentAssets[i]
+			if asset.ID != selected.ID {
+				continue
+			}
+			if asset.State == "ready" {
+				writeJSON(w, 200, asset)
+				return
+			}
+			if strOf(current["draft"]) != "true" || asset.State != "pending" || asset.SHA256 != selected.SHA256 || asset.Size != selected.Size {
+				writeJSON(w, 409, map[string]any{"error": "asset_not_recoverable"})
+				return
+			}
+			asset.State = "ready"
+			found = true
+		}
+		if !found {
+			writeJSON(w, 404, map[string]any{"error": "asset_not_found"})
+			return
+		}
+		raw, _ := json.Marshal(currentAssets)
+		err = a.Trestle.PatchRecord("releases", rid, version, map[string]any{"assets_json": string(raw), "updated_at": nowStr()})
+		if err == nil {
+			selected.State = "ready"
+			writeJSON(w, 200, selected)
+			return
+		}
+		if draftPersistenceStatus(err) != 409 {
+			break
+		}
+	}
+	writeJSON(w, 502, map[string]any{"error": "asset_attachment_pending", "retryable": true})
 }

@@ -64,3 +64,12 @@ upper observation 13147.95ms). This fixture has no semantic contract: its tiny
 semantic-stage time measures the missing-contract fast path, not representative
 contract validation. Do not use that number to claim semantic performance complete.
 Queue publication timing and representative contract validation remain open.
+
+The genuine two-rule semantic fixture is now measured, not the missing-contract
+fast path. Twelve repaired-tree previews passed: end-to-end median6881.50ms,
+nearest-rank p95/max11554.50ms, min6108.78ms. Server-Timing Git-preview median
+6336.24ms (min5743.09/max8753.06); actual local semantic validation median0.133ms
+(min0.084/max0.421). The remote checkout dominates this small JSON contract.
+This is not evidence for large contracts or Nick's internet. Raw samples:
+semantic-contract-preview-12.json. Durable queue stage timing is now implemented;
+repeated actual publication samples remain open.

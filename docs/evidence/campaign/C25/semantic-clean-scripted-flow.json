@@ -1,0 +1,1146 @@
+{
+  "work_id": "wk_de7b6ee579db014c",
+  "steps": {
+    "original-actions-settings": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "definition": {
+            "approved_by": "alice",
+            "created_at": "2026-10-04T05:25:29Z",
+            "definition": {
+              "jobs": [
+                {
+                  "id": "verify",
+                  "steps": [
+                    {
+                      "command": "node --test ci.test.mjs && git -C /tmp/ci-source rev-parse HEAD",
+                      "id": "unit",
+                      "timeout_ms": 60000
+                    }
+                  ]
+                }
+              ],
+              "refs": [
+                "refs/heads/main",
+                "refs/heads/event-competition-f211f9ea6f52-a",
+                "refs/heads/event-competition-f211f9ea6f52-b"
+              ],
+              "revision": "b2dff68a348e5c7a06030cb0e0a28e347d014183fb90cf5323ae63537252905b",
+              "source": "export default {refs:[\"refs/heads/main\", \"refs/heads/event-competition-f211f9ea6f52-a\", \"refs/heads/event-competition-f211f9ea6f52-b\"],jobs:[{id:'verify',steps:[{id:'unit',command:'node --test ci.test.mjs && git -C /tmp/ci-source rev-parse HEAD',timeout_ms:60000}]}]};"
+            },
+            "id": "def-f60615569b60444141c449d7997027a43ebb0f53e13f79f98bad29a2a61bcf2c",
+            "repo": "codex-actions-probe-20261003",
+            "revision": "b2dff68a348e5c7a06030cb0e0a28e347d014183fb90cf5323ae63537252905b"
+          },
+          "deployment_setup": "A verified Cloudflare Workers Builds connection and build token are required for preview and deployment links.",
+          "enabled": true,
+          "secret_references": [
+            {
+              "provider": "cloudflare-worker",
+              "binding": "CONTROL_SECRET",
+              "purpose": "Signed control-plane requests"
+            },
+            {
+              "provider": "cloudflare-worker",
+              "binding": "CF_TOKEN",
+              "purpose": "Repository checkout token minting"
+            },
+            {
+              "provider": "cloudflare-worker",
+              "binding": "R2_ACCESS_KEY_ID",
+              "purpose": "Bounded CI snapshots"
+            },
+            {
+              "provider": "cloudflare-worker",
+              "binding": "R2_SECRET_ACCESS_KEY",
+              "purpose": "Bounded CI snapshots"
+            }
+          ],
+          "settings": {
+            "repo": "codex-actions-probe-20261003",
+            "required_jobs": [
+              "verify"
+            ],
+            "revision": "b2dff68a348e5c7a06030cb0e0a28e347d014183fb90cf5323ae63537252905b"
+          }
+        },
+        "seconds": 0.007
+      }
+    },
+    "approve-actions-before-push": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "required_jobs": [
+            "verify"
+          ],
+          "revision": "8f780f13e14614c2b1a3e2489c26b0c000c6f9aad033f520a4d9240afd20852a"
+        },
+        "seconds": 0.697
+      }
+    },
+    "implementation-a": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "adapter": "opencode-go/gpt-5.6-luna",
+          "attempt_id": "wk_10ad029585a18271",
+          "execution": "exe_f08fd36d",
+          "new_sha": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+          "output": "{\"files\":{\"api-version.json\":\"{\\n  \\\"version\\\": 2,\\n  \\\"requires\\\": 2\\n}\\n\"},\"timings_ns\":{\"adapter_total_ns\":11496878624,\"model_execution_ns\":11495396597,\"runner_bootstrap_ns\":1443472,\"workspace_result_read_ns\":34956}}\nOpenCode event: step_start\nOpenCode event: text\nOpenCode event: tool_use\nRequested path: /workspace/api-version.json\nOpenCode tool read: completed \nOpenCode event: step_finish\nOpenCode event: step_start\nOpenCode event: text\nOpenCode event: tool_use\nOpenCode tool apply_patch: completed \nOpenCode event: step_finish\nOpenCode event: step_start\nOpenCode event: text\nOpenCode event: step_finish\n",
+          "publication_timings_ns": {
+            "git_commit_ns": 12598899,
+            "git_fetch_ns": 3794364013,
+            "git_push_ns": 1767677668,
+            "publication_preflight_ns": 4164359586,
+            "publication_state_ns": 2508454,
+            "publication_total_ns": 9742069594
+          },
+          "status": "ok",
+          "timings_ns": {
+            "adapter_total_ns": 11496878624,
+            "model_execution_ns": 11495396597,
+            "queue_wait_ns": 2834,
+            "runner_bootstrap_ns": 1443472,
+            "workspace_result_read_ns": 34956
+          }
+        },
+        "seconds": 25.63
+      }
+    },
+    "implementation-b": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "adapter": "opencode-go/gpt-5.6-luna",
+          "attempt_id": "wk_47ae565ab9b10404",
+          "execution": "exe_ef986520",
+          "new_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+          "output": "{\"files\":{\"switchyard.contract.json\":\"{\\n  \\\"rules\\\": [\\n    {\\n      \\\"kind\\\": \\\"field_equals\\\",\\n      \\\"a\\\": \\\"api-version.json:version\\\",\\n      \\\"b\\\": \\\"api-version.json:requires\\\"\\n    },\\n    {\\n      \\\"kind\\\": \\\"field_equals\\\",\\n      \\\"a\\\": \\\"api-version.json:version\\\",\\n      \\\"b\\\": \\\"new-consumer.json:requires\\\"\\n    }\\n  ]\\n}\\n\"},\"timings_ns\":{\"adapter_total_ns\":17768767101,\"model_execution_ns\":17768031645,\"runner_bootstrap_ns\":689653,\"workspace_result_read_ns\":41014}}\nOpenCode event: step_start\nOpenCode event: text\nOpenCode event: tool_use\nRequested path: /workspace/switchyard.contract.json\nOpenCode tool read: completed \nOpenCode event: step_finish\nOpenCode event: step_start\nOpenCode event: text\nOpenCode event: tool_use\nOpenCode tool apply_patch: completed \nOpenCode event: step_finish\nOpenCode event: step_start\nOpenCode event: tool_use\nRequested path: /workspace/switchyard.contract.json\nOpenCode tool read: completed \nOpenCode event: step_finish\nOpenCode event: step_start\nOpenCode event: text\nOpenCode event: step_finish\n",
+          "publication_timings_ns": {
+            "git_commit_ns": 14286173,
+            "git_fetch_ns": 3745337489,
+            "git_push_ns": 1463362494,
+            "publication_preflight_ns": 1885838827,
+            "publication_state_ns": 1288471,
+            "publication_total_ns": 7110585726
+          },
+          "status": "ok",
+          "timings_ns": {
+            "adapter_total_ns": 17768767101,
+            "model_execution_ns": 17768031645,
+            "queue_wait_ns": 2152,
+            "runner_bootstrap_ns": 689653,
+            "workspace_result_read_ns": 41014
+          }
+        },
+        "seconds": 29.295
+      }
+    },
+    "native-ci-a": {
+      "state": "done",
+      "response": {
+        "result": {
+          "actor": "switchyard",
+          "created_at": "2026-10-04T06:03:01.609Z",
+          "definition_revision": "8f780f13e14614c2b1a3e2489c26b0c000c6f9aad033f520a4d9240afd20852a",
+          "id": "b5bfc1e5-e452-49a1-af80-fcdcaf3ae273",
+          "ref": "refs/heads/event-competition-de2f9b13f5a2-a",
+          "repo": "codex-actions-probe-20261003",
+          "source_sha": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+          "state": {
+            "external_status": "complete",
+            "finished_at": "2026-10-04T06:03:17.383Z",
+            "manifest": {
+              "finished_at": "2026-10-04T06:03:17.383Z",
+              "jobs": [
+                {
+                  "id": "verify",
+                  "name": "verify",
+                  "status": "succeeded",
+                  "steps": [
+                    {
+                      "finished_at": "2026-10-04T06:03:15.351Z",
+                      "id": "unit",
+                      "log_key": "runs/b5bfc1e5-e452-49a1-af80-fcdcaf3ae273/verify-unit.json",
+                      "name": "unit",
+                      "started_at": "2026-10-04T06:03:02.461Z",
+                      "status": "succeeded",
+                      "truncated": false
+                    }
+                  ]
+                }
+              ],
+              "run": {
+                "actor": "switchyard",
+                "definition_revision": "8f780f13e14614c2b1a3e2489c26b0c000c6f9aad033f520a4d9240afd20852a",
+                "event": {
+                  "type": "push"
+                },
+                "jobs": [
+                  {
+                    "id": "verify",
+                    "steps": [
+                      {
+                        "command": "node --test ci.test.mjs && git -C /tmp/ci-source rev-parse HEAD",
+                        "id": "unit",
+                        "timeout_ms": 60000
+                      }
+                    ]
+                  }
+                ],
+                "owner": "switchyard-cp0",
+                "provider": "cloudflare-artifacts",
+                "providerData": {
+                  "namespace": "switchyard-cp0"
+                },
+                "ref": "refs/heads/event-competition-de2f9b13f5a2-a",
+                "repo": "codex-actions-probe-20261003",
+                "run_id": "b5bfc1e5-e452-49a1-af80-fcdcaf3ae273",
+                "sha": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+                "trigger": "push"
+              },
+              "source": {
+                "commit_present": true,
+                "config": null,
+                "inspection": "artifacts-worker-binding",
+                "repo": "codex-actions-probe-20261003",
+                "sha": "b11b67e73fbc11a30289587f8adf0b9d560da596"
+              },
+              "started_at": "2026-10-04T06:03:01.609Z",
+              "status": "succeeded"
+            },
+            "status": "success"
+          },
+          "trigger": "push"
+        }
+      }
+    },
+    "initial-preview-a": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "attempt_id": "wk_10ad029585a18271",
+          "conflict": false,
+          "conflicts": [],
+          "semantic_conflict": false,
+          "status": "ok"
+        },
+        "seconds": 6.757
+      }
+    },
+    "initial-review-a": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "attempt_id": "wk_10ad029585a18271",
+          "execution": "exe_8643213d",
+          "findings": [
+            {
+              "file": "api-version.json",
+              "message": "api-version.json is valid JSON with version=2 and requires=2.",
+              "severity": "info"
+            },
+            {
+              "file": "switchyard.contract.json",
+              "message": "switchyard.contract.json is valid JSON.",
+              "severity": "info"
+            },
+            {
+              "file": "switchyard.contract.json",
+              "message": "Contract rule field_equals(api-version.json:version, api-version.json:requires) is satisfied: 2 == 2.",
+              "severity": "info"
+            }
+          ],
+          "reviewed_by": "alice"
+        },
+        "seconds": 19.69
+      }
+    },
+    "pr-a": {
+      "state": "done",
+      "response": {
+        "status": 201,
+        "result": {
+          "base": "main",
+          "branch": "event-competition-de2f9b13f5a2-a",
+          "id": "wk_6f410d72f9ea9127",
+          "proposed_by": "alice",
+          "repo": "codex-actions-probe-20261003",
+          "status": "open",
+          "title": "Semantic competition a"
+        },
+        "seconds": 0.509
+      }
+    },
+    "native-ci-b": {
+      "state": "done",
+      "response": {
+        "result": {
+          "actor": "switchyard",
+          "created_at": "2026-10-04T06:03:04.522Z",
+          "definition_revision": "8f780f13e14614c2b1a3e2489c26b0c000c6f9aad033f520a4d9240afd20852a",
+          "id": "b16ce32b-1bde-401b-9a57-623244843e49",
+          "ref": "refs/heads/event-competition-de2f9b13f5a2-b",
+          "repo": "codex-actions-probe-20261003",
+          "source_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+          "state": {
+            "external_status": "complete",
+            "finished_at": "2026-10-04T06:03:34.008Z",
+            "manifest": {
+              "finished_at": "2026-10-04T06:03:34.008Z",
+              "jobs": [
+                {
+                  "id": "verify",
+                  "name": "verify",
+                  "status": "succeeded",
+                  "steps": [
+                    {
+                      "finished_at": "2026-10-04T06:03:32.616Z",
+                      "id": "unit",
+                      "log_key": "runs/b16ce32b-1bde-401b-9a57-623244843e49/verify-unit.json",
+                      "name": "unit",
+                      "started_at": "2026-10-04T06:03:05.346Z",
+                      "status": "succeeded",
+                      "truncated": false
+                    }
+                  ]
+                }
+              ],
+              "run": {
+                "actor": "switchyard",
+                "definition_revision": "8f780f13e14614c2b1a3e2489c26b0c000c6f9aad033f520a4d9240afd20852a",
+                "event": {
+                  "type": "push"
+                },
+                "jobs": [
+                  {
+                    "id": "verify",
+                    "steps": [
+                      {
+                        "command": "node --test ci.test.mjs && git -C /tmp/ci-source rev-parse HEAD",
+                        "id": "unit",
+                        "timeout_ms": 60000
+                      }
+                    ]
+                  }
+                ],
+                "owner": "switchyard-cp0",
+                "provider": "cloudflare-artifacts",
+                "providerData": {
+                  "namespace": "switchyard-cp0"
+                },
+                "ref": "refs/heads/event-competition-de2f9b13f5a2-b",
+                "repo": "codex-actions-probe-20261003",
+                "run_id": "b16ce32b-1bde-401b-9a57-623244843e49",
+                "sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+                "trigger": "push"
+              },
+              "source": {
+                "commit_present": true,
+                "config": null,
+                "inspection": "artifacts-worker-binding",
+                "repo": "codex-actions-probe-20261003",
+                "sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e"
+              },
+              "started_at": "2026-10-04T06:03:04.522Z",
+              "status": "succeeded"
+            },
+            "status": "success"
+          },
+          "trigger": "push"
+        }
+      }
+    },
+    "initial-preview-b": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "attempt_id": "wk_47ae565ab9b10404",
+          "conflict": false,
+          "conflicts": [],
+          "semantic_conflict": false,
+          "status": "ok"
+        },
+        "seconds": 9.804
+      }
+    },
+    "initial-review-b": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "attempt_id": "wk_47ae565ab9b10404",
+          "execution": "exe_d05f0b6a",
+          "findings": [],
+          "reviewed_by": "alice"
+        },
+        "seconds": 23.255
+      }
+    },
+    "pr-b": {
+      "state": "done",
+      "response": {
+        "status": 201,
+        "result": {
+          "base": "main",
+          "branch": "event-competition-de2f9b13f5a2-b",
+          "id": "wk_8e849a6797c1b619",
+          "proposed_by": "alice",
+          "repo": "codex-actions-probe-20261003",
+          "status": "open",
+          "title": "Semantic competition b"
+        },
+        "seconds": 0.379
+      }
+    },
+    "lane-a-enqueue": {
+      "state": "done",
+      "response": {
+        "status": 201,
+        "result": {
+          "id": "iq_f32b5cd36a14484cc063e79f",
+          "pr_id": "wk_6f410d72f9ea9127",
+          "status": "queued"
+        },
+        "seconds": 8.778
+      }
+    },
+    "lane-a-published": {
+      "state": "done",
+      "response": {
+        "result": {
+          "attempts": "0",
+          "base": "main",
+          "branch": "event-competition-de2f9b13f5a2-a",
+          "created_at": "2026-10-04T06:04:28.793Z",
+          "error": "",
+          "id": "iq_f32b5cd36a14484cc063e79f",
+          "policy": "exact_source_check + immutable_preview + semantic + policy",
+          "pr_id": "wk_6f410d72f9ea9127",
+          "repo": "codex-actions-probe-20261003",
+          "risk": "low",
+          "status": "done",
+          "updated_at": "2026-10-04T06:04:45Z"
+        }
+      }
+    },
+    "semantic-conflict": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "attempt_id": "wk_47ae565ab9b10404",
+          "conflict": false,
+          "findings": [
+            {
+              "file": "api-version.json",
+              "message": "semantic conflict: git merge is clean but api-version.json:version (2) != new-consumer.json:requires (1)",
+              "severity": "error"
+            }
+          ],
+          "semantic_conflict": true,
+          "status": "semantic_conflict"
+        },
+        "seconds": 6.459
+      }
+    },
+    "real-resolver": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "attempt_id": "wk_47ae565ab9b10404",
+          "new_sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+          "notice": "Run preview and review before integration",
+          "resolved_files": [
+            "new-consumer.json"
+          ],
+          "status": "repair_proposed"
+        },
+        "seconds": 38.545
+      }
+    },
+    "repair-repreview": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "attempt_id": "wk_47ae565ab9b10404",
+          "conflict": false,
+          "conflicts": [],
+          "semantic_conflict": false,
+          "status": "ok"
+        },
+        "seconds": 6.649
+      }
+    },
+    "repair-rereview": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "attempt_id": "wk_47ae565ab9b10404",
+          "execution": "exe_513d57f9",
+          "findings": [],
+          "reviewed_by": "alice"
+        },
+        "seconds": 16.964
+      }
+    },
+    "repair-native-ci": {
+      "state": "done",
+      "response": {
+        "result": {
+          "actor": "Switchyard CI validation",
+          "created_at": "2026-10-04T06:05:38.249Z",
+          "definition_revision": "8f780f13e14614c2b1a3e2489c26b0c000c6f9aad033f520a4d9240afd20852a",
+          "id": "5f79219d-87a0-4009-b97e-7af5a5b96b00",
+          "ref": "refs/heads/event-competition-de2f9b13f5a2-b",
+          "repo": "codex-actions-probe-20261003",
+          "source_sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+          "state": {
+            "external_status": "complete",
+            "finished_at": "2026-10-04T06:05:59.061Z",
+            "manifest": {
+              "finished_at": "2026-10-04T06:05:59.061Z",
+              "jobs": [
+                {
+                  "id": "verify",
+                  "name": "verify",
+                  "status": "succeeded",
+                  "steps": [
+                    {
+                      "finished_at": "2026-10-04T06:05:55.904Z",
+                      "id": "unit",
+                      "log_key": "runs/5f79219d-87a0-4009-b97e-7af5a5b96b00/verify-unit.json",
+                      "name": "unit",
+                      "started_at": "2026-10-04T06:05:40.439Z",
+                      "status": "succeeded",
+                      "truncated": false
+                    }
+                  ]
+                }
+              ],
+              "run": {
+                "actor": "Switchyard CI validation",
+                "definition_revision": "8f780f13e14614c2b1a3e2489c26b0c000c6f9aad033f520a4d9240afd20852a",
+                "event": {
+                  "type": "push"
+                },
+                "jobs": [
+                  {
+                    "id": "verify",
+                    "steps": [
+                      {
+                        "command": "node --test ci.test.mjs && git -C /tmp/ci-source rev-parse HEAD",
+                        "id": "unit",
+                        "timeout_ms": 60000
+                      }
+                    ]
+                  }
+                ],
+                "owner": "switchyard-cp0",
+                "provider": "cloudflare-artifacts",
+                "providerData": {
+                  "namespace": "switchyard-cp0"
+                },
+                "ref": "refs/heads/event-competition-de2f9b13f5a2-b",
+                "repo": "codex-actions-probe-20261003",
+                "run_id": "5f79219d-87a0-4009-b97e-7af5a5b96b00",
+                "sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+                "trigger": "push"
+              },
+              "source": {
+                "commit_present": true,
+                "config": null,
+                "inspection": "artifacts-worker-binding",
+                "repo": "codex-actions-probe-20261003",
+                "sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d"
+              },
+              "started_at": "2026-10-04T06:05:38.249Z",
+              "status": "succeeded"
+            },
+            "status": "success"
+          },
+          "trigger": "push"
+        }
+      }
+    },
+    "lane-b-enqueue": {
+      "state": "done",
+      "response": {
+        "status": 201,
+        "result": {
+          "id": "iq_7960ea840cf8ef8bb08b4b1d",
+          "pr_id": "wk_8e849a6797c1b619",
+          "status": "queued"
+        },
+        "seconds": 9.999
+      }
+    },
+    "lane-b-published": {
+      "state": "done",
+      "response": {
+        "result": {
+          "attempts": "0",
+          "base": "main",
+          "branch": "event-competition-de2f9b13f5a2-b",
+          "created_at": "2026-10-04T06:06:20.681Z",
+          "error": "",
+          "id": "iq_7960ea840cf8ef8bb08b4b1d",
+          "policy": "exact_source_check + immutable_preview + semantic + policy",
+          "pr_id": "wk_8e849a6797c1b619",
+          "repo": "codex-actions-probe-20261003",
+          "risk": "low",
+          "status": "done",
+          "updated_at": "2026-10-04T06:06:33Z"
+        }
+      }
+    },
+    "final-refs": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "refs": {
+            "HEAD": "552beee1b6a57feae0f120c063f67360bff90ab8",
+            "refs/heads/event-competition-de2f9b13f5a2-a": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+            "refs/heads/event-competition-de2f9b13f5a2-b": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+            "refs/heads/main": "552beee1b6a57feae0f120c063f67360bff90ab8"
+          }
+        },
+        "seconds": 2.302
+      }
+    },
+    "final-provenance": {
+      "state": "done",
+      "response": {
+        "status": 200,
+        "result": {
+          "chain": [
+            {
+              "id": "wk_de7b6ee579db014c",
+              "kind": "work",
+              "owner": "alice",
+              "status": "open",
+              "title": "Competition: two competing implementations"
+            },
+            {
+              "branch": "event-competition-de2f9b13f5a2-a",
+              "id": "wk_10ad029585a18271",
+              "kind": "attempt",
+              "repo": "codex-actions-probe-20261003",
+              "status": "created"
+            },
+            {
+              "at": "2026-10-04T06:02:57Z",
+              "attempt_id": "wk_10ad029585a18271",
+              "kind": "run",
+              "message": "agent run (opencode-go/gpt-5.6-luna)",
+              "new_sha": "b11b67e73fbc11a30289587f8adf0b9d560da596"
+            },
+            {
+              "base": "main",
+              "branch": "event-competition-de2f9b13f5a2-a",
+              "check_status": "pass",
+              "id": "wk_6f410d72f9ea9127",
+              "kind": "pr",
+              "repo": "codex-actions-probe-20261003",
+              "status": "integrated"
+            },
+            {
+              "branch": "event-competition-de2f9b13f5a2-b",
+              "id": "wk_47ae565ab9b10404",
+              "kind": "attempt",
+              "repo": "codex-actions-probe-20261003",
+              "status": "repair_proposed"
+            },
+            {
+              "at": "2026-10-04T06:03:01Z",
+              "attempt_id": "wk_47ae565ab9b10404",
+              "kind": "run",
+              "message": "agent run (opencode-go/gpt-5.6-luna)",
+              "new_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e"
+            },
+            {
+              "base": "main",
+              "branch": "event-competition-de2f9b13f5a2-b",
+              "check_status": "pass",
+              "id": "wk_8e849a6797c1b619",
+              "kind": "pr",
+              "repo": "codex-actions-probe-20261003",
+              "status": "integrated"
+            },
+            {
+              "branch": "event-competition-de2f9b13f5a2-b",
+              "kind": "ref_update",
+              "new_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+              "old_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+              "provenance": "user:alice",
+              "repo": "codex-actions-probe-20261003"
+            },
+            {
+              "branch": "event-competition-de2f9b13f5a2-b",
+              "kind": "ref_update",
+              "new_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+              "old_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+              "provenance": "user:alice",
+              "repo": "codex-actions-probe-20261003"
+            },
+            {
+              "branch": "event-competition-de2f9b13f5a2-a",
+              "kind": "ref_update",
+              "new_sha": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+              "old_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+              "provenance": "user:alice",
+              "repo": "codex-actions-probe-20261003"
+            },
+            {
+              "branch": "event-competition-de2f9b13f5a2-b",
+              "kind": "ref_update",
+              "new_sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+              "old_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+              "provenance": "conflict-resolver:alice:wk_47ae565ab9b10404",
+              "repo": "codex-actions-probe-20261003"
+            },
+            {
+              "branch": "event-competition-de2f9b13f5a2-a",
+              "kind": "ref_update",
+              "new_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+              "old_sha": "2aa66285ad89c631e7009f47adf589d1aaae7edf",
+              "provenance": "user:alice",
+              "repo": "codex-actions-probe-20261003"
+            }
+          ],
+          "work_id": "wk_de7b6ee579db014c"
+        },
+        "seconds": 0.294
+      }
+    }
+  },
+  "timeline": [
+    {
+      "step": "original-actions-settings",
+      "at": "2026-10-04T06:02:31Z",
+      "seconds": 0.007
+    },
+    {
+      "step": "approve-actions-before-push",
+      "at": "2026-10-04T06:02:32Z",
+      "seconds": 0.697
+    },
+    {
+      "step": "implementation-a",
+      "at": "2026-10-04T06:02:57Z",
+      "seconds": 25.63
+    },
+    {
+      "step": "implementation-b",
+      "at": "2026-10-04T06:03:01Z",
+      "seconds": 29.295
+    },
+    {
+      "step": "initial-preview-a",
+      "at": "2026-10-04T06:03:26Z",
+      "seconds": 6.757
+    },
+    {
+      "step": "initial-review-a",
+      "at": "2026-10-04T06:03:46Z",
+      "seconds": 19.69
+    },
+    {
+      "step": "pr-a",
+      "at": "2026-10-04T06:03:46Z",
+      "seconds": 0.509
+    },
+    {
+      "step": "initial-preview-b",
+      "at": "2026-10-04T06:03:56Z",
+      "seconds": 9.804
+    },
+    {
+      "step": "initial-review-b",
+      "at": "2026-10-04T06:04:19Z",
+      "seconds": 23.255
+    },
+    {
+      "step": "pr-b",
+      "at": "2026-10-04T06:04:20Z",
+      "seconds": 0.379
+    },
+    {
+      "step": "lane-a-enqueue",
+      "at": "2026-10-04T06:04:28Z",
+      "seconds": 8.778
+    },
+    {
+      "step": "semantic-conflict",
+      "at": "2026-10-04T06:04:53Z",
+      "seconds": 6.459
+    },
+    {
+      "step": "real-resolver",
+      "at": "2026-10-04T06:05:31Z",
+      "seconds": 38.545
+    },
+    {
+      "step": "repair-repreview",
+      "at": "2026-10-04T06:05:38Z",
+      "seconds": 6.649
+    },
+    {
+      "step": "repair-rereview",
+      "at": "2026-10-04T06:05:55Z",
+      "seconds": 16.964
+    },
+    {
+      "step": "lane-b-enqueue",
+      "at": "2026-10-04T06:06:20Z",
+      "seconds": 9.999
+    },
+    {
+      "step": "final-refs",
+      "at": "2026-10-04T06:06:38Z",
+      "seconds": 2.302
+    },
+    {
+      "step": "final-provenance",
+      "at": "2026-10-04T06:06:38Z",
+      "seconds": 0.294
+    }
+  ],
+  "executions": [
+    {
+      "adapter": "opencode-go/deepseek-v4-flash",
+      "attempt_id": "wk_47ae565ab9b10404",
+      "finished_at": "2026-10-04T06:05:55Z",
+      "id": "exe_513d57f9",
+      "metadata": {
+        "branch": "event-competition-de2f9b13f5a2-b",
+        "cpu_time_ns": 7812453000,
+        "credential_profile": "cred_6f6bdfb415bb731d221b6533",
+        "duration_ns": 7882298385,
+        "exit_code": 0,
+        "failure_code": "",
+        "file": "REVIEW.json",
+        "model": "deepseek-v4-flash",
+        "output_truncated": false,
+        "principal": "alice",
+        "provider": "opencode-go",
+        "resource_usage": {
+          "accounting": "sampled cgroup v2; last sample may precede exit",
+          "cpu.max": "200000 100000",
+          "cpu.stat": "usage_usec 7812453\nuser_usec 6912031\nsystem_usec 900421\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 78\nnr_throttled 8\nthrottled_usec 959958\nnr_bursts 0\nburst_usec 0",
+          "memory.current": "231546880",
+          "memory.current.sampled_peak": "604004352",
+          "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+          "memory.max": "1073741824",
+          "memory.peak": "605110272",
+          "memory.swap.max": "0",
+          "pids.current": "10",
+          "pids.current.sampled_peak": "38",
+          "pids.events": "max 0",
+          "pids.max": "128",
+          "pids.peak": "46"
+        },
+        "role": "reviewer",
+        "sandbox": true,
+        "source_sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+        "status": "succeeded",
+        "timings_ns": {
+          "adapter_total_ns": 7769080985,
+          "model_execution_ns": 7767833935,
+          "queue_wait_ns": 1526,
+          "runner_bootstrap_ns": 1168121,
+          "workspace_result_read_ns": 73670
+        }
+      },
+      "role": "reviewer",
+      "started_at": "2026-10-04T06:05:47Z",
+      "status": "succeeded"
+    },
+    {
+      "adapter": "opencode-go/glm-5.3-flash",
+      "attempt_id": "wk_47ae565ab9b10404",
+      "finished_at": "2026-10-04T06:05:28Z",
+      "id": "exe_80756054",
+      "metadata": {
+        "branch": "event-competition-de2f9b13f5a2-b",
+        "cpu_time_ns": 14915412000,
+        "credential_profile": "cred_6f6bdfb415bb731d221b6533",
+        "duration_ns": 27443994254,
+        "exit_code": 0,
+        "failure_code": "",
+        "file": "new-consumer.json",
+        "model": "glm-5.3-flash",
+        "output_truncated": false,
+        "principal": "alice",
+        "provider": "opencode-go",
+        "resource_usage": {
+          "accounting": "sampled cgroup v2; last sample may precede exit",
+          "cpu.max": "200000 100000",
+          "cpu.stat": "usage_usec 14915412\nuser_usec 13530343\nsystem_usec 1385068\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 261\nnr_throttled 9\nthrottled_usec 1685672\nnr_bursts 0\nburst_usec 0",
+          "memory.current": "264056832",
+          "memory.current.sampled_peak": "624431104",
+          "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+          "memory.max": "1073741824",
+          "memory.peak": "625819648",
+          "memory.swap.max": "0",
+          "pids.current": "10",
+          "pids.current.sampled_peak": "40",
+          "pids.events": "max 0",
+          "pids.max": "128",
+          "pids.peak": "48"
+        },
+        "role": "conflict-resolver",
+        "sandbox": true,
+        "source_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+        "status": "succeeded",
+        "timings_ns": {
+          "adapter_total_ns": 27338877501,
+          "model_execution_ns": 27337838967,
+          "queue_wait_ns": 1815,
+          "runner_bootstrap_ns": 964587,
+          "workspace_result_read_ns": 68795
+        }
+      },
+      "role": "conflict-resolver",
+      "started_at": "2026-10-04T06:05:01Z",
+      "status": "succeeded"
+    },
+    {
+      "adapter": "opencode-go/deepseek-v4-flash",
+      "attempt_id": "wk_10ad029585a18271",
+      "finished_at": "2026-10-04T06:03:46Z",
+      "id": "exe_8643213d",
+      "metadata": {
+        "branch": "event-competition-de2f9b13f5a2-a",
+        "cpu_time_ns": 10800371000,
+        "credential_profile": "cred_6f6bdfb415bb731d221b6533",
+        "duration_ns": 11290884523,
+        "exit_code": 0,
+        "failure_code": "",
+        "file": "REVIEW.json",
+        "model": "deepseek-v4-flash",
+        "output_truncated": false,
+        "principal": "alice",
+        "provider": "opencode-go",
+        "resource_usage": {
+          "accounting": "sampled cgroup v2; last sample may precede exit",
+          "cpu.max": "200000 100000",
+          "cpu.stat": "usage_usec 10800371\nuser_usec 9729376\nsystem_usec 1070995\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 112\nnr_throttled 11\nthrottled_usec 1962775\nnr_bursts 0\nburst_usec 0",
+          "memory.current": "11538432",
+          "memory.current.sampled_peak": "682348544",
+          "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+          "memory.max": "1073741824",
+          "memory.peak": "682872832",
+          "memory.swap.max": "0",
+          "pids.current": "2",
+          "pids.current.sampled_peak": "39",
+          "pids.events": "max 0",
+          "pids.max": "128",
+          "pids.peak": "47"
+        },
+        "role": "reviewer",
+        "sandbox": true,
+        "source_sha": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+        "status": "succeeded",
+        "timings_ns": {
+          "adapter_total_ns": 11197482983,
+          "model_execution_ns": 11196479649,
+          "queue_wait_ns": 3213,
+          "runner_bootstrap_ns": 927419,
+          "workspace_result_read_ns": 70527
+        }
+      },
+      "role": "reviewer",
+      "started_at": "2026-10-04T06:03:34Z",
+      "status": "succeeded"
+    },
+    {
+      "adapter": "opencode-go/deepseek-v4-flash",
+      "attempt_id": "wk_47ae565ab9b10404",
+      "finished_at": "2026-10-04T06:04:19Z",
+      "id": "exe_d05f0b6a",
+      "metadata": {
+        "branch": "event-competition-de2f9b13f5a2-b",
+        "cpu_time_ns": 9979605000,
+        "credential_profile": "cred_6f6bdfb415bb731d221b6533",
+        "duration_ns": 10015360642,
+        "exit_code": 0,
+        "failure_code": "",
+        "file": "REVIEW.json",
+        "model": "deepseek-v4-flash",
+        "output_truncated": false,
+        "principal": "alice",
+        "provider": "opencode-go",
+        "resource_usage": {
+          "accounting": "sampled cgroup v2; last sample may precede exit",
+          "cpu.max": "200000 100000",
+          "cpu.stat": "usage_usec 9979605\nuser_usec 8923671\nsystem_usec 1055933\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 99\nnr_throttled 10\nthrottled_usec 2075953\nnr_bursts 0\nburst_usec 0",
+          "memory.current": "157786112",
+          "memory.current.sampled_peak": "725958656",
+          "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+          "memory.max": "1073741824",
+          "memory.peak": "725958656",
+          "memory.swap.max": "0",
+          "pids.current": "10",
+          "pids.current.sampled_peak": "38",
+          "pids.events": "max 0",
+          "pids.max": "128",
+          "pids.peak": "46"
+        },
+        "role": "reviewer",
+        "sandbox": true,
+        "source_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+        "status": "succeeded",
+        "timings_ns": {
+          "adapter_total_ns": 9894460413,
+          "model_execution_ns": 9893407407,
+          "queue_wait_ns": 3723,
+          "runner_bootstrap_ns": 985328,
+          "workspace_result_read_ns": 62285
+        }
+      },
+      "role": "reviewer",
+      "started_at": "2026-10-04T06:04:09Z",
+      "status": "succeeded"
+    },
+    {
+      "adapter": "opencode-go/gpt-5.6-luna",
+      "attempt_id": "wk_47ae565ab9b10404",
+      "finished_at": "2026-10-04T06:02:54Z",
+      "id": "exe_ef986520",
+      "metadata": {
+        "branch": "event-competition-de2f9b13f5a2-b",
+        "cpu_time_ns": 10725523000,
+        "credential_profile": "cred_6f6bdfb415bb731d221b6533",
+        "duration_ns": 17867266501,
+        "exit_code": 0,
+        "failure_code": "",
+        "file": "switchyard.contract.json",
+        "model": "gpt-5.6-luna",
+        "output_truncated": false,
+        "principal": "alice",
+        "provider": "opencode-go",
+        "publication_duration_ns": 7111236963,
+        "publication_status": "ok",
+        "publication_timings_ns": {
+          "git_commit_ns": 14286173,
+          "git_fetch_ns": 3745337489,
+          "git_push_ns": 1463362494,
+          "publication_preflight_ns": 1885838827,
+          "publication_state_ns": 1288471,
+          "publication_total_ns": 7110585726
+        },
+        "published_sha": "0d9dbf4be14e6c51f1b304e400126a60109c4f6e",
+        "resource_usage": {
+          "accounting": "sampled cgroup v2; last sample may precede exit",
+          "cpu.max": "200000 100000",
+          "cpu.stat": "usage_usec 10725523\nuser_usec 9597211\nsystem_usec 1128312\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 163\nnr_throttled 10\nthrottled_usec 1460036\nnr_bursts 0\nburst_usec 0",
+          "memory.current": "166076416",
+          "memory.current.sampled_peak": "694571008",
+          "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+          "memory.max": "1073741824",
+          "memory.peak": "695750656",
+          "memory.swap.max": "0",
+          "pids.current": "10",
+          "pids.current.sampled_peak": "38",
+          "pids.events": "max 0",
+          "pids.max": "128",
+          "pids.peak": "46"
+        },
+        "role": "implementer",
+        "sandbox": true,
+        "source_sha": null,
+        "status": "succeeded",
+        "timings_ns": {
+          "adapter_total_ns": 17768767101,
+          "model_execution_ns": 17768031645,
+          "queue_wait_ns": 2152,
+          "runner_bootstrap_ns": 689653,
+          "workspace_result_read_ns": 41014
+        }
+      },
+      "role": "implementer",
+      "started_at": "2026-10-04T06:02:36Z",
+      "status": "succeeded"
+    },
+    {
+      "adapter": "opencode-go/gpt-5.6-luna",
+      "attempt_id": "wk_10ad029585a18271",
+      "finished_at": "2026-10-04T06:02:48Z",
+      "id": "exe_f08fd36d",
+      "metadata": {
+        "branch": "event-competition-de2f9b13f5a2-a",
+        "cpu_time_ns": 9861845000,
+        "credential_profile": "cred_6f6bdfb415bb731d221b6533",
+        "duration_ns": 11568669609,
+        "exit_code": 0,
+        "failure_code": "",
+        "file": "api-version.json",
+        "model": "gpt-5.6-luna",
+        "output_truncated": false,
+        "principal": "alice",
+        "provider": "opencode-go",
+        "publication_duration_ns": 9743233080,
+        "publication_status": "ok",
+        "publication_timings_ns": {
+          "git_commit_ns": 12598899,
+          "git_fetch_ns": 3794364013,
+          "git_push_ns": 1767677668,
+          "publication_preflight_ns": 4164359586,
+          "publication_state_ns": 2508454,
+          "publication_total_ns": 9742069594
+        },
+        "published_sha": "b11b67e73fbc11a30289587f8adf0b9d560da596",
+        "resource_usage": {
+          "accounting": "sampled cgroup v2; last sample may precede exit",
+          "cpu.max": "200000 100000",
+          "cpu.stat": "usage_usec 9861845\nuser_usec 8782714\nsystem_usec 1079131\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 108\nnr_throttled 9\nthrottled_usec 876784\nnr_bursts 0\nburst_usec 0",
+          "memory.current": "22966272",
+          "memory.current.sampled_peak": "677752832",
+          "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+          "memory.max": "1073741824",
+          "memory.peak": "677912576",
+          "memory.swap.max": "0",
+          "pids.current": "10",
+          "pids.current.sampled_peak": "39",
+          "pids.events": "max 0",
+          "pids.max": "128",
+          "pids.peak": "47"
+        },
+        "role": "implementer",
+        "sandbox": true,
+        "source_sha": null,
+        "status": "succeeded",
+        "timings_ns": {
+          "adapter_total_ns": 11496878624,
+          "model_execution_ns": 11495396597,
+          "queue_wait_ns": 2834,
+          "runner_bootstrap_ns": 1443472,
+          "workspace_result_read_ns": 34956
+        }
+      },
+      "role": "implementer",
+      "started_at": "2026-10-04T06:02:36Z",
+      "status": "succeeded"
+    }
+  ],
+  "result": "PASS",
+  "scope": "isolated local control plane and local cgroup-limited workers; existing explicitly disposable Cloudflare Artifacts repo and Actions Worker",
+  "limitations": [
+    "Direct provider HTTP time remains unmeasured; model_execution_ns includes OpenCode process and network.",
+    "Browser screenshots and final UI walkthrough remain outstanding."
+  ]
+}

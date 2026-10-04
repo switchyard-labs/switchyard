@@ -1,0 +1,79 @@
+{
+  "repository": "alice/railway",
+  "immutable_sha": "e2a22198d24faa843975adef7fe7ffde1b997aa5",
+  "git_tree": {
+    "README.md": {
+      "sha256": "6b29e249bba85a3ac50c324cd32a251e75405a0e4ee57d1c882bd3264f4e3b85",
+      "size": 489,
+      "symlink": false
+    },
+    "ci.test.mjs": {
+      "sha256": "24bf2dfb0cd044ee7062970016d5f105e2e39714f752ebce11dbb76fc4c37398",
+      "size": 119,
+      "symlink": false
+    },
+    "docs/architecture.md": {
+      "sha256": "19df775c8c41afad6cd5b0bc94d6bc7b3969f69c0b69ee3b9d80b23ea88a5a9c",
+      "size": 211,
+      "symlink": false
+    },
+    "docs/guides/contributing.md": {
+      "sha256": "29e0c1277479d43e6b999f766e19ab0ca8dc45315b2337fbd4811a2d2950243a",
+      "size": 125,
+      "symlink": false
+    },
+    "src/network.json": {
+      "sha256": "01d8ffbeb8eff67c9109337fb7fd29d384abcd067f9d314706489c3b3403fe8e",
+      "size": 79,
+      "symlink": false
+    },
+    "src/routes.mjs": {
+      "sha256": "57803ae03fcfbb57948122414f6a9ddd02255c1dfcda111ea45f7bb488fa5575",
+      "size": 178,
+      "symlink": false
+    }
+  },
+  "archives": [
+    {
+      "surface": "server-zip",
+      "file_count": 6,
+      "exact_git_tree_match": true,
+      "sha256": "58af5f12d202b3ad872cfe15e1bce43a07d324d967b4a4fed32a6c2d2fe520dc",
+      "content_type": "application/zip",
+      "content_disposition": "attachment; filename=\"railway-e2a22198d24f.zip\""
+    },
+    {
+      "surface": "sy-zip",
+      "file_count": 6,
+      "exact_git_tree_match": true,
+      "sha256": "58af5f12d202b3ad872cfe15e1bce43a07d324d967b4a4fed32a6c2d2fe520dc"
+    },
+    {
+      "surface": "server-tar.gz",
+      "file_count": 6,
+      "exact_git_tree_match": true,
+      "sha256": "28c48102cae32d934e2f5bdd9bb3fe96735a6b0ffedbfd004ff04a4b014a2d40",
+      "content_type": "application/gzip",
+      "content_disposition": "attachment; filename=\"railway-e2a22198d24f.tar.gz\""
+    },
+    {
+      "surface": "sy-tar.gz",
+      "file_count": 6,
+      "exact_git_tree_match": true,
+      "sha256": "28c48102cae32d934e2f5bdd9bb3fe96735a6b0ffedbfd004ff04a4b014a2d40"
+    },
+    {
+      "surface": "browser-zip",
+      "file_count": 6,
+      "exact_git_tree_match": true,
+      "sha256": "58af5f12d202b3ad872cfe15e1bce43a07d324d967b4a4fed32a6c2d2fe520dc"
+    }
+  ],
+  "published_r2_browser_asset": {
+    "bytes": 4096,
+    "sha256": "c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193"
+  },
+  "limitations": [
+    "Public/private authorization and symlink/streaming behavior are separate regression gates; this remote fixture has no symlink."
+  ]
+}

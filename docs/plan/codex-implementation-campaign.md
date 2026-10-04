@@ -348,3 +348,30 @@ Legacy synthetic ATTEMPT.md was removed from the disposable B fixture. New Attem
 creation preserves the exact initial Git tree without synthetic marker commits.
 C25/C41 remain PARTIAL pending clean-state scripted replay, direct provider HTTP
 latency and final provenance/UI certification. No coding Agent ran on Linode.
+
+C25/C41 clean-state replay: scripts/run-semantic-competition.py passed using fresh
+Workwk_de7b6ee579db014c and exact-tree Attempts, with Actions approval BEFORE the
+first pushes. Two real concurrent gpt-5.6-luna implementations, native exact-SHA
+CI, two actual deepseek-v4-flash reviews, Queue A, genuine semantic conflict,
+glm-5.3-flash repair, required re-preview/re-review, native repaired-SHA CI and
+Queue B all passed. Final canonical SHA552beee1b6a57feae0f120c063f67360bff90ab8.
+Resource accounting includes 1GiB memory,128PIDs,200%CPU limits and observed peaks;
+execution metadata includes role/provider/model/principal/credential-profile,
+source/published SHAs and stage durations. No raw model output is in the committed
+proof. C25/semantic-clean-scripted-flow.json and the resumable script replace the
+manual choreography caveat. Provider HTTP timing and final screenshot suite remain
+open; C41/C25 are still PARTIAL rather than claiming every gate complete.
+
+C45 exact cross-surface content proof passed for immutable e2a22198d24faa843975adef7fe7ffde1b997aa5:
+browserZIP,serverZIP,servertar.gz,syZIP,sytar.gz all match every Git blob/path,
+with no .git or unsafe members. ZIP outputs were also byte-identical and tar.gz
+outputs byte-identical. Evidence: C45/exact-browser-server-sy-tree.json. This real
+remote tree contains no symlink; authorization/symlink/streaming regressions remain
+separate recorded gates.
+
+Browser input recovered after closing the original stalled native-dialog test tab.
+Replaced in-page publication confirmation worked, disposable prerelease published,
+draft mutation controls disappeared, Markdown HTML stayed inert, browser source
+ZIP and R2 binary downloads completed. Asset bytes4096 and SHA256c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193
+matched. Screenshot: C46/release-published.jpg. Releases Actions automation and
+full lifecycle/live/responsive gates are still open.

@@ -1,0 +1,100 @@
+{
+  "scope": "remote merged checkout plus local semantic validation; preview may record findings but never publishes Git",
+  "attempt": "wk_47ae565ab9b10404",
+  "n": 12,
+  "median_ms": 6881.5035,
+  "p95_nearest_rank_ms": 11554.503,
+  "min_ms": 6108.784,
+  "max_ms": 11554.503,
+  "rows": [
+    {
+      "ms": 6852.03,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6205.131, semantic;dur=0.136"
+    },
+    {
+      "ms": 7744.926,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=7281.329, semantic;dur=0.335"
+    },
+    {
+      "ms": 6584.905,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6112.197, semantic;dur=0.084"
+    },
+    {
+      "ms": 6108.784,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=5743.087, semantic;dur=0.096"
+    },
+    {
+      "ms": 6937.259,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6387.953, semantic;dur=0.271"
+    },
+    {
+      "ms": 6910.977,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6439.797, semantic;dur=0.124"
+    },
+    {
+      "ms": 6375.214,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=5936.237, semantic;dur=0.122"
+    },
+    {
+      "ms": 11554.503,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6442.176, semantic;dur=0.421"
+    },
+    {
+      "ms": 6688.123,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=6284.520, semantic;dur=0.114"
+    },
+    {
+      "ms": 6469.916,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=5823.804, semantic;dur=0.250"
+    },
+    {
+      "ms": 8715.37,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=8331.900, semantic;dur=0.137"
+    },
+    {
+      "ms": 9187.305,
+      "http_status": 200,
+      "preview_status": "ok",
+      "server_timing": "git_preview;dur=8753.055, semantic;dur=0.130"
+    }
+  ],
+  "contract": "two field_equals rules: API version=API requires and API version=new consumer requires; repaired tree has all values 2",
+  "stage_statistics": {
+    "git_preview": {
+      "n": 12,
+      "median_ms": 6336.236500000001,
+      "p95_nearest_rank_ms": 8753.055,
+      "min_ms": 5743.087,
+      "max_ms": 8753.055
+    },
+    "semantic": {
+      "n": 12,
+      "median_ms": 0.133,
+      "p95_nearest_rank_ms": 0.421,
+      "min_ms": 0.084,
+      "max_ms": 0.421
+    }
+  }
+}
