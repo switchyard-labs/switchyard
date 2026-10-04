@@ -317,3 +317,11 @@ and prerelease publication at immutable SHA e2a22198d24faa843975adef7fe7ffde1b99
 Main was unchanged. Evidence: C46/sy-release-proof.json. These are local app proofs,
 not Linode release certification. Actions tag-build-attach-publish integration,
 abandoned reservations/recovery and full lifecycle/browser matrices remain open.
+
+Clean app commit a07b154 is now deployed on Linode. Schema7 migration succeeded,
+SQLite backup integrity was ok, readiness was HTTP200, and database/binary/state
+rollback artifacts are retained at /opt/cp0/switchyard-backup-20261004-a07b154.
+The upgrade pauses Caddy during migration and restores the database exclusively
+with the identified Trestle writer stopped if rollback is needed. The rollback
+path is prepared, not failure-injection certified. sy release transfer and command
+race tests passed; Linux arm64 and Windows amd64 cross-builds passed.
