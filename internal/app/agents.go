@@ -117,6 +117,20 @@ func (a *App) handleListExecutions(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
+	metadata, err := a.Trestle.ListRecords("execution_metadata", "")
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "execution_metadata_unavailable"})
+		return
+	}
+	byID := map[string]any{}
+	for _, record := range a.visibleRecords("execution_metadata", metadata, a.currentUser(r)) {
+		byID[strOr(record["execution_id"])] = record["metadata"]
+	}
+	for _, item := range items {
+		if meta, ok := byID[strOr(item["id"])]; ok {
+			item["metadata"] = meta
+		}
+	}
 	writeJSON(w, 200, map[string]any{"items": items})
 }
 

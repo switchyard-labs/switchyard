@@ -1,0 +1,432 @@
+{
+  "scope": "isolated local control plane and local isolated Agent workers; existing disposable Cloudflare repository and Actions Worker",
+  "limitations": [
+    "Initial implementation pushes preceded Actions approval; initial CI was manually adopted. Repair push had native push-triggered CI.",
+    "Legacy ATTEMPT.md cleanup was a certification fixture change, not model coding.",
+    "Re-review first failed due to missing unchanged contract counterparts; fixed context and actual retry passed.",
+    "Direct provider HTTP timing and script-from-clean-state proof remain open."
+  ],
+  "agents": [
+    {
+      "lane": "a",
+      "attempt": "wk_a42e0ccb34a29b6a",
+      "branch": "event-competition-f211f9ea6f52-a",
+      "http_status": 200,
+      "seconds": 20.442,
+      "execution": "exe_0038d4f1",
+      "new_sha": "45a2d8d2a974f9140c311a9fd7105c3e46ff17e9",
+      "error": null
+    },
+    {
+      "lane": "b",
+      "attempt": "wk_886c4bb0e60c4c89",
+      "branch": "event-competition-f211f9ea6f52-b",
+      "http_status": 200,
+      "seconds": 26.276,
+      "execution": "exe_ddab55a4",
+      "new_sha": "3cb5ceda81c352c8db040ec3a289f3940453f741",
+      "error": null
+    }
+  ],
+  "reviews": [
+    {
+      "lane": "a",
+      "attempt": "wk_a42e0ccb34a29b6a",
+      "status": 200,
+      "seconds": 19.283,
+      "execution": "exe_92e8da67",
+      "findings": [
+        {
+          "file": "ATTEMPT.md",
+          "message": "ATTEMPT.md contains a single attempt identifier header and no other content; no issues detected.",
+          "severity": "info"
+        },
+        {
+          "file": "api-version.json",
+          "message": "api-version.json is well-formed JSON declaring version 2.",
+          "severity": "info"
+        },
+        {
+          "file": "api-version.json",
+          "message": "'requires' is set to 2, equal to the declared 'version'. If 'requires' denotes the minimum client API version, it is redundant with the current version and may prevent older clients from being detected.",
+          "severity": "warning"
+        }
+      ],
+      "error": null
+    },
+    {
+      "lane": "b",
+      "attempt": "wk_886c4bb0e60c4c89",
+      "status": 200,
+      "seconds": 20.284,
+      "execution": "exe_b892b6c2",
+      "findings": [
+        {
+          "file": "ATTEMPT.md",
+          "message": "ATTEMPT.md is a minimal valid Markdown file containing a single H1 heading; no issues found.",
+          "severity": "info"
+        },
+        {
+          "file": "switchyard.contract.json",
+          "message": "switchyard.contract.json is valid JSON, but its rule references 'api-version.json:version' and 'api-version.json:requires' and the referenced file could not be accessed/verified in this workspace.",
+          "severity": "warning"
+        },
+        {
+          "file": "switchyard.contract.json",
+          "message": "switchyard.contract.json rule references 'new-consumer.json:requires' and the referenced file could not be accessed/verified in this workspace.",
+          "severity": "warning"
+        }
+      ],
+      "error": null
+    }
+  ],
+  "conflict-proof": {
+    "preview": {
+      "attempt_id": "wk_886c4bb0e60c4c89",
+      "conflict": false,
+      "findings": [
+        {
+          "file": "api-version.json",
+          "message": "semantic conflict: git merge is clean but api-version.json:version (2) != new-consumer.json:requires (1)",
+          "severity": "error"
+        }
+      ],
+      "semantic_conflict": true,
+      "status": "semantic_conflict"
+    },
+    "seconds": 20.084
+  },
+  "resolver-proof": {
+    "status": 200,
+    "result": {
+      "attempt_id": "wk_886c4bb0e60c4c89",
+      "new_sha": "684f453744daad2235c878943281f67cddad4a92",
+      "notice": "Run preview and review before integration",
+      "resolved_files": [
+        "new-consumer.json"
+      ],
+      "status": "repair_proposed"
+    },
+    "seconds": 46.892
+  },
+  "repreview": {
+    "status": 200,
+    "result": {
+      "attempt_id": "wk_886c4bb0e60c4c89",
+      "conflict": false,
+      "conflicts": [],
+      "semantic_conflict": false,
+      "status": "ok"
+    },
+    "seconds": 8.469
+  },
+  "rereview-context-fixed": {
+    "status": 200,
+    "result": {
+      "attempt_id": "wk_886c4bb0e60c4c89",
+      "execution": "exe_6d8ad2f3",
+      "findings": [
+        {
+          "file": "api-version.json",
+          "message": "All supplied JSON documents parse successfully.",
+          "severity": "info"
+        },
+        {
+          "file": "switchyard.contract.json",
+          "message": "Contract rule satisfied: api-version.json:version (2) equals api-version.json:requires (2).",
+          "severity": "info"
+        },
+        {
+          "file": "switchyard.contract.json",
+          "message": "Contract rule satisfied: api-version.json:version (2) equals new-consumer.json:requires (2).",
+          "severity": "info"
+        },
+        {
+          "file": "new-consumer.json",
+          "message": "new-consumer.json:requires (2) is consistent with the unchanged contract counterpart api-version.json.",
+          "severity": "info"
+        },
+        {
+          "file": "new-consumer.json",
+          "message": "new-consumer.json declares 'requires' but no 'version' field; consumers should declare their own version for traceability.",
+          "severity": "warning"
+        }
+      ],
+      "reviewed_by": "alice"
+    },
+    "seconds": 24.674
+  },
+  "queue-final": [
+    {
+      "attempts": "0",
+      "base": "main",
+      "branch": "event-competition-f211f9ea6f52-a",
+      "created_at": "2026-10-04T05:28:37.270Z",
+      "error": "",
+      "id": "iq_44928925416dd8cabc94d3cb",
+      "policy": "exact_source_check + immutable_preview + semantic + policy",
+      "pr_id": "wk_1786cdf38df02523",
+      "repo": "codex-actions-probe-20261003",
+      "risk": "low",
+      "status": "done",
+      "updated_at": "2026-10-04T05:28:49Z"
+    },
+    {
+      "attempts": "0",
+      "base": "main",
+      "branch": "event-competition-f211f9ea6f52-b",
+      "created_at": "2026-10-04T05:52:56.197Z",
+      "error": "",
+      "id": "iq_fd2c7943b65b428f46ee1845",
+      "policy": "exact_source_check + immutable_preview + semantic + policy",
+      "pr_id": "wk_e73b1f650fcc193e",
+      "repo": "codex-actions-probe-20261003",
+      "risk": "low",
+      "status": "done",
+      "updated_at": "2026-10-04T05:53:09Z"
+    }
+  ],
+  "final-proof": {
+    "refs": {
+      "refs": {
+        "HEAD": "826d5816bcbbc1703775517ff1d98113dd8f66d3",
+        "refs/heads/event-competition-f211f9ea6f52-a": "45a2d8d2a974f9140c311a9fd7105c3e46ff17e9",
+        "refs/heads/event-competition-f211f9ea6f52-b": "684f453744daad2235c878943281f67cddad4a92",
+        "refs/heads/main": "826d5816bcbbc1703775517ff1d98113dd8f66d3"
+      }
+    },
+    "provenance": {
+      "chain": [
+        {
+          "id": "wk_f37955f114ef2058",
+          "kind": "work",
+          "owner": "alice",
+          "status": "open",
+          "title": "Competition: two competing implementations"
+        },
+        {
+          "branch": "event-competition-f211f9ea6f52-b",
+          "id": "wk_886c4bb0e60c4c89",
+          "kind": "attempt",
+          "repo": "codex-actions-probe-20261003",
+          "status": "repair_proposed"
+        },
+        {
+          "at": "2026-10-04T05:24:30Z",
+          "attempt_id": "wk_886c4bb0e60c4c89",
+          "kind": "run",
+          "message": "agent run (opencode-go/gpt-5.6-luna)",
+          "new_sha": "3cb5ceda81c352c8db040ec3a289f3940453f741"
+        },
+        {
+          "base": "main",
+          "branch": "event-competition-f211f9ea6f52-b",
+          "check_status": "pass",
+          "id": "wk_e73b1f650fcc193e",
+          "kind": "pr",
+          "repo": "codex-actions-probe-20261003",
+          "status": "integrated"
+        },
+        {
+          "branch": "event-competition-f211f9ea6f52-a",
+          "id": "wk_a42e0ccb34a29b6a",
+          "kind": "attempt",
+          "repo": "codex-actions-probe-20261003",
+          "status": "created"
+        },
+        {
+          "at": "2026-10-04T05:24:24Z",
+          "attempt_id": "wk_a42e0ccb34a29b6a",
+          "kind": "run",
+          "message": "agent run (opencode-go/gpt-5.6-luna)",
+          "new_sha": "45a2d8d2a974f9140c311a9fd7105c3e46ff17e9"
+        },
+        {
+          "base": "main",
+          "branch": "event-competition-f211f9ea6f52-a",
+          "check_status": "pass",
+          "id": "wk_1786cdf38df02523",
+          "kind": "pr",
+          "repo": "codex-actions-probe-20261003",
+          "status": "integrated"
+        },
+        {
+          "branch": "event-competition-f211f9ea6f52-b",
+          "kind": "ref_update",
+          "new_sha": "3cb5ceda81c352c8db040ec3a289f3940453f741",
+          "old_sha": "e80449a1b83a5a5073e7de3e96233f52a38ab002",
+          "provenance": "user:alice",
+          "repo": "codex-actions-probe-20261003"
+        },
+        {
+          "branch": "event-competition-f211f9ea6f52-b",
+          "kind": "ref_update",
+          "new_sha": "e80449a1b83a5a5073e7de3e96233f52a38ab002",
+          "old_sha": "751456de4042768fdd88c464f9fc13649d6efa88",
+          "provenance": "user:alice",
+          "repo": "codex-actions-probe-20261003"
+        },
+        {
+          "branch": "event-competition-f211f9ea6f52-a",
+          "kind": "ref_update",
+          "new_sha": "45a2d8d2a974f9140c311a9fd7105c3e46ff17e9",
+          "old_sha": "b4290d9a5d31185d3d53e532edb5c4234f99c232",
+          "provenance": "user:alice",
+          "repo": "codex-actions-probe-20261003"
+        },
+        {
+          "branch": "event-competition-f211f9ea6f52-b",
+          "kind": "ref_update",
+          "new_sha": "684f453744daad2235c878943281f67cddad4a92",
+          "old_sha": "02bd09a7eb14a4010843289cbdd22809ce096d73",
+          "provenance": "conflict-resolver:alice:wk_886c4bb0e60c4c89",
+          "repo": "codex-actions-probe-20261003"
+        },
+        {
+          "branch": "event-competition-f211f9ea6f52-a",
+          "kind": "ref_update",
+          "new_sha": "b4290d9a5d31185d3d53e532edb5c4234f99c232",
+          "old_sha": "751456de4042768fdd88c464f9fc13649d6efa88",
+          "provenance": "user:alice",
+          "repo": "codex-actions-probe-20261003"
+        }
+      ],
+      "work_id": "wk_f37955f114ef2058"
+    },
+    "commits": {
+      "items": [
+        {
+          "hash": "826d5816bcbbc1703775517ff1d98113dd8f66d3",
+          "treeHash": "a6d02c4a57ef70a588757259ae13f1fbb8453de9",
+          "message": "integration queue wk_e73b1f650fcc193e",
+          "committedAt": 1791093186,
+          "author": {
+            "name": "switchyard"
+          }
+        },
+        {
+          "hash": "5175fb07975e424072b8cd09aebbd13f3c909ebb",
+          "treeHash": "8e6f12e39d015339c55cb83af56ff46f45b14768",
+          "message": "integration queue wk_1786cdf38df02523",
+          "committedAt": 1791091725,
+          "author": {
+            "name": "switchyard"
+          }
+        },
+        {
+          "hash": "751456de4042768fdd88c464f9fc13649d6efa88",
+          "treeHash": "063551d81a2defa46d12aed4753b53de55ac1b07",
+          "message": "Prepare disposable semantic contract competition",
+          "committedAt": 1791091359,
+          "author": {
+            "name": "Switchyard certification"
+          }
+        },
+        {
+          "hash": "e2a22198d24faa843975adef7fe7ffde1b997aa5",
+          "treeHash": "bc85bb6ae87f9680bd3f7526120846dc172bd443",
+          "message": "Document railway routes and repository layout",
+          "committedAt": 1791012490,
+          "author": {
+            "name": "Switchyard CI validation"
+          }
+        },
+        {
+          "hash": "b4e3fe7f7d3e76931b0f7a9dbdabc248c10cb402",
+          "treeHash": "ec95cadeb2853d52d849a657e532ead1c829d9ac",
+          "message": "Verify native Artifacts push trigger",
+          "committedAt": 1791006115,
+          "author": {
+            "name": "Switchyard CI validation"
+          }
+        },
+        {
+          "hash": "213c6fa8adf42b443730a555d3b645ae6fe69873",
+          "treeHash": "d285e364e592ce34290ecf9dc89867d715c24f35",
+          "message": "Seed disposable cloud Actions fixture",
+          "committedAt": 1791005416,
+          "author": {
+            "name": "Switchyard CI validation"
+          }
+        }
+      ],
+      "ref": "main"
+    }
+  },
+  "repair_native_action": [
+    {
+      "actor": "Switchyard CI validation",
+      "created_at": "2026-10-04T05:41:31.173Z",
+      "definition_revision": "b2dff68a348e5c7a06030cb0e0a28e347d014183fb90cf5323ae63537252905b",
+      "id": "1fb5c569-9b19-4b56-bad0-102be644f985",
+      "ref": "refs/heads/event-competition-f211f9ea6f52-b",
+      "repo": "codex-actions-probe-20261003",
+      "source_sha": "684f453744daad2235c878943281f67cddad4a92",
+      "state": {
+        "external_status": "complete",
+        "finished_at": "2026-10-04T05:41:44.929Z",
+        "manifest": {
+          "finished_at": "2026-10-04T05:41:44.929Z",
+          "jobs": [
+            {
+              "id": "verify",
+              "name": "verify",
+              "status": "succeeded",
+              "steps": [
+                {
+                  "finished_at": "2026-10-04T05:41:43.585Z",
+                  "id": "unit",
+                  "log_key": "runs/1fb5c569-9b19-4b56-bad0-102be644f985/verify-unit.json",
+                  "name": "unit",
+                  "started_at": "2026-10-04T05:41:32.017Z",
+                  "status": "succeeded",
+                  "truncated": false
+                }
+              ]
+            }
+          ],
+          "run": {
+            "actor": "Switchyard CI validation",
+            "definition_revision": "b2dff68a348e5c7a06030cb0e0a28e347d014183fb90cf5323ae63537252905b",
+            "event": {
+              "type": "push"
+            },
+            "jobs": [
+              {
+                "id": "verify",
+                "steps": [
+                  {
+                    "command": "node --test ci.test.mjs && git -C /tmp/ci-source rev-parse HEAD",
+                    "id": "unit",
+                    "timeout_ms": 60000
+                  }
+                ]
+              }
+            ],
+            "owner": "switchyard-cp0",
+            "provider": "cloudflare-artifacts",
+            "providerData": {
+              "namespace": "switchyard-cp0"
+            },
+            "ref": "refs/heads/event-competition-f211f9ea6f52-b",
+            "repo": "codex-actions-probe-20261003",
+            "run_id": "1fb5c569-9b19-4b56-bad0-102be644f985",
+            "sha": "684f453744daad2235c878943281f67cddad4a92",
+            "trigger": "push"
+          },
+          "source": {
+            "commit_present": true,
+            "config": null,
+            "inspection": "artifacts-worker-binding",
+            "repo": "codex-actions-probe-20261003",
+            "sha": "684f453744daad2235c878943281f67cddad4a92"
+          },
+          "started_at": "2026-10-04T05:41:31.173Z",
+          "status": "succeeded"
+        },
+        "status": "success"
+      },
+      "trigger": "push"
+    }
+  ]
+}

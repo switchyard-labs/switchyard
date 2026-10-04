@@ -196,7 +196,7 @@ func (a *App) handleResolveConflict(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status, _ := attempt["status"].(string)
-	if status != "conflict" {
+	if status != "conflict" && status != "semantic_conflict" {
 		writeJSON(w, 409, map[string]any{"error": "attempt_not_in_conflict"})
 		return
 	}
@@ -225,6 +225,10 @@ func (a *App) handleResolveConflict(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "status": "repair_proposed", "resolved_files": files, "new_sha": result.NewSHA, "notice": "Run preview and review before integration"})
+		return
+	}
+	if status == "semantic_conflict" {
+		writeJSON(w, 409, map[string]any{"error": "semantic_repair_requires_provider"})
 		return
 	}
 	res, resolved, err := a.Refs.ResolveIntoSource(repo, base, branch, "resolve attempt "+attemptID, "conflict-resolver:"+user+":"+attemptID)

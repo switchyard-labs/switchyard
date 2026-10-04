@@ -64,8 +64,31 @@ func (a *App) providerReview(ctx context.Context, repo, branch, attempt string) 
 		}
 		files[path] = string(data)
 	}
+	// Include bounded contract counterparts at the same immutable review SHA.
+	// They may be unchanged relative to main, but are needed to judge compatibility.
+	contract, contractErr := a.Artifacts.RawFile(repo, head, "switchyard.contract.json")
+	if contractErr == nil {
+		contextPaths, err := reviewContractPaths(contract)
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, path := range contextPaths {
+			if _, present := files[path]; present {
+				continue
+			}
+			data, err := a.Artifacts.RawFile(repo, head, path)
+			if err != nil {
+				return nil, nil, fmt.Errorf("review contract counterpart unavailable")
+			}
+			total += len(data)
+			if total > 1<<20 {
+				return nil, nil, fmt.Errorf("review input exceeds 1 MiB")
+			}
+			files[path] = string(data)
+		}
+	}
 	input, _ := json.Marshal(files)
-	ex, err := a.runViaSubstrateContext(ctx, "reviewer", attempt, repo, branch, "REVIEW.json", string(input), `Review these files. Return files.REVIEW.json containing a JSON array of objects with severity (info/warning/error), message, file. Do not modify repository files.`)
+	ex, err := a.runViaSubstrateContext(ctx, "reviewer", attempt, repo, branch, "REVIEW.json", string(input), `Review the supplied JSON map of file paths to complete contents, including unchanged contract counterparts. All review inputs are in this prompt; do not try to read repository paths using tools. Return files.REVIEW.json containing a JSON array of objects with severity (info/warning/error), message, file. Do not modify repository files.`)
 	if err != nil {
 		return nil, ex, err
 	}
@@ -91,6 +114,33 @@ func (a *App) providerReview(ctx context.Context, repo, branch, attempt string) 
 	}
 	return findings, ex, nil
 }
+
+// reviewContractPaths bounds and validates context references before remote reads.
+func reviewContractPaths(contract []byte) ([]string, error) {
+	var spec struct {
+		Rules []contractRule `json:"rules"`
+	}
+	if len(contract) > 64<<10 || json.Unmarshal(contract, &spec) != nil || len(spec.Rules) > 100 {
+		return nil, fmt.Errorf("invalid or oversized review contract")
+	}
+	paths := []string{"switchyard.contract.json"}
+	seen := map[string]bool{"switchyard.contract.json": true}
+	for _, rule := range spec.Rules {
+		for _, selector := range []string{rule.A, rule.B} {
+			parts := strings.SplitN(selector, ":", 2)
+			path := parts[0]
+			if len(parts) != 2 || parts[1] == "" || path == "" || filepath.IsAbs(path) || filepath.Clean(path) != path || path == ".." || strings.HasPrefix(path, "../") || strings.ContainsAny(path, "\\\x00") {
+				return nil, fmt.Errorf("unsafe review contract path")
+			}
+			if !seen[path] {
+				paths = append(paths, path)
+				seen[path] = true
+			}
+		}
+	}
+	return paths, nil
+}
+
 func (a *App) providerConflict(ctx context.Context, repo, base, branch, attempt, user string) (*refs.Result, []string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()

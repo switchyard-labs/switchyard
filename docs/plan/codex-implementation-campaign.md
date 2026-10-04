@@ -325,3 +325,26 @@ The upgrade pauses Caddy during migration and restores the database exclusively
 with the identified Trestle writer stopped if rollback is needed. The rollback
 path is prepared, not failure-injection certified. sy release transfer and command
 race tests passed; Linux arm64 and Windows amd64 cross-builds passed.
+
+C25 semantic product-flow follow-up (2026-10-04): two configured real implementation
+Agents ran concurrently in isolated local workers (gpt-5.6-luna), followed by real
+deepseek-v4-flash reviews. Queue A published; B then merged textually clean but failed
+the genuine field_equals contract (API2 / consumer1). The configured glm-5.3-flash
+resolver repaired only new-consumer.json, preserving canonical ancestry. Fresh
+preview passed, real re-review passed after correcting missing unchanged contract
+counterpart context, and automatic native push-triggered Actions passed at repaired
+SHA684f453744daad2235c878943281f67cddad4a92. Queue B completed with exact-source
+validation. Canonical main is826d5816bcbbc1703775517ff1d98113dd8f66d3.
+Evidence: C25/semantic-multi-role-flow.json.
+
+This proof exposed and fixed semantic_conflict resolver routing and the review
+context gap. The earlier failed re-review is retained in private runtime evidence;
+its provider run succeeded but its finding referenced an unavailable input and
+failed output validation. The successful actual retry is recorded. Execution listing
+now includes durable role/provider/model/principal/credential-profile/resource
+metadata, without credential material. Initial implementation CI was manually
+adopted because approval came after those pushes; repair CI was native automatic.
+Legacy synthetic ATTEMPT.md was removed from the disposable B fixture. New Attempt
+creation preserves the exact initial Git tree without synthetic marker commits.
+C25/C41 remain PARTIAL pending clean-state scripted replay, direct provider HTTP
+latency and final provenance/UI certification. No coding Agent ran on Linode.
