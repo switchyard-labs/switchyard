@@ -1,0 +1,25 @@
+{
+  "phase": "complete",
+  "run_id": "manual-593a425f8b0f95c10f6164f13fa7e7bd70efda0745cb1f72b162a5b1afc32726",
+  "sha": "a3fa6403c088ed147de8f1d6990aa20cfd7da52d",
+  "request_id": "c24-actions-drain-delayed-6d6c655",
+  "observed": {
+    "manifest_status": "running",
+    "step_statuses": [
+      "running"
+    ]
+  },
+  "dispatch_http": 202,
+  "dispatch_seconds": 1.439,
+  "http_stop_seconds": 0.1004956680117175,
+  "process_drain_seconds": 0.3016110659809783,
+  "old_process_group_exited": true,
+  "worker_after_stop_status": "running",
+  "result": "PASS",
+  "coordinator_final_status": "success",
+  "same_request_same_run": true,
+  "matching_run_records": 1,
+  "jobs": 1,
+  "checks": 1,
+  "scope": "isolated local coordinator and existing disposable Cloudflare CI; no Linode Agent"
+}

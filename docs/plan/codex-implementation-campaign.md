@@ -486,3 +486,15 @@ neither is counted as an in-flight recovery PASS. Investigation found the Worker
 persisted step state only after completion. The running-step admission is now
 persisted before awaiting its runner; all 23 Worker tests/typecheck/dry-run passed.
 Live Worker deployment and the actual coordinator stop proof follow next.
+
+### C24 actual Actions and workflow drain proofs (2026-10-04)
+
+Actions PASS: persisted running step, isolated coordinator shutdown, external
+Worker continued, restart reconciled success, repeated request returned the same
+run ID, one run/job/check. Existing disposable Worker deployed clean `6d6c655`,
+version `f9bcb7b7-6b67-48bf-ad09-b0a366d4fa12`, capacity unchanged.
+Workflow PASS: Trestle child creation committed with response held, shutdown
+waited, restart completed exactly one child and one durable step per run.
+See C24/actions-drain-recovery.json and workflow-drain-recovery.json.
+Queue publication drain remains outstanding; no public-demo reset or additional
+Linode Agent load. Rollback remains prepared, not failure-injection certified.

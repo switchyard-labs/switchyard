@@ -1,0 +1,17 @@
+{
+  "phase": "complete",
+  "parent_run_id": "wfr_3cf5d43cb9",
+  "child_run_id": "wfr_b584868d35",
+  "effect": "idempotent child workflow creation",
+  "upstream_create_calls": 1,
+  "drain_waited_for_effect": true,
+  "drain_seconds": 8.743994682095945,
+  "old_process_group_exited": true,
+  "result": "PASS",
+  "parent_status": "completed",
+  "child_status": "completed",
+  "child_count": 1,
+  "parent_step_count": 1,
+  "child_step_count": 1,
+  "scope": "real isolated local Switchyard/Trestle and a loopback response-hold proxy; no Agent/Git publication"
+}
