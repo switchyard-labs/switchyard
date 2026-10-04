@@ -30,6 +30,14 @@ func (a *App) requestedProvider(r *http.Request, role string) (context.Context, 
 
 type agentSourceSHAKey struct{}
 
+type providerExecutionError struct {
+	execution *agent.Execution
+	cause     error
+}
+
+func (e *providerExecutionError) Error() string { return "provider execution failed" }
+func (e *providerExecutionError) Unwrap() error { return e.cause }
+
 func (a *App) providerReview(ctx context.Context, repo, branch, attempt string) ([]map[string]any, *agent.Execution, error) {
 	head, err := a.repoHead(repo, branch)
 	if err != nil {
@@ -123,7 +131,7 @@ func (a *App) providerConflict(ctx context.Context, repo, base, branch, attempt,
 		}
 		ex, err := a.runViaSubstrateContext(ctx, "conflict-resolver", attempt, repo, branch, path, string(bytes), "Resolve the merge conflict markers in this file. Return only this file. Preserve the intended changes on both sides.")
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, &providerExecutionError{execution: ex, cause: err}
 		}
 		content, ok := ex.Result[path]
 		if !ok || len(ex.Result) != 1 || strings.Contains(content, "<<<<<<<") || strings.Contains(content, ">>>>>>>") {

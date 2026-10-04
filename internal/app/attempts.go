@@ -331,6 +331,10 @@ func randHex(n int) string {
 }
 
 func writeAgentExecutionError(w http.ResponseWriter, ex *agent.Execution, err error) {
+	var providerErr *providerExecutionError
+	if errors.As(err, &providerErr) {
+		ex = providerErr.execution
+	}
 	code := "publication_failed"
 	if ex != nil && ex.FailureCode != "" {
 		code = ex.FailureCode

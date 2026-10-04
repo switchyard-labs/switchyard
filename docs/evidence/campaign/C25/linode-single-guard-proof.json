@@ -1,0 +1,165 @@
+{
+  "before_available_bytes": 616591360,
+  "after_available_bytes": 638664704,
+  "duration_seconds": 7.793,
+  "returncode": 0,
+  "guard": "host_headroom_guard",
+  "failure_code": null,
+  "timings_ns": null,
+  "output_has_original": false,
+  "output_has_function": false,
+  "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "samples": [
+    {
+      "seconds": 0.001,
+      "available_bytes": 616591360,
+      "switchyard": "200 0.001706",
+      "switchyard_exit": 0,
+      "trestle": "404 0.001699",
+      "trestle_exit": 0,
+      "caddy": "200 0.002183",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 0.554,
+      "available_bytes": 595918848,
+      "switchyard": "200 0.000642",
+      "switchyard_exit": 0,
+      "trestle": "404 0.000605",
+      "trestle_exit": 0,
+      "caddy": "200 0.000838",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 1.098,
+      "available_bytes": 533024768,
+      "switchyard": "200 0.000711",
+      "switchyard_exit": 0,
+      "trestle": "404 0.001307",
+      "trestle_exit": 0,
+      "caddy": "200 0.001980",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 1.65,
+      "available_bytes": 485208064,
+      "switchyard": "200 0.001578",
+      "switchyard_exit": 0,
+      "trestle": "404 0.003670",
+      "trestle_exit": 0,
+      "caddy": "200 0.001842",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 2.212,
+      "available_bytes": 449708032,
+      "switchyard": "200 0.000507",
+      "switchyard_exit": 0,
+      "trestle": "404 0.000634",
+      "trestle_exit": 0,
+      "caddy": "200 0.001770",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 2.776,
+      "available_bytes": 422879232,
+      "switchyard": "200 0.000465",
+      "switchyard_exit": 0,
+      "trestle": "404 0.001488",
+      "trestle_exit": 0,
+      "caddy": "200 0.001891",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 3.325,
+      "available_bytes": 391405568,
+      "switchyard": "200 0.000496",
+      "switchyard_exit": 0,
+      "trestle": "404 0.001090",
+      "trestle_exit": 0,
+      "caddy": "200 0.001868",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 3.887,
+      "available_bytes": 301850624,
+      "switchyard": "200 0.001390",
+      "switchyard_exit": 0,
+      "trestle": "404 0.000599",
+      "trestle_exit": 0,
+      "caddy": "200 0.001443",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 4.445,
+      "available_bytes": 260755456,
+      "switchyard": "200 0.000605",
+      "switchyard_exit": 0,
+      "trestle": "404 0.000437",
+      "trestle_exit": 0,
+      "caddy": "200 0.003030",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 5.019,
+      "available_bytes": 220065792,
+      "switchyard": "200 0.001037",
+      "switchyard_exit": 0,
+      "trestle": "404 0.000704",
+      "trestle_exit": 0,
+      "caddy": "200 0.003183",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 5.58,
+      "available_bytes": 210272256,
+      "switchyard": "200 0.000505",
+      "switchyard_exit": 0,
+      "trestle": "404 0.001788",
+      "trestle_exit": 0,
+      "caddy": "200 0.003266",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 6.145,
+      "available_bytes": 221208576,
+      "switchyard": "200 0.000984",
+      "switchyard_exit": 0,
+      "trestle": "404 0.002239",
+      "trestle_exit": 0,
+      "caddy": "200 0.005645",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 6.711,
+      "available_bytes": 261898240,
+      "switchyard": "200 0.002540",
+      "switchyard_exit": 0,
+      "trestle": "404 0.005780",
+      "trestle_exit": 0,
+      "caddy": "200 0.002802",
+      "caddy_exit": 0
+    },
+    {
+      "seconds": 7.309,
+      "available_bytes": 183701504,
+      "switchyard": "200 0.017977",
+      "switchyard_exit": 0,
+      "trestle": "404 0.001183",
+      "trestle_exit": 0,
+      "caddy": "200 0.015991",
+      "caddy_exit": 0
+    }
+  ],
+  "git_publication": "not exercised; standalone sandbox capacity task",
+  "minimum_available_bytes": 183701504,
+  "credential_deleted": true,
+  "service_summary": [
+    "Finished with result: success",
+    "Main processes terminated with: code=killed/status=TERM",
+    "Service runtime: 7.700s",
+    "CPU time consumed: 5.542s",
+    "Memory peak: 537.0M",
+    "Memory swap peak: 0B"
+  ]
+}

@@ -63,3 +63,11 @@ Linode preparation has installed bubblewrap and created dedicated switchyard-age
 The prepared AppArmor profile was installed only after explicit approval for its broad persistent permissions. The dedicated executable is root-owned 0750 and restricted to the switchyard-agent group. Its model child profile denies capabilities; mount containment remains bubblewrap's responsibility. The global unprivileged-user-namespace restriction remains enabled.
 
 The non-root UID 999 identity probe passed (38 ms, 1.2 MiB peak). A 64 MiB allocation in a 32 MiB zero-swap cgroup was killed by the memory controller (85 ms, 32 MiB peak). A parent with a sleeping child was terminated by the two-second service deadline (2.013 seconds, KillMode=control-group). These certify startup and bounded termination only, not real Agent capacity. No provider credential has been copied to Linode and no real model request has run there yet.
+
+## Guarded real Linode task
+
+Exactly one real coding task ran under UID 999, MemoryMax=768 MiB, zero swap, TasksMax=128, CPUQuota=100%, and 110-second service deadline. The root observer stopped only its dedicated service when host MemAvailable fell below the reserved 192 MiB floor. The run stopped after 7.793 seconds without verified code output; this is a guarded capacity failure, not an Agent success. Systemd recorded 537 MiB peak, 5.542 CPU seconds and child termination by SIGTERM. Available memory fell from 588 MiB to 175.2 MiB and recovered to 609 MiB. Credential deletion was verified. No second Agent, resize, or production runner configuration change occurred.
+
+**Capacity recommendation: CONTROL PLANE ONLY on this host with the chosen reserve; SEPARATE WORKERS RECOMMENDED.** This single startup/coding probe does not establish completed provider latency or Git publication capacity. Raw timing samples are in linode-single-guard-proof.json; the Trestle /health path returned 404, so its samples measure server response latency rather than an authenticated datastore transaction. C25 remains PARTIAL for the full resolver/semantic/queue/Actions flow and direct provider request timings.
+
+A real reviewer execution subsequently passed locally, with six findings, separate deepseek-v4-flash role configuration, personal credential identity and exact source SHA recorded in real-review-proof.json.

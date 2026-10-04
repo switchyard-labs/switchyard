@@ -216,7 +216,7 @@ func (a *App) handleResolveConflict(w http.ResponseWriter, r *http.Request) {
 	if configured {
 		result, files, err := a.providerConflict(ctx, repo, base, branch, attemptID, user)
 		if err != nil {
-			writeJSON(w, 502, map[string]any{"error": err.Error()})
+			writeAgentExecutionError(w, nil, err)
 			return
 		}
 		// A model proposal is never declared semantically resolved before preview.
