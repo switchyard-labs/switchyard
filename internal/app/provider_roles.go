@@ -146,10 +146,8 @@ func (a *App) providerConflict(ctx context.Context, repo, base, branch, attempt,
 		if validationErr != nil {
 			return nil, nil, validationErr
 		}
-		if semantic {
-			if err = os.WriteFile(absolute, []byte(content), 0600); err != nil {
-				return nil, nil, err
-			}
+		if err = os.WriteFile(absolute, []byte(content), 0600); err != nil {
+			return nil, nil, err
 		}
 		changes = append(changes, refs.Change{Path: path, Content: content})
 	}
@@ -165,6 +163,6 @@ func (a *App) providerConflict(ctx context.Context, repo, base, branch, attempt,
 			return nil, nil, fmt.Errorf("resolver proposal still violates semantic contract")
 		}
 	}
-	result, err := a.Refs.Update(repo, branch, head, changes, "provider conflict repair "+attempt, "conflict-resolver:"+user+":"+attempt)
+	result, err := a.Refs.PublishRepairTree(repo, branch, head, tree, "provider conflict repair "+attempt, "conflict-resolver:"+user+":"+attempt)
 	return result, conflicts, err
 }

@@ -18,7 +18,7 @@ func TestSemanticRepairScopeAndCounterpartContext(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(paths) != 1 || paths[0] != "api.json" || !strings.Contains(prompt, "consumer.json") {
+	if len(paths) != 1 || paths[0] != "consumer.json" || !strings.Contains(prompt, "consumer.json") {
 		t.Fatalf("repair scope/context: %v", paths)
 	}
 	if err = os.WriteFile(filepath.Join(tree, "api.json"), []byte(`{"version":3}`), 0600); err != nil {
