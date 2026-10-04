@@ -301,3 +301,19 @@ The local preview was backed up before additive schema migration to7. No C46
 Linode/Worker deployment yet. R2 live round-trip, complete lifecycle/concurrency
 certification, Actions tag flow, sy release commands and final responsive browser
 matrix remain open. Draft UI proof does not mark C46 DONE.
+
+C46 live transport follow-up: the existing Actions Worker was deployed from clean
+commit d454196. Local schema7 app → Worker → R2 upload/download passed with exact
+4096-byte content and SHA256, identical retry200 and conflicting-content409.
+Evidence: C46/r2-asset-roundtrip.json. Native browser confirmations were replaced
+with in-page dialogs at db714f1 after a native prompt blocked browser input;
+interactive publication/download browser checks remain unverified.
+
+sy commit996e82b adds release list/view/create/upload/download/publish, JSON and
+human output, bounded raw upload, checksum/size verification and no-overwrite
+downloads. Full tests/vet/build passed. Local API plus deployed Worker/R2 proved
+list/view/upload/exact download; a separate disposable tag proved draft creation
+and prerelease publication at immutable SHA e2a22198d24faa843975adef7fe7ffde1b997aa5.
+Main was unchanged. Evidence: C46/sy-release-proof.json. These are local app proofs,
+not Linode release certification. Actions tag-build-attach-publish integration,
+abandoned reservations/recovery and full lifecycle/browser matrices remain open.
