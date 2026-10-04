@@ -86,3 +86,22 @@ The first interruption was a 600-second disposable Git credential expiry;
 renewal resumed existing state without duplicate Work/Attempts. The CI retry
 kept the exact source SHA. The requested twelve-sample queue matrix remains
 partial; the provider failures are not represented as queue samples.
+
+### Current certification — twelve queue samples (4 October 2026)
+
+The representative semantic-contract and durable queue timing matrix is now
+complete for the disposable real repository. All twelve exact-SHA canonical
+integrations passed. Git revalidation median 8.152 s (min 6.354, max/p95 16.244);
+publication median 4.018 s (min 3.290, max/p95 15.615); semantic validation median
+0.157 ms (min 0.103, max/p95 0.231). Raw stages and summary:
+`queue-semantic-timing-12.json`. Nearest-rank p95 equals the maximum at n=12.
+Earlier semantic-preview samples remain in `semantic-contract-preview-12.json`.
+
+This closes the requested representative C23 matrix with bounded conclusions:
+Git/provider/publication dominates this fixture; the two-rule semantic engine is
+sub-millisecond. It does not establish population-scale latency, explain Nick's
+network, or justify a production mirror migration. The CI interruption preceded
+queue entry; a precise orphan recovery and exact-SHA CI retry resumed sample 8
+without duplicating Work/Attempts. Provider HTTP timings are separately recorded
+under C25. Warm local API/Trestle measurements remain distinct from remote Git,
+Cloudflare CI and model response time. C23 DONE for this documented matrix.

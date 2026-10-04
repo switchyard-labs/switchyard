@@ -446,3 +446,9 @@ release-assets are excluded. See C46/build-output-retention.json. Actual elapsed
 expiry is not claimed. Queue definition restored with revision protection; its
 interrupted exact-SHA retry accepted. App Actions-release code still awaits the
 next coherent Linode deployment and final whole-product/runtime gates.
+
+C23 DONE (bounded representative matrix): twelve real semantic-contract queue
+integrations completed. Median Git revalidation 8.152 s, publication 4.018 s,
+semantic validation 0.157 ms. C23/queue-semantic-timing-12.json records all samples,
+p95/min/max and limits. This supports separating remote Git/publication cost from
+the tiny semantic computation; it is not a large-repository or user-network claim.

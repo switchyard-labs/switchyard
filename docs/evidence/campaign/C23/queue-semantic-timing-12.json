@@ -1,0 +1,167 @@
+{
+  "repository": "codex-actions-probe-20261003",
+  "result": "PASS twelve exact-SHA canonical queue integrations",
+  "worker_recovery_version": "a281a381-203d-4e0a-afb3-cd924fb0468a",
+  "samples": [
+    {
+      "index": 0,
+      "sha": "c2e5a0a019a03f4f5b61cad6e18b5bb6499a7c75",
+      "queue_id": "iq_a100765cae42a67bbbf9d68d",
+      "timings_ns": {
+        "git_preview": 13878922423,
+        "publication": 3977042562,
+        "semantic": 121116
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 1,
+      "sha": "f16979c77aa52f7989874675909b2f2a5ccfb404",
+      "queue_id": "iq_3220bb6b735e9d55b2cc95a1",
+      "timings_ns": {
+        "git_preview": 9800899799,
+        "publication": 4059354075,
+        "semantic": 227493
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 2,
+      "sha": "8290482abf5a27bac94fa8827f8217762797b19b",
+      "queue_id": "iq_e2acc121e8bf27b3cc5ef3ea",
+      "timings_ns": {
+        "git_preview": 16243568781,
+        "publication": 15615449334,
+        "semantic": 115128
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 3,
+      "sha": "487757dbb9ac2f7081f9b838bd92b760a4833124",
+      "queue_id": "iq_8a20940387e2868cb804e35a",
+      "timings_ns": {
+        "git_preview": 6821773460,
+        "publication": 3382163635,
+        "semantic": 201433
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 4,
+      "sha": "b3b38f776241b8af0d8c102b848a5bf45703f649",
+      "queue_id": "iq_0d7b43091999bd1beef4fa5b",
+      "timings_ns": {
+        "git_preview": 6791599305,
+        "publication": 3797812184,
+        "semantic": 116915
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 5,
+      "sha": "98b5ac8a80606364a0f422b215aea240dcbf54fa",
+      "queue_id": "iq_b3549051487260828f74e045",
+      "timings_ns": {
+        "git_preview": 7209957909,
+        "publication": 3595513456,
+        "semantic": 115026
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 6,
+      "sha": "9eaa3698bcf011814c4744861aed45dbbae4fecd",
+      "queue_id": "iq_0689793b60e28f7261f7906a",
+      "timings_ns": {
+        "git_preview": 9107055814,
+        "publication": 7464683504,
+        "semantic": 231177
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 7,
+      "sha": "9f858301e75c06eac99714dff0202a52d2dd2cf6",
+      "queue_id": "iq_b4e08ea322839a96d5746b65",
+      "timings_ns": {
+        "git_preview": 6945218511,
+        "publication": 4232915834,
+        "semantic": 156808
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 8,
+      "sha": "2fc62e600200aa64b178d940cac12885338adb54",
+      "queue_id": "iq_c7ff267592b4e0444ba2c990",
+      "timings_ns": {
+        "git_preview": 6354276946,
+        "publication": 3289920819,
+        "semantic": 157662
+      },
+      "used_ci_retry": true
+    },
+    {
+      "index": 9,
+      "sha": "6e818e7c6840a4576a2bcd85754ec26c7ba0eff0",
+      "queue_id": "iq_8c0d56d70ad3e68c57c4ad7c",
+      "timings_ns": {
+        "git_preview": 9094544709,
+        "publication": 4764728120,
+        "semantic": 171897
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 10,
+      "sha": "c61b743fe07b86bc8a925c0f189982bfc4d8951a",
+      "queue_id": "iq_8df9e0d39a3f8aa434154fa1",
+      "timings_ns": {
+        "git_preview": 6997729397,
+        "publication": 3660159362,
+        "semantic": 181065
+      },
+      "used_ci_retry": false
+    },
+    {
+      "index": 11,
+      "sha": "a3fa6403c088ed147de8f1d6990aa20cfd7da52d",
+      "queue_id": "iq_83eb7c15ec383ff0e8eb3efe",
+      "timings_ns": {
+        "git_preview": 9950859438,
+        "publication": 6383393758,
+        "semantic": 102937
+      },
+      "used_ci_retry": false
+    }
+  ],
+  "summary": {
+    "git_preview": {
+      "n": 12,
+      "median_seconds": 8.152251309,
+      "p95_nearest_rank_seconds": 16.243568781,
+      "min_seconds": 6.354276946,
+      "max_seconds": 16.243568781
+    },
+    "publication": {
+      "n": 12,
+      "median_seconds": 4.0181983185,
+      "p95_nearest_rank_seconds": 15.615449334,
+      "min_seconds": 3.289920819,
+      "max_seconds": 15.615449334
+    },
+    "semantic": {
+      "n": 12,
+      "median_seconds": 0.000157235,
+      "p95_nearest_rank_seconds": 0.000231177,
+      "min_seconds": 0.000102937,
+      "max_seconds": 0.000231177
+    }
+  },
+  "limitations": [
+    "Small disposable semantic-contract fixture; not population-scale benchmark",
+    "One CI interruption and exact-SHA retry before sample 8; CI wait is outside measured queue stages",
+    "Nearest-rank p95 is the maximum at n=12"
+  ]
+}
