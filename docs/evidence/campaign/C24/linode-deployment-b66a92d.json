@@ -1,0 +1,14 @@
+{
+  "commit": "b66a92ddebda77f37fd3555f4ffc6bc486707ae8",
+  "built": "2026-10-04T10:54:54Z",
+  "binary_sha256": "bec33b16c6fc3a7d03b665b3fddb088c0849c4d7a4f8d144f157ca0f0b2967b6",
+  "schema_version": 8,
+  "backup": "/opt/cp0/switchyard-backup-20261004-b66a92d",
+  "sqlite_integrity": "ok",
+  "migration": "applied",
+  "readiness": "HTTP200",
+  "browser_smoke": "anonymous canonical /alice/demo-basic/releases fully loaded, No releases yet",
+  "rollback": "exclusive database and binary restore prepared, not failure-injection certified",
+  "no_public_demo_reset": true,
+  "no_linode_agent": true
+}

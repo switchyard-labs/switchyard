@@ -66,6 +66,9 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
     for(const [commandIndex,command] of job.steps.entries()) {
      const label=`${job.id}-${command.id}`;
      const state={id:command.id,name:command.name||command.id,status:'running',started_at:await step.do(`start-${label}`,async()=>new Date().toISOString()),finished_at:'',log_key:`runs/${run.run_id}/${label}.json`,truncated:false};view.steps.push(state);
+     // Persist admission before awaiting the runner so live views and recovery
+     // probes can observe the in-flight job rather than an empty step list.
+     await step.do(`record-running-${label}`,()=>save());
      const outputs=job.assets?.length&&commandIndex===job.steps.length-1?await step.do(`prepare-outputs-${job.id}`,async()=>{
       const stored=await this.env.BACKUP_BUCKET.get(`definitions/${run.repo}.json`),definition=stored?await stored.json<any>():null;
       if(!definition||definition.revision!==run.definition_revision||typeof definition.upload_origin!=='string'||new URL(definition.upload_origin).protocol!=='https:')throw new Error('Approved upload origin unavailable');

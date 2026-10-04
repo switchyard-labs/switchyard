@@ -475,3 +475,14 @@ repeat reset, credential/non-demo preservation and idempotency restoration. No
 public demo reset, production record mutation, Agent load or resize occurred.
 Switchyard/Caddy remained active. C24 is still PARTIAL: actual in-flight queue,
 workflow and Actions drain/recovery proofs remain. Schema 8 is not yet deployed.
+
+Schema-8 batch `b66a92d` is now cleanly deployed on Linode. Private backup and
+SQLite integrity, migration, exact installed commit/checksum, Switchyard/Caddy
+active, readiness HTTP200 and canonical anonymous Releases browser smoke passed.
+Evidence: C24/linode-deployment-b66a92d.json and its screenshot. No public demo
+reset or Agent execution occurred. The isolated local app also runs this binary.
+Two attempted CI drain observations finished without a visible running step;
+neither is counted as an in-flight recovery PASS. Investigation found the Worker
+persisted step state only after completion. The running-step admission is now
+persisted before awaiting its runner; all 23 Worker tests/typecheck/dry-run passed.
+Live Worker deployment and the actual coordinator stop proof follow next.
