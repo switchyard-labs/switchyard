@@ -106,6 +106,15 @@ func (a *App) providerConflict(ctx context.Context, repo, base, branch, attempt,
 	if len(conflicts) > 20 {
 		return nil, nil, fmt.Errorf("repair exceeds 20 conflict files")
 	}
+	ctx = context.WithValue(ctx, agentSourceSHAKey{}, head)
+	semantic := len(conflicts) == 0
+	prompt := "Resolve the merge conflict markers in this file. Return only this file. Preserve the intended changes on both sides."
+	if semantic {
+		conflicts, prompt, err = semanticRepairInputs(tree)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 	changes := []refs.Change{}
 	total := 0
 	for _, path := range conflicts {
@@ -129,18 +138,32 @@ func (a *App) providerConflict(ctx context.Context, repo, base, branch, attempt,
 		if err != nil {
 			return nil, nil, err
 		}
-		ex, err := a.runViaSubstrateContext(ctx, "conflict-resolver", attempt, repo, branch, path, string(bytes), "Resolve the merge conflict markers in this file. Return only this file. Preserve the intended changes on both sides.")
+		ex, err := a.runViaSubstrateContext(ctx, "conflict-resolver", attempt, repo, branch, path, string(bytes), prompt)
 		if err != nil {
 			return nil, nil, &providerExecutionError{execution: ex, cause: err}
 		}
-		content, ok := ex.Result[path]
-		if !ok || len(ex.Result) != 1 || strings.Contains(content, "<<<<<<<") || strings.Contains(content, ">>>>>>>") {
-			return nil, nil, fmt.Errorf("resolver did not return one resolved file")
+		content, validationErr := validateResolverFile(ex.Result, path)
+		if validationErr != nil {
+			return nil, nil, validationErr
+		}
+		if semantic {
+			if err = os.WriteFile(absolute, []byte(content), 0600); err != nil {
+				return nil, nil, err
+			}
 		}
 		changes = append(changes, refs.Change{Path: path, Content: content})
 	}
 	if len(changes) == 0 {
 		return nil, nil, fmt.Errorf("no structural conflicts to resolve")
+	}
+	if semantic {
+		findings, validationErr := semanticFindingsInTree(tree)
+		if validationErr != nil {
+			return nil, nil, validationErr
+		}
+		if len(findings) > 0 {
+			return nil, nil, fmt.Errorf("resolver proposal still violates semantic contract")
+		}
 	}
 	result, err := a.Refs.Update(repo, branch, head, changes, "provider conflict repair "+attempt, "conflict-resolver:"+user+":"+attempt)
 	return result, conflicts, err
