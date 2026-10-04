@@ -36,3 +36,9 @@ and NO_PRIVILEGED_CREDENTIALS stdout. SHA256:
 Copy reported Output copied, but CUA clipboard read-back returned an empty string;
 clipboard contents remain UNVERIFIED, not PASS. Actions now also uses one owner/repo
 heading instead of adding the shared duplicate context row.
+
+Further browser verification downloaded the clean semantic repair native run's
+log (346 bytes, exact repair SHA; C25 evidence). Copy again reports success but
+CUA clipboard reads empty; clipboard remains UNVERIFIED. Cancelled runs lacking
+a provider completion timestamp now show an unknown duration instead of an
+ever-growing elapsed time. The fix does not invent a cancellation timestamp.

@@ -32,7 +32,17 @@ func RunOpenCodeAdapter(input io.Reader, output, diagnostics io.Writer) (returnE
 	started := time.Now()
 	code := "runner_start_failed"
 	timings := map[string]int64{}
+	var finishProvider func() map[string]int64
+	collectProvider := func() {
+		if finishProvider != nil {
+			for name, elapsed := range finishProvider() {
+				timings[name] = elapsed
+			}
+			finishProvider = nil
+		}
+	}
 	defer func() {
+		collectProvider()
 		timings["adapter_total_ns"] = int64(time.Since(started))
 		if returnErr != nil {
 			_ = json.NewEncoder(output).Encode(map[string]any{"failure_code": code, "timings_ns": timings})
@@ -70,6 +80,17 @@ func RunOpenCodeAdapter(input io.Reader, output, diagnostics io.Writer) (returnE
 	}
 	defer os.RemoveAll(configDir)
 	config := map[string]any{"$schema": "https://opencode.ai/config.json", "model": task.Provider + "/" + task.Model, "share": "disabled", "autoupdate": false, "plugin": []string{}, "mcp": map[string]any{}, "permission": map[string]any{"*": "deny", "read": map[string]string{"*": "deny", task.File: "allow", "/workspace/" + task.File: "allow", "workspace/" + task.File: "allow"}, "edit": map[string]string{"*": "deny", task.File: "allow", "/workspace/" + task.File: "allow", "workspace/" + task.File: "allow"}}, "provider": map[string]any{task.Provider: map[string]any{"options": map[string]string{"apiKey": "{env:SWITCHYARD_PROVIDER_API_KEY}"}}}}
+	// OpenCode Go uses the installed runtime registry's OpenAI-compatible API.
+	// Measure actual HTTP streams separately from process/model execution.
+	if task.Provider == "opencode-go" {
+		baseURL, finish, proxyErr := providerTimingProxy("https://opencode.ai/zen/go/v1")
+		if proxyErr != nil {
+			return errors.New("provider timing listener unavailable")
+		}
+		finishProvider = finish
+		options := config["provider"].(map[string]any)[task.Provider].(map[string]any)["options"].(map[string]string)
+		options["baseURL"] = baseURL
+	}
 	raw, err := json.Marshal(config)
 	if err != nil {
 		return err
@@ -162,6 +183,7 @@ func RunOpenCodeAdapter(input io.Reader, output, diagnostics io.Writer) (returnE
 		return errors.New("OpenCode did not produce a file change")
 	}
 	timings["workspace_result_read_ns"] = int64(time.Since(mutationStarted))
+	collectProvider()
 	timings["adapter_total_ns"] = int64(time.Since(started))
 	return json.NewEncoder(output).Encode(map[string]any{"files": map[string]string{task.File: string(result)}, "timings_ns": timings})
 }

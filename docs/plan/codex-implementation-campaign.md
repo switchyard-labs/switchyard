@@ -387,3 +387,14 @@ HTTP 200 and anonymous browser renders “No releases yet.” Browser evidence:
 `docs/evidence/campaign/C46/linode-public-releases-3586cb5.jpg`. No additional
 Agent load was run on Linode. Actions-to-Releases automation, reset/drain gates,
 remaining browser/CLI certification and final brochure remain incomplete.
+
+### 2026-10-04 — direct OpenCode Go HTTP timing
+
+One real local rereview succeeded with actual request headers/completion timing:
+3 requests, cumulative headers 3.401 s, cumulative completion 4.531 s, model
+process 5.448 s, full review API 19.354 s. C25 `provider-http-review.json` records
+only safe execution metadata; all timing excludes credential/prompt/body logging.
+Other providers remain process-timed. Full Go tests and Agent race tests passed.
+C45 is DONE within documented bounded archive support; final `sy` live dogfood
+is its separate gate. C38 clipboard remains unverified by the available browser
+tool. Actions-to-Releases automation and remaining campaign gates continue.

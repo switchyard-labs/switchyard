@@ -1,0 +1,56 @@
+{
+  "status": 200,
+  "execution": {
+    "adapter": "opencode-go/deepseek-v4-flash",
+    "attempt_id": "wk_47ae565ab9b10404",
+    "finished_at": "2026-10-04T07:06:00Z",
+    "id": "exe_263c2a64",
+    "metadata": {
+      "branch": "event-competition-de2f9b13f5a2-b",
+      "cpu_time_ns": 6169435000,
+      "credential_profile": "cred_6f6bdfb415bb731d221b6533",
+      "duration_ns": 5566305248,
+      "exit_code": 0,
+      "failure_code": "",
+      "file": "REVIEW.json",
+      "model": "deepseek-v4-flash",
+      "output_truncated": false,
+      "principal": "alice",
+      "provider": "opencode-go",
+      "resource_usage": {
+        "accounting": "sampled cgroup v2; last sample may precede exit",
+        "cpu.max": "200000 100000",
+        "cpu.stat": "usage_usec 6169435\nuser_usec 5370049\nsystem_usec 799385\nnice_usec 0\ncore_sched.force_idle_usec 0\nnr_periods 54\nnr_throttled 7\nthrottled_usec 1146538\nnr_bursts 0\nburst_usec 0",
+        "memory.current": "165031936",
+        "memory.current.sampled_peak": "668184576",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0",
+        "memory.max": "1073741824",
+        "memory.peak": "681852928",
+        "memory.swap.max": "0",
+        "pids.current": "15",
+        "pids.current.sampled_peak": "43",
+        "pids.events": "max 0",
+        "pids.max": "128",
+        "pids.peak": "46"
+      },
+      "role": "reviewer",
+      "sandbox": true,
+      "source_sha": "ec1338d5bb27cadae7999a4d8bec427f01b9993d",
+      "status": "succeeded",
+      "timings_ns": {
+        "adapter_total_ns": 5448820895,
+        "model_execution_ns": 5447533024,
+        "provider_http_complete_ns": 4530671375,
+        "provider_http_headers_ns": 3401155380,
+        "provider_http_requests": 3,
+        "queue_wait_ns": 1016,
+        "runner_bootstrap_ns": 1108204,
+        "workspace_result_read_ns": 38934
+      }
+    },
+    "role": "reviewer",
+    "started_at": "2026-10-04T07:05:54Z",
+    "status": "succeeded"
+  },
+  "review_duration_seconds": 19.354
+}
