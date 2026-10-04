@@ -35,11 +35,13 @@ func (a *App) handleCreateAttempt(w http.ResponseWriter, r *http.Request) {
 		in.Branch = "attempt-" + strings.TrimPrefix(attemptID, "wk_")
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
-	res, err := a.Refs.Update(in.Repo, in.Branch, "", []refs.Change{
-		{Path: "ATTEMPT.md", Content: "# Attempt " + attemptID + "\n"},
-	}, "attempt "+attemptID+" init", "user:"+user)
+	res, err := a.Refs.Update(in.Repo, in.Branch, "", nil, "attempt "+attemptID+" init", "user:"+user)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
+		return
+	}
+	if res.Status != "ok" {
+		writeJSON(w, 409, map[string]any{"error": "attempt_branch_exists"})
 		return
 	}
 	_, _, err = a.Trestle.CreateRecord("attempts", map[string]any{

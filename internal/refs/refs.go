@@ -303,6 +303,13 @@ func (s *Service) buildCommit(repo, remote, branch, expected string, changes []C
 			}
 		}
 	}
+	// A new Attempt branch points at the existing default commit. Its identity
+	// belongs in metadata, not a synthetic file that conflicts with other Attempts.
+	if len(changes) == 0 {
+		timings["git_commit_ns"] = int64(time.Since(commitStarted))
+		success = true
+		return dir, nil
+	}
 	if err := git(dir, "", "add", "-A"); err != nil {
 		return "", err
 	}
