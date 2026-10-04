@@ -1,0 +1,12 @@
+{
+  "upload_status": 201,
+  "size": 4096,
+  "sha256": "c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193",
+  "asset_id": "ast_b03d6c6d7edf1eab600f1631",
+  "retry_status": 200,
+  "different_content_status": 409,
+  "download_status": 200,
+  "exact_bytes": true,
+  "download_sha256": "c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193",
+  "checksum_header": "c8f5d0341d54d951a71b136e6e2afcb14d11ed8489a7ae126a8fee0df6ecf193"
+}
