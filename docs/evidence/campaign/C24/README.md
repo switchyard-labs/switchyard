@@ -19,8 +19,8 @@ exclusion suppresses rediscovery and cannot suppress a non-demo run. Five Python
 tests cover relation scope, shared Work rejection, active/unknown-effect rejection,
 similarly named non-demo repos and a transactional SQLite round trip.
 
-This is not an actual public-demo reset. C24 remains PARTIAL until queue
-publication shutdown/recovery is exercised against running services. The reset's external
+This is not an actual public-demo reset. The reset and all three requested drain/recovery gates are now certified in
+isolated fixtures. The reset's external
 CI/event drain flag is an explicit operator attestation, not an API-verification
 claim. Rollback artifacts remain prepared rather than failure-injection certified.
 
@@ -46,3 +46,20 @@ loopback forwarding proxy, not an Agent or production service. An earlier
 clean-runtime preview sharing the test database was stopped before this proof;
 its competing workflow runner invalidated the preceding interception attempts.
 The restart helper now waits for the previous process group to exit.
+
+`publication-drain-recovery.json` records native CI on a disposable Attempt,
+semantic preview, PR and a real Integration Queue canonical Git push. A
+PATH-scoped Git wrapper forwards to the real Git executable and holds only the
+successful return of that repository's canonical-main push. Shutdown waits,
+then restart reaches queue `done` and PR `integrated`; remote main equals the
+recorded publication SHA and exactly one canonical push was observed. The
+wrapper records public SHAs only, never command arguments or credentials. The
+original launcher and revision-guarded Actions definition were restored.
+
+C24 is DONE for the requested safe-reset fixture, authenticated restore evidence,
+three actual graceful-drain/recovery gates and completed operator runbooks.
+Public-demo reset remains an available operator procedure, not an executed
+production operation. Live destructive rollback failure injection is not
+claimed or required for the prepared rollback runbook. These proofs certify
+graceful drain; abrupt-crash recovery is covered by the separate queue/workflow
+durability tests rather than being inferred from SIGTERM.

@@ -498,3 +498,17 @@ waited, restart completed exactly one child and one durable step per run.
 See C24/actions-drain-recovery.json and workflow-drain-recovery.json.
 Queue publication drain remains outstanding; no public-demo reset or additional
 Linode Agent load. Rollback remains prepared, not failure-injection certified.
+
+### C24 completion (2026-10-04)
+
+DONE for the requested bounded operations gates: selective safe demo reset
+fixture, authenticated state restore evidence, actual graceful drain/recovery
+of queue publication/workflow child creation/external Actions coordination,
+and backup/restore/upgrade/rollback/restart/demo reset/health/metrics runbooks.
+Publication proof: one real canonical push after native exact-SHA CI, drain
+waited, old process group exited, restart queue done/PR integrated, remote main
+matched recorded publication SHA. Evidence: C24/publication-drain-recovery.json.
+No public demo reset, extra Linode Agent, live destructive rollback injection or
+abrupt-crash live certification is claimed. Queue/workflow crash tests remain
+separate evidence. Linode control-plane binary remains clean b66a92d; subsequent
+commits are Worker source/documentation.

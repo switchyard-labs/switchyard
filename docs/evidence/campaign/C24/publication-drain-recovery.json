@@ -1,0 +1,22 @@
+{
+  "phase": "complete",
+  "work_id": "wk_9019fc1ffb703ab1",
+  "attempt_id": "wk_cf823b8e46595374",
+  "branch": "c24-publication-1791115254",
+  "before_sha": "5cf4fba18bc1d4cba4b725e824d42c6f3ef4d379",
+  "source_sha": "1f8756d44ddf2f3b6628119f1e7bb3e99fda4fbc",
+  "fixture_folder": "/tmp/switchyard-c24-publish-5gdr9ex_",
+  "queue_id": "iq_31e9319dca48d7e366ec74d7",
+  "pr_id": "wk_8de714bbc0115895",
+  "published_sha": "3851c3945342bad29b10a44447cfb41d55614eb9",
+  "drain_waited_for_publication": true,
+  "drain_seconds": 0.4183049980783835,
+  "old_process_group_exited": true,
+  "result": "PASS",
+  "queue_status": "done",
+  "canonical_sha": "3851c3945342bad29b10a44447cfb41d55614eb9",
+  "canonical_push_count": 1,
+  "scope": "isolated local coordinator and existing disposable Artifacts Git repository; real native CI; no Agent or production mutation",
+  "pr_status": "integrated",
+  "original_actions_definition_restored": true
+}

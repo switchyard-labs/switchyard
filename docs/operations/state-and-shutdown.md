@@ -65,5 +65,63 @@ views before resuming Trestle, Switchyard and event ingestion.
 The isolated operator-command proof restored five local bare repositories and
 synthetic Trestle state, preserved credentials/non-demo activity and idempotency,
 created an Actions exclusion, and repeated without changing the result. It did
-not reset the public demo. C24 remains PARTIAL pending actual in-flight queue,
-workflow and Actions shutdown/recovery proofs.
+not reset the public demo. Actual isolated in-flight queue publication, workflow effect and external
+Actions coordination shutdown/recovery proofs now pass; see C24 evidence.
+
+## Upgrade and rollback
+
+Build a clean committed source archive with embedded assets. Run the affected
+Go and Worker checks first, record the full source commit, build timestamp and
+binary SHA-256, and read the binary's `--version` output before uploading it.
+Stage the release in a new private directory; do not replace the running binary
+from an uncommitted checkout. Keep control-plane upgrades free of Agent load.
+
+Put the public proxy into maintenance and gracefully stop Switchyard. Preserve
+the previous binary, deployment environment, credential key, application data
+and a SQLite backup made through the backup API; run `PRAGMA integrity_check`
+against the copied database. Preserve Trestle's companion state and exact writer
+launch identity. Write a private checksum manifest before applying migrations.
+Never expose environment files or restart metadata in public evidence.
+
+Apply the intended schema migration, install the verified binary and start
+Switchyard. Check local HTTP readiness, exact full commit/build identity, schema
+version and SQLite integrity. Reopen the proxy only after local readiness.
+Then verify public health and a fully loaded canonical repository or Releases
+page; verify authenticated access and credential decryption separately. The
+C24 Linode deployment evidence records the successful schema-8 upgrade and
+backup identity.
+
+If readiness or identity checks fail, leave the proxy in maintenance. Verify
+every backup checksum before restoring. Stop Switchyard and identify/stop the
+actual Trestle writer before replacing SQLite; do not infer its launch settings
+from a guessed service name. Preserve failed database/WAL/SHM and application
+data for diagnosis. Restore database plus companion state, matching application
+data/key/environment and the old binary together. Restart Trestle using its
+recorded identity, then Switchyard; repeat integrity, version, authentication and
+HTTP checks before reopening the proxy. If writer identity or backup integrity
+cannot be proved, remain in maintenance instead of partially restoring.
+
+A source-compatible binary rollback can still require a database rollback after
+a migration. Restoring coordination state does not undo remote Artifacts refs,
+R2 objects or external CI. Reconcile those effects against exact recorded SHAs
+and idempotency keys before retrying. The live rollback path has prepared,
+integrity-checked artifacts; deliberate live upgrade failure injection has not
+been certified.
+
+## Restart, health and metrics
+
+For the current systemd deployment, use `systemctl restart switchyard` for a
+planned restart and retain `TimeoutStopSec=330`. Check `systemctl is-active
+switchyard caddy`, local HTTP `/` readiness, exact binary version, and the public endpoint
+afterwards. A healthy process alone does not prove repository authorization,
+external Actions reconciliation or queued publication. Inspect those states too.
+For an isolated process launcher, wait for the entire old process group to exit
+before starting a replacement; never accept readiness from the draining process.
+
+Keep `/metrics` on its explicitly configured loopback listener. Monitor HTTP and
+upstream duration, error rates, queue/claim state, reconciliation progress and
+Agent admission/resource limits. Do not confuse response-header transport timing
+with complete payload time. Maintain the reserved-memory policy: this Linode is
+the control-plane host, with routine Agent execution on separately scalable
+isolated workers. An unhealthy external Worker can coexist with healthy local
+HTTP and needs its own diagnosis.
