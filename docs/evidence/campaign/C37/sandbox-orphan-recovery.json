@@ -1,0 +1,19 @@
+{
+  "candidate_commit": "b97caa7",
+  "worker_version": "a281a381-203d-4e0a-afb3-cd924fb0468a",
+  "failed_run": "e5566ddd-120c-4da7-a3de-1b809400b0b9",
+  "observed_running_instances": 1,
+  "observed_inactive_instances": 41,
+  "orphan_id": "39b12f8829cd26ec1412db6d3eeb15ff7286d13c5d6fc61c68a0fc57047684fa",
+  "orphan_name": "verify-unit-a85dead0-46f4-481b-857d-bfcbbc315415",
+  "instance_running_at": "2026-10-04T07:41:25.856999936Z",
+  "failed_step_finished_at": "2026-10-04T07:41:21.908Z",
+  "signed_inspect_http": 200,
+  "signed_destroy_http": 200,
+  "tests": 23,
+  "typecheck": "PASS",
+  "dry_run": "PASS",
+  "limit_unchanged": 1,
+  "root_cause": "SDK onStop hypothesis; actual rerun verification pending",
+  "upstream_issue": "https://github.com/cloudflare/sandbox-sdk/issues/928"
+}

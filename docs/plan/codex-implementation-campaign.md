@@ -418,3 +418,20 @@ two native CI RPC failures interrupted the requested twelve queue samples.
 Evidence: `C23/queue-semantic-timing-partial.json`. C24 safe reset/drain, final
 C33/C38 browser checks, final C42/C43 regression, sy live dogfood and brochure
 refresh remain outstanding. The campaign is not complete.
+
+### Native Actions release/recovery follow-up — 4 October 2026
+
+`25361e0` adds approved tag-build outputs, scoped upload grants, immutable R2
+receipts, bound draft releases, retry/CAS attachment and optional publication.
+Worker/local preview deployed; Linode remains `fcda4e7`. Real tag build failed
+before output upload; real automated release stayed draft with zero assets.
+C46 Actions success and staged-output cleanup remain open.
+
+`b97caa7` adds a version/hash-pinned Sandbox SDK stop-handler compatibility guard
+and signed operator orphan inspection/recovery. All 23 Worker tests, type check
+and dry run passed. Clean Worker deployed as
+`a281a381-203d-4e0a-afb3-cd924fb0468a`, preserving one-container capacity. Exact
+orphan identity inspection and destruction both returned HTTP200. Evidence:
+`C37/sandbox-orphan-recovery.json`. This proves precise recovery, not yet that the
+upstream RPC hypothesis resolves subsequent builds. C23 has eight real queue
+samples; four remain. No additional Agent load or resize on Linode.
