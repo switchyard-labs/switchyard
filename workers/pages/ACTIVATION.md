@@ -1,24 +1,42 @@
-# Native Pages activation (conditional)
+# Native Pages activation
 
-Local product tests do not require these steps. Nothing in this file authorizes
-resource creation, DNS changes or deployment.
+Live infrastructure was activated on 2026-10-05. End-to-end certification is
+still in progress; infrastructure activation alone does not prove a successful
+published build.
 
-1. Purchase and configure `switchyard.cx` after owner approval. Confirm the zone
-   and credentials on the intended Cloudflare account.
-2. Confirm the existing Actions artifact bucket is the intended production
-   bucket. `wrangler.jsonc` currently binds the existing campaign bucket;
-   update the binding deliberately rather than creating another bucket.
-3. Deploy the completed Actions Worker and app schema 11 together, with the
-   existing signed control protocol and approved repository allowlist. Static
-   build bundles and ready deployment receipts share its existing bucket.
-4. Deploy the read-only serving Worker with its `PAGES_BUCKET` binding. After
-   domain setup, add the wildcard route `*.switchyard.cx/*` in the approved zone.
-   Verify wildcard DNS and edge TLS with owner and `dpl-<32 hex>` preview hosts.
-5. Keep the application on a distinct host, such as `app.switchyard.cx`. App
-   cookies must remain host-only (no parent-domain `Domain` attribute).
-6. Smoke-test owner root, dotted/hyphenated/underscore repository prefixes,
-   exact-SHA preview, atomic promotion, 404 scope and rollback over HTTPS.
-   Then enable native public URLs in product messaging.
+- Cloudflare account: `b7f20353ee8a9e5d2003f52c74ba795e`.
+- Active zone: `switchyard.cx` (`abf2755072006add6ff1e59342ab5114`).
+- Nameservers: `linda.ns.cloudflare.com`, `noel.ns.cloudflare.com`.
+- Apex A: `45.79.189.46`, DNS-only. Caddy terminates HTTPS on Linode.
+- `www`: DNS-only CNAME to apex; Caddy redirects to `https://switchyard.cx`.
+- `docs`: DNS-only CNAME to `switchyard-labs.github.io`; GitHub Pages HTTPS.
+- Wildcard: proxied AAAA `100::`, Auto TTL; read-only Worker route
+  `*.switchyard.cx/*`. Apex is outside this route; explicit DNS-only infrastructure
+  records bypass the wildcard Worker.
+- Serving Worker: `switchyard-pages`, version
+  `b0caefd0-1f86-4e75-ad02-6008362ad20a`, `workers_dev=false`.
+- R2: existing `switchyard-actions-probe-20261003`, retained deliberately.
+  Actions build assets, Release assets, immutable Pages content and production
+  mappings occupy distinct namespaces. A bucket rename would require migration
+  of those receipts and mappings; no new bucket or destructive migration was used.
+- Cloudflare Universal TLS covers apex and wildcard. Apex, www, docs and an
+  unconfigured owner host passed certificate verification (owner returns 404).
+- Reserved owners: `www`, `docs`, `app`, `api`, `admin`, `assets`, `static`,
+  `pages`, `login`, `signup`, `sy`, and every `dpl-` prefix.
+- App schema 11 runs on Linode. Dedicated Actions control key stays in a
+  mode-600 host file; the serving Worker has only R2 and domain bindings.
+  Rotate by updating the Actions encrypted `CONTROL_SECRET` and the matching
+  Linode key file in one maintenance window; never include values in evidence.
+- Application cookies remain host-only and Secure with
+  `SWITCHYARD_PUBLIC_URL=https://switchyard.cx`; application host remains apex.
+
+Before activation the binary, environment, Caddy configuration and consistent
+Trestle database were backed up on the host at
+`/opt/cp0/switchyard/before-pages-20261005-012909/`. Schema 11 migration is
+additive. The older binary is not compatible with schema 11: use a compatible
+binary rollback, or restore metadata only during an exclusive maintenance window
+with an explicit plan for writes made after that backup. Do not blindly restore
+an old database over newer writes.
 
 Project sites share the owner origin (scripts, cookies, localStorage and
 IndexedDB). Owners must trust published projects. Project service workers have

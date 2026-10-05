@@ -73,6 +73,19 @@
             "workflow_name": "switchyard-actions-probe-20261003"
           }
         ]
+      },
+      {
+        "type": "cf.artifacts.repo.pushed",
+        "filter": {
+          "namespace": "switchyard-cp0",
+          "repo_name": "codex-pages-live-20261005"
+        },
+        "targets": [
+          {
+            "type": "workflow",
+            "workflow_name": "switchyard-actions-probe-20261003"
+          }
+        ]
       }
     ]
   }
