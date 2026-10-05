@@ -5,7 +5,7 @@ const output=JSON.parse(process.env.SWITCHYARD_STATIC_OUTPUT);
 delete process.env.SWITCHYARD_STATIC_OUTPUT;
 try {
  const objects=new Map();
- const result=await exportStatic({workspace:'/tmp/ci-source',output:output.directory,maxTotalBytes:48*1024*1024,siteID:'artifact_static',deploymentID:'artifact_output',basePath:output.base_path,spaFallback:output.spa_fallback,bucket:{put:async(key,body)=>{objects.set(key,body);return {etag:'local'};}}});
+ const result=await exportStatic({workspace:'/workspace',output:output.directory,maxTotalBytes:48*1024*1024,siteID:'artifact_static',deploymentID:'artifact_output',basePath:output.base_path,spaFallback:output.spa_fallback,bucket:{put:async(key,body)=>{objects.set(key,body);return {etag:'local'};}}});
  const manifest=JSON.parse(objects.get('pages/artifact_static/artifact_output/manifest.json'));
  const bundle=JSON.stringify({format:'switchyard-static-v1',base_path:result.base_path,spa_fallback:manifest.spa_fallback,files:Object.entries(manifest.files).map(([path,entry])=>({path,mime:entry.mime,size:entry.size,sha256:entry.sha256,body:objects.get(entry.key).toString('base64')}))});
  const bytes=Buffer.from(bundle);if(bytes.length>output.limit)throw Error('static_bundle_size_limit');

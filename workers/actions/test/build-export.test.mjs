@@ -19,7 +19,7 @@ test('trusted uploader streams exact bytes and rejects a symlink escape without 
   await fs.writeFile(path.join(root,'program.zip'),'actual build bytes');
   const output={path:'program.zip',limit:100,token:'disposable-test-grant',url:`http://127.0.0.1:${server.address().port}/upload`};
   const run=()=>new Promise(resolve=>{
-   const child=spawn(process.execPath,['--input-type=module','-e',buildExportScript.replace('"/tmp/ci-source"',JSON.stringify(root))],{env:{...process.env,SWITCHYARD_BUILD_OUTPUTS:JSON.stringify([output])}});let text='';
+   const child=spawn(process.execPath,['--input-type=module','-e',buildExportScript.replace('"/workspace"',JSON.stringify(root))],{env:{...process.env,SWITCHYARD_BUILD_OUTPUTS:JSON.stringify([output])}});let text='';
    child.stdout.on('data',v=>text+=v);child.stderr.on('data',v=>text+=v);child.on('close',code=>resolve({code,text}));
   });
   const success=await run();assert.equal(success.code,0);assert.equal(requests,1);assert.ok(!success.text.includes(output.token));

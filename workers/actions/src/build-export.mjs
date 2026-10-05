@@ -7,7 +7,7 @@ import {createHash} from "node:crypto";
 import {Readable} from "node:stream";
 const outputs=JSON.parse(process.env.SWITCHYARD_BUILD_OUTPUTS);
 delete process.env.SWITCHYARD_BUILD_OUTPUTS;
-const root=fs.realpathSync("/tmp/ci-source");
+const root=fs.realpathSync("/workspace");
 try {
  for(const output of outputs){
   const file=path.join(root,output.path),fd=fs.openSync(file,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);
