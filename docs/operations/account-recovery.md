@@ -13,10 +13,11 @@ work; there is no new email-change workflow in this campaign.
 Browser routes: `/verify-email`, `/forgot-password`, `/reset-password`.
 Mutations: POST `/api/auth/verify-email`, `/api/auth/resend-verification`,
 `/api/auth/password-reset/request`, `/api/auth/password-reset/complete`.
+Link preflight: POST `/api/auth/account-token/validate?purpose=email_verification|password_reset`. It checks the current link without consuming it or changing account state. The browser hides the form until validation succeeds; used/expired links show an invalid-link message on arrival.
 Private settings: GET `/api/settings/email`.
 
 Trestle POST `/api/v1/collections/{collection}/records/{id}/account-auth`
-accepts `action: issue|consume`, `purpose: email_verification|password_reset`,
+accepts `action: issue|validate|consume`, `purpose: email_verification|password_reset`,
 issuance `lifetime_seconds`, or consumption `token` and reset `new_password`.
 Only an authenticated administrator with the existing CSRF credential can call
 it. Generic record grants, service tokens and anonymous clients cannot. The
@@ -66,8 +67,10 @@ through public DNS. Existing apex SPF and routing are preserved. Credentials
 are stored only in the protected host environment. Real registration verification and reset emails reached the approved inbox;
 the user completed both links and logged in with the new password. The live
 API confirmed verification persistence and rejection of the old password and
-session. Real resend, expiry and duplicate-link mail scenarios remain separate
-certification checks; do not infer them from this successful flow.
+session. The user also confirmed real resend supersession, verification reuse rejection,
+reset reuse rejection, new-password login, sender identity, expiry copy and mobile
+email appearance. Expiry boundaries and races were verified using a controlled
+clock at the token authority, not by waiting for real mail to expire.
 
 Mail contains restrained plain-text and HTML alternatives, the one-time HTTPS
 link, UTC expiry and an unsolicited-message notice. Signup survives delivery

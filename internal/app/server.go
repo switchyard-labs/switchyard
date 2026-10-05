@@ -126,6 +126,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/auth/login", a.authorizeHandler(a.handleLogin))
 	mux.HandleFunc("POST /api/auth/logout", a.authorizeHandler(a.handleLogout))
 	mux.HandleFunc("GET /api/auth/me", a.authorizeHandler(a.handleMe))
+	mux.HandleFunc("POST /api/auth/account-token/validate", a.authorizeHandler(a.handleAccountTokenValidation))
 	mux.HandleFunc("POST /api/auth/verify-email", a.authorizeHandler(a.handleVerifyEmail))
 	mux.HandleFunc("POST /api/auth/resend-verification", a.authorizeHandler(a.handleResendVerification))
 	mux.HandleFunc("POST /api/auth/password-reset/request", a.authorizeHandler(a.handleResetRequest))

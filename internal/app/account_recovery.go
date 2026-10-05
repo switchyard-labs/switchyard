@@ -179,7 +179,18 @@ func (a *App) handleResetRequest(w http.ResponseWriter, r *http.Request) {
 	})
 }
 func (a *App) consumeAccountToken(w http.ResponseWriter, r *http.Request, purpose string) {
-	if !a.allowAuthAttempt(r.RemoteAddr, "consume:"+purpose) {
+	a.accountTokenOperation(w, r, purpose, "consume")
+}
+func (a *App) handleAccountTokenValidation(w http.ResponseWriter, r *http.Request) {
+	purpose := r.URL.Query().Get("purpose")
+	if purpose != "email_verification" && purpose != "password_reset" {
+		writeJSON(w, 400, map[string]any{"error": "account_token_invalid"})
+		return
+	}
+	a.accountTokenOperation(w, r, purpose, "validate")
+}
+func (a *App) accountTokenOperation(w http.ResponseWriter, r *http.Request, purpose, action string) {
+	if !a.allowAuthAttempt(r.RemoteAddr, action+":"+purpose) {
 		writeJSON(w, 429, map[string]any{"error": "rate_limited"})
 		return
 	}
@@ -192,7 +203,7 @@ func (a *App) consumeAccountToken(w http.ResponseWriter, r *http.Request, purpos
 		writeJSON(w, 400, map[string]any{"error": "bad_request"})
 		return
 	}
-	if purpose == "password_reset" && (len(in.Password) < 8 || len(in.Password) > 72 || in.Password != in.Confirm) {
+	if action == "consume" && purpose == "password_reset" && (len(in.Password) < 8 || len(in.Password) > 72 || in.Password != in.Confirm) {
 		writeJSON(w, 400, map[string]any{"error": "password_confirmation_or_policy"})
 		return
 	}
@@ -201,7 +212,7 @@ func (a *App) consumeAccountToken(w http.ResponseWriter, r *http.Request, purpos
 		writeJSON(w, 400, map[string]any{"error": "account_token_invalid"})
 		return
 	}
-	_, err := a.Trestle.AccountAuth("users", parts[0], map[string]any{"action": "consume", "purpose": purpose, "token": parts[1], "new_password": in.Password})
+	_, err := a.Trestle.AccountAuth("users", parts[0], map[string]any{"action": action, "purpose": purpose, "token": parts[1], "new_password": in.Password})
 	if err != nil {
 		var apiErr *trestle.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == 400 {
@@ -211,7 +222,7 @@ func (a *App) consumeAccountToken(w http.ResponseWriter, r *http.Request, purpos
 		}
 		return
 	}
-	if purpose == "password_reset" {
+	if action == "consume" && purpose == "password_reset" {
 		http.SetCookie(w, &http.Cookie{Name: "switchyard_session", Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: secureRequest(r), SameSite: http.SameSiteLaxMode})
 	}
 	writeJSON(w, 200, map[string]any{"ok": true})

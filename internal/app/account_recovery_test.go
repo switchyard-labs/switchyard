@@ -162,3 +162,25 @@ func TestLoginCannotBindStalePasswordToNewSession(t *testing.T) {
 		t.Fatal("stale authentication created session")
 	}
 }
+
+func TestAccountTokenPreflight(t *testing.T) {
+	a, _, calls := recoveryFixture(t)
+	for _, purpose := range []string{"email_verification", "password_reset"} {
+		r := httptest.NewRequest("POST", "/api/auth/account-token/validate?purpose="+purpose, strings.NewReader(`{"token":"rec_alice.`+strings.Repeat("a", 43)+`"}`))
+		w := httptest.NewRecorder()
+		a.handleAccountTokenValidation(w, r)
+		if w.Code != 200 || len(w.Result().Cookies()) != 0 {
+			t.Fatalf("preflight: status %d, cookies %v", w.Code, w.Result().Cookies())
+		}
+	}
+	if *calls != 2 {
+		t.Fatalf("expected two read-only validations, got %d", *calls)
+	}
+	for _, path := range []string{"?purpose=other", "?purpose=password_reset"} {
+		w := httptest.NewRecorder()
+		a.handleAccountTokenValidation(w, httptest.NewRequest("POST", "/api/auth/account-token/validate"+path, strings.NewReader(`{"token":"invalid"}`)))
+		if w.Code != 400 {
+			t.Fatalf("invalid preflight status %d", w.Code)
+		}
+	}
+}
