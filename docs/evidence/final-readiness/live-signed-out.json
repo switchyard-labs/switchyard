@@ -1,0 +1,35 @@
+{
+  "scope": "Read-only deployed delayed-auth smoke; final retry passed after one navigation timeout. Permanent local test samples every animation frame.",
+  "checks": [
+    {
+      "path": "/",
+      "personalFlash": false,
+      "publicView": true
+    },
+    {
+      "path": "/repositories.html",
+      "personalFlash": false,
+      "publicView": true
+    },
+    {
+      "path": "/work.html",
+      "personalFlash": false,
+      "publicView": true
+    },
+    {
+      "path": "/pulls.html",
+      "personalFlash": false,
+      "publicView": true
+    },
+    {
+      "path": "/operations.html",
+      "personalFlash": false,
+      "publicView": true
+    },
+    {
+      "path": "/settings.html",
+      "personalFlash": false,
+      "publicView": true
+    }
+  ]
+}

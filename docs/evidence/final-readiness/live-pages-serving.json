@@ -1,0 +1,82 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "etag": "\"bdfcfaa2b6c213d62af7710e73c5fe47c4497b48263b6fcbf4e88ba4e9879b05\""
+  },
+  {
+    "path": "/nested/",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "etag": "\"31e5be6288864acb3a89b45f1f6e05a47d7001d4a9faa53d560f7ff772c18656\""
+  },
+  {
+    "path": "/assets/site.css",
+    "status": 200,
+    "mime": "text/css; charset=utf-8",
+    "etag": "\"37452450bfd27fcf3f1508fba62868a54688dab7ee68902845816eb414328119\""
+  },
+  {
+    "path": "/assets/app.js",
+    "status": 200,
+    "mime": "text/javascript; charset=utf-8",
+    "etag": "\"b7c7b14c3ae5668348cf3e33d1f7cb6b4db0f0fe28a4097112a188e540dc98f3\""
+  },
+  {
+    "path": "/assets/icon.svg",
+    "status": 200,
+    "mime": "image/svg+xml",
+    "etag": "\"3f47589932186686b9ece57b59711d9e92f243d85a74c5ff5348299b8edd829c\""
+  },
+  {
+    "path": "/missing",
+    "status": 404,
+    "mime": "text/html; charset=utf-8",
+    "etag": "\"3764407ed040d246ffbf70b077e1b57eb87036a1704240237a11b99215800c97\""
+  },
+  {
+    "path": "/foo.js/",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "etag": "\"59dd2d8a34f7b86798ce2ba50981254efe43e5d6c3747c0da48851c1fe6eb54b\""
+  },
+  {
+    "path": "/foo.js/nested/",
+    "status": 200,
+    "mime": "text/html; charset=utf-8",
+    "etag": "\"d55d5b6f91d4758f517d8fdb8b0092611ab9ef4e0677168b50efb7e2c0bbf11e\""
+  },
+  {
+    "path": "/foo.js/assets/site.css",
+    "status": 200,
+    "mime": "text/css; charset=utf-8",
+    "etag": "\"37452450bfd27fcf3f1508fba62868a54688dab7ee68902845816eb414328119\""
+  },
+  {
+    "path": "/foo.js/assets/app.js",
+    "status": 200,
+    "mime": "text/javascript; charset=utf-8",
+    "etag": "\"b7c7b14c3ae5668348cf3e33d1f7cb6b4db0f0fe28a4097112a188e540dc98f3\""
+  },
+  {
+    "path": "/foo.js/assets/icon.svg",
+    "status": 200,
+    "mime": "image/svg+xml",
+    "etag": "\"3f47589932186686b9ece57b59711d9e92f243d85a74c5ff5348299b8edd829c\""
+  },
+  {
+    "path": "/foo.js/missing",
+    "status": 404,
+    "mime": "text/html; charset=utf-8",
+    "etag": "\"3764407ed040d246ffbf70b077e1b57eb87036a1704240237a11b99215800c97\""
+  },
+  {
+    "preview": "98b8566ae25fc83b6041760f587f7490",
+    "status": 200
+  },
+  {
+    "preview": "d0910851ca1f63375a658da3fe46e003",
+    "status": 200
+  }
+]

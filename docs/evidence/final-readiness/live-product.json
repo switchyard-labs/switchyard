@@ -1,0 +1,77 @@
+[
+  {
+    "surface": "profile",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "orgs",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "repo",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "source",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "work",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "attempts",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "pulls",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "agents",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "queue",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "actions",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "releases",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "editor",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "proposal",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "pages",
+    "status": 200,
+    "pageErrors": []
+  },
+  {
+    "surface": "Pages host-only auth cookie isolation",
+    "requests": 4,
+    "passed": true
+  }
+]

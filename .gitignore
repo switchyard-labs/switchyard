@@ -4,3 +4,7 @@ node_modules/
 .wrangler/
 .dev.vars
 dist/
+
+# Generated Python bytecode; preserve caches on disk, exclude from source commits.
+__pycache__/
+*.pyc

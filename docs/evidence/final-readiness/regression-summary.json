@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-06",
+  "scope": "Final reconciliation; no new production mutation or feature deployment",
+  "passed": [
+    "Switchyard full Go tests and vet",
+    "sy full Go tests and vet",
+    "Trestle full Go tests and vet",
+    "Switchyard affected package race tests",
+    "sy api/commands/config race tests",
+    "Trestle account auth records race tests",
+    "Actions: 30 tests, typecheck, dry-run build",
+    "Pages: 16 tests, dry-run build",
+    "Editor bundle rebuild; tracked output unchanged",
+    "App Nift 10-page rebuild; tracked output unchanged",
+    "Brochure Nift 19-page rebuild",
+    "Static product certification: 21-page a11y, JS syntax, Go format, primary colors, handover, current patch whitespace",
+    "Node ANSI, diff surface, repository tree checks",
+    "Python operations: five tests",
+    "Repository shell browser: 60 checks",
+    "Proposal browser: 12 checks",
+    "Pages browser: 12 checks",
+    "Work/Pages browser: six checks",
+    "Permanent anonymous delayed-auth browser: 12 checks",
+    "Real disposable Trestle captured-mail auth desktop/mobile including logout",
+    "Live product: 15 read-only checks",
+    "Live Pages: 14 cases plus HEAD/ETag/range",
+    "Live CLI: 11 read-only checks plus ZIP archive",
+    "Live anonymous: six delayed-auth surfaces"
+  ],
+  "limitations": [
+    "Browser coverage Chromium only",
+    "Optional PostgreSQL runtime qualification unavailable",
+    "No new paid provider run or production integration/deployment",
+    "Recipient mail authentication headers not independently inspected",
+    "Raw sy api HTTP 401 exits 1; typed auth error classification not claimed",
+    "Generated cumulative app/output blank-line whitespace retained"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-06",
+  "switchyard": {
+    "deployed_commit": "d462e69",
+    "sha256": "b883d75ace0763ff939603a61c914e2c5043f672ab93686db7b6febf763e349b",
+    "local_binary_matches": true,
+    "service": "active",
+    "embedded_assets": true,
+    "static_override": false,
+    "memory_max_bytes": 1073741824,
+    "tasks_max": 256
+  },
+  "trestle": {
+    "deployed_commit": "4ceac7a",
+    "sha256": "01bf418374d3637256220e318b44618f4d6add0fb382f3921f3c0d54e082489f",
+    "local_binary_matches": true
+  },
+  "sandbox": {
+    "profile_sha256": "ef9d4e335e10b6867a8693217648898c4f5c5195a0187b3a2a91fa93a215ee96",
+    "local_profile_matches": true,
+    "executable_sha256": "e318903862396f96de3df57264e0158682b952fd3fb53ac23d876413e7b30f71",
+    "permissions": "750 root:switchyard-agent"
+  },
+  "environment": {
+    "file_permissions": "600 root:root",
+    "smtp_tls_mode": "starttls",
+    "smtp_address": "smtp.mailgun.org:2525",
+    "public_url": "https://switchyard.cx",
+    "pages_native_hosting": "active",
+    "credentials_present": true
+  },
+  "scope": "Read-only live inspection; no secrets, no new execution or deployment"
+}

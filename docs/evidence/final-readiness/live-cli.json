@@ -1,0 +1,76 @@
+{
+  "checks": [
+    {
+      "authenticated": false,
+      "command": "sy --json repo view alice/demo-semantic",
+      "exit_code": 0,
+      "output_is_json": true
+    },
+    {
+      "authenticated": false,
+      "command": "sy --json proposal list --repo pages-probe-1005/foo.js",
+      "exit_code": 0,
+      "output_is_json": true
+    },
+    {
+      "authenticated": false,
+      "command": "sy --json pages status --repo pages-probe-1005/foo.js",
+      "exit_code": 0,
+      "output_is_json": true
+    },
+    {
+      "authenticated": false,
+      "command": "sy --json pages deployments --repo pages-probe-1005/foo.js",
+      "exit_code": 0,
+      "output_is_json": true
+    },
+    {
+      "authenticated": false,
+      "command": "sy --json release list --repo alice/demo-semantic",
+      "exit_code": 0,
+      "output_is_json": true
+    },
+    {
+      "authenticated": false,
+      "command": "sy api private account settings",
+      "exit_code": 1,
+      "unauthorized": true
+    },
+    {
+      "authenticated": true,
+      "command": "sy --json repo view alice/demo-semantic",
+      "exit_code": 0,
+      "output_is_json": true
+    },
+    {
+      "authenticated": true,
+      "command": "sy --json proposal list --repo pages-probe-1005/foo.js",
+      "exit_code": 0,
+      "output_is_json": true
+    },
+    {
+      "authenticated": true,
+      "command": "sy --json pages status --repo pages-probe-1005/foo.js",
+      "exit_code": 0,
+      "output_is_json": true
+    },
+    {
+      "authenticated": true,
+      "command": "sy --json pages deployments --repo pages-probe-1005/foo.js",
+      "exit_code": 0,
+      "output_is_json": true
+    },
+    {
+      "authenticated": true,
+      "command": "sy --json release list --repo alice/demo-semantic",
+      "exit_code": 0,
+      "output_is_json": true
+    }
+  ],
+  "public_archive": {
+    "status": 200,
+    "zip_magic": true,
+    "bytes": 3067,
+    "sha256": "9a975a43e26a55dc0ee1726e4b5e55aabcdb87b8215f36a138abe0d249e99826"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "scope": "Pre-existing untracked campaign evidence preserved during final reconciliation; historical snapshots, not new production certification",
+  "files": [
+    {
+      "path": "docs/evidence/campaign/C38/cancelled-duration.jpg",
+      "sha256": "7116f7cf3aaa8a10dbaa374084cac475de23549daf58ad1ebf8ee2bd31df485f"
+    },
+    {
+      "path": "docs/evidence/campaign/C42/linode-aligned-file-cards.png",
+      "sha256": "bc6dfaf94f66292780d4f7d2b84e82ad7751be8810d76591b8a823bb21f17916"
+    },
+    {
+      "path": "docs/evidence/campaign/C43/embedded-profile.png",
+      "sha256": "b21c37f5400748383d4550b90cd2186ea07fb60b4cffdcf114e853c9488391b8"
+    },
+    {
+      "path": "docs/evidence/campaign/C43/runtime.json",
+      "sha256": "4648bc9b4f88889724fa945b51cedfcc00b5a65e4861203904b9c70356e4f30f"
+    }
+  ]
+}

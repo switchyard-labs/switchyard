@@ -10,6 +10,22 @@ sender identity, expiry copy and mobile email layout. Recipient authentication
 headers were not independently inspected. Credentials are confined to the
 protected host environment and are absent from evidence.
 
+The final read-only Cloudflare record inspection on 2026-10-06 confirms:
+
+| Name | Published state |
+|---|---|
+| `mg.switchyard.cx` | SPF: `v=spf1 include:mailgun.org ~all` |
+| `mx._domainkey.mg.switchyard.cx` | DKIM: RSA public key (`k=rsa; p=…`) |
+| `_dmarc.mg.switchyard.cx` | DMARC: `p=none; pct=100`, Mailgun/OnDMARC reporting recipients |
+| `switchyard.cx` | Existing registrar-forwarder SPF retained |
+| `_dmarc.switchyard.cx` | Existing `v=DMARC1; p=none;` retained |
+
+Full public values and inspection scope are in
+`docs/evidence/final-readiness/live-reconciliation.json`. This proves publication
+and configured sender state, not independently observed recipient SPF/DKIM/DMARC
+results. Historical `mail-activation/dns.json` and `dmarc.json` describe the earlier
+prerequisite check; they do not describe the final Mailgun state.
+
 ## B–F. Link certification
 
 - Verification resend: the user confirmed the old link was rejected and the new
@@ -57,7 +73,7 @@ empty states and settings geometry. Desktop/mobile screenshots are in
 
 Real disposable Trestle plus captured-mail desktop/mobile browser flows pass:
 signup, resend supersession, verification, reset confirmation, reset, session
-revocation, new-password login and link reuse rejected on arrival. Full Switchyard
+revocation, new-password login, explicit logout returning HTTP 401, and link reuse rejected on arrival. Full Switchyard
 Go tests and affected vet pass; Trestle account-token race tests and vet pass.
 Real mail delivery is separately certified by the user; captured mail alone is
 not delivery evidence.

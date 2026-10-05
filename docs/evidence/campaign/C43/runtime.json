@@ -1,0 +1,90 @@
+{
+  "version": "switchyard dev\ncommit: e1b1e8e6cc1708e51ff11c6a1b774b4448961c76\nbuilt: 2026-10-03T21:15:54Z\nGo: go1.26.0\n",
+  "sha256": "c23458ecc91e633d94e128fd471b401211aa5c12d31f46cba4690f0d342eed93",
+  "runtime_directory": "/tmp/switchyard-c43-runtime",
+  "top_level": [
+    "data",
+    "switchyard"
+  ],
+  "path_tools": [
+    "bash",
+    "git",
+    "sh",
+    "ssh"
+  ],
+  "external_dependencies": [
+    "Git",
+    "Trestle",
+    "Cloudflare Artifacts",
+    "configured token helper",
+    "Cloudflare Actions Worker"
+  ],
+  "rows": [
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 3390
+    },
+    {
+      "path": "/signin",
+      "status": 200,
+      "bytes": 2617
+    },
+    {
+      "path": "/alice",
+      "status": 200,
+      "bytes": 6019
+    },
+    {
+      "path": "/alice/railway",
+      "status": 200,
+      "bytes": 8035
+    },
+    {
+      "path": "/alice/railway/blob/main/src/routes.mjs",
+      "status": 200,
+      "bytes": 8035
+    },
+    {
+      "path": "/alice/railway/pulls",
+      "status": 200,
+      "bytes": 1715
+    },
+    {
+      "path": "/alice/railway/actions",
+      "status": 200,
+      "bytes": 2469
+    },
+    {
+      "path": "/alice/railway/edit/main/src/routes.mjs",
+      "status": 200,
+      "bytes": 6293
+    },
+    {
+      "path": "/alice/railway/settings",
+      "status": 200,
+      "bytes": 4309
+    },
+    {
+      "path": "/work",
+      "status": 200,
+      "bytes": 3315
+    },
+    {
+      "path": "/operations.html",
+      "status": 200,
+      "bytes": 4360
+    },
+    {
+      "path": "/api/repositories/alice/railway",
+      "status": 200,
+      "bytes": 453
+    },
+    {
+      "path": "/api/users/alice/contributions",
+      "status": 200,
+      "bytes": 1340
+    }
+  ],
+  "scope": "Latest embedded binary HTTP/API proof; browser major-surface loaded-state proof separately required"
+}

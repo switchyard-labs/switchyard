@@ -1,0 +1,11 @@
+{
+  "name": "_dmarc.switchyard.cx",
+  "type": "TXT",
+  "content": "v=DMARC1; p=none;",
+  "ttl": 300,
+  "policy": "monitoring only; no reports mailbox configured",
+  "existing_spf_changed": false,
+  "app_docs_pages_records_changed": false,
+  "provider_sending_verified": false,
+  "scope": "Historical pre-Mailgun prerequisite snapshot; not current sender state. Superseded by mailgun-dns.json, live-mail.json and final-readiness/live-reconciliation.json."
+}

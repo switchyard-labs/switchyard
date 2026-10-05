@@ -1,0 +1,51 @@
+{
+  "zone": "switchyard.cx",
+  "status": "active",
+  "changed": false,
+  "records": [
+    {
+      "name": "switchyard.cx",
+      "type": "A",
+      "content": "45.79.189.46",
+      "proxied": false,
+      "ttl": 1
+    },
+    {
+      "name": "*.switchyard.cx",
+      "type": "AAAA",
+      "content": "100::",
+      "proxied": true,
+      "ttl": 1
+    },
+    {
+      "name": "docs.switchyard.cx",
+      "type": "CNAME",
+      "content": "switchyard-labs.github.io",
+      "proxied": false,
+      "ttl": 1
+    },
+    {
+      "name": "www.switchyard.cx",
+      "type": "CNAME",
+      "content": "switchyard.cx",
+      "proxied": false,
+      "ttl": 1
+    },
+    {
+      "name": "_dmarc.switchyard.cx",
+      "type": "TXT",
+      "content": "v=DMARC1; p=none;",
+      "proxied": false,
+      "ttl": 300
+    },
+    {
+      "name": "switchyard.cx",
+      "type": "TXT",
+      "content": "\"v=spf1 include:spf.efwd.registrar-servers.com ~all\"",
+      "proxied": false,
+      "ttl": 1
+    }
+  ],
+  "provider_generated_dkim": "not available until domain is added at provider",
+  "scope": "Historical pre-Mailgun prerequisite snapshot; not current sender state. Superseded by mailgun-dns.json, live-mail.json and final-readiness/live-reconciliation.json."
+}
