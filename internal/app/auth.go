@@ -132,7 +132,10 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	userID, _, err := a.Trestle.CreateRecord("users", map[string]any{"username": in.Username, "email": in.Email, "password_hash": string(hash), "display_name": in.Username}, "signup-user-"+newToken())
 	if err != nil {
-		a.removeSignupRecord("account_emails", emailID)
+		if a.removeSignupRecord("account_emails", emailID) != nil {
+			writeJSON(w, 502, map[string]any{"error": "registration_unavailable"})
+			return
+		}
 		matches, lookupErr := a.Trestle.ListRecords("users", filterEq("username", in.Username))
 		if lookupErr == nil && len(matches) > 0 {
 			writeJSON(w, 409, map[string]any{"error": "username_taken"})
@@ -142,8 +145,10 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := a.ensureOwnerNamespace(in.Username, "user", in.Username); err != nil {
-		a.removeSignupRecord("users", userID)
-		a.removeSignupRecord("account_emails", emailID)
+		if a.removeSignupRecord("users", userID) != nil || a.removeSignupRecord("account_emails", emailID) != nil {
+			writeJSON(w, 502, map[string]any{"error": "registration_unavailable"})
+			return
+		}
 		writeJSON(w, 409, map[string]any{"error": "owner_namespace_conflict"})
 		return
 	}
@@ -155,11 +160,11 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 // Cleanup is restricted to record IDs created by this signup request.
-func (a *App) removeSignupRecord(collection, id string) {
+func (a *App) removeSignupRecord(collection, id string) error {
 	if id == "" {
-		return
+		return nil
 	}
-	_ = a.Trestle.DeleteRecord(collection, id, "1")
+	return a.Trestle.DeleteRecord(collection, id, "1")
 }
 
 func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
