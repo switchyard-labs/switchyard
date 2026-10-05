@@ -284,4 +284,13 @@ func TestPagesPromotionPermissionsFailuresAndProvenance(t *testing.T) {
 	if len(store.records["events"]) != 4 {
 		t.Fatal("same owner operation created duplicate audit", len(store.records["events"]))
 	}
+	store.rejectEventReplay = true
+	for _, action := range []string{"promote", "rollback"} {
+		if w := promote("alice", action); w.Code != 200 {
+			t.Fatal("replay did not recover its existing audit", w.Code, w.Body.String())
+		}
+	}
+	if len(store.records["events"]) != 4 {
+		t.Fatal("replay duplicated audit")
+	}
 }

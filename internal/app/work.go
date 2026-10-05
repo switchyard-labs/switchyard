@@ -138,7 +138,7 @@ func (a *App) handleGetWork(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				artifact, _ := state["artifact"].(map[string]any)
-				previews = append(previews, map[string]any{"attempt_id": attempt["id"], "deployment_id": deployment["id"], "source_sha": deployment["source_sha"], "run_id": deployment["run_id"], "pages_path": "/" + strOf(meta["full_name"]) + "/pages?deployment=" + strOf(deployment["id"]) + "&kind=" + map[bool]string{true: "owner", false: "project"}[artifact["base_path"] == "/"], "preview_url": "https://dpl-" + strings.TrimPrefix(strOf(deployment["id"]), "dpl_") + ".switchyard.cx" + strOf(artifact["base_path"]), "hosting": "conditional_dns_tls"})
+				previews = append(previews, map[string]any{"attempt_id": attempt["id"], "deployment_id": deployment["id"], "source_sha": deployment["source_sha"], "run_id": deployment["run_id"], "pages_path": "/" + strOf(meta["full_name"]) + "/pages?deployment=" + strOf(deployment["id"]) + "&kind=" + map[bool]string{true: "owner", false: "project"}[artifact["base_path"] == "/"], "preview_url": "https://dpl-" + strings.TrimPrefix(strOf(deployment["id"]), "dpl_") + ".switchyard.cx" + strOf(artifact["base_path"]), "hosting": pagesHostingStatus()})
 			}
 		}
 	}

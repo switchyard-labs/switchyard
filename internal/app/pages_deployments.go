@@ -114,7 +114,7 @@ func (a *App) handlePagesDeploy(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 502, map[string]any{"error": "definition_unavailable"})
 		return
 	}
-	id := "pages-" + sha256Hex([]byte(siteID + "\x00" + user + "\x00" + input.OperationID))
+	id := "pages-" + sha256Hex([]byte(siteID+"\x00"+user+"\x00"+input.OperationID))
 	_, _, previous, err := a.Trestle.FindRecord("action_runs", filterEq("id", id))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": "pages_dispatch_unavailable"})
@@ -129,6 +129,10 @@ func (a *App) handlePagesDeploy(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		sourceRefs, e := a.repoRefs(strOf(meta["artifact_name"]))
+		if e != nil {
+			writeJSON(w, 502, map[string]any{"error": "pages_source_lookup_unavailable"})
+			return
+		}
 		sha := ""
 		if e == nil {
 			sha, e = pagesResolvedSource(sourceRefs, config.Ref)
@@ -225,9 +229,24 @@ func (a *App) handlePagesPromote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, _, err = a.Trestle.CreateRecord("events", map[string]any{"type": "pages." + map[string]string{"promote": "promoted", "rollback": "rolled_back"}[action], "repo_name": deployment["repo"], "occurred_at": nowStr(), "payload": map[string]any{"deployment_id": deployment["id"], "source_sha": deployment["source_sha"], "actor": user, "operation_id": input.OperationID, "production": result}}, "pages-production-"+sha256Hex([]byte(strOf(site["owner"])+"\x00"+input.OperationID)))
+	// A successful Worker operation can be retried after later promotions.
+	// Its original audit is authoritative; timestamps/current maps must not
+	// turn a replay into a second event or an apparent publication failure.
+	if err != nil {
+		events, lookupErr := a.Trestle.ListRecords("events", filterEq("repo_name", strOf(deployment["repo"])))
+		if lookupErr == nil {
+			for _, event := range events {
+				payload, _ := event["payload"].(map[string]any)
+				if event["type"] == "pages."+map[string]string{"promote": "promoted", "rollback": "rolled_back"}[action] && payload["operation_id"] == input.OperationID && payload["deployment_id"] == deployment["id"] && payload["source_sha"] == deployment["source_sha"] && payload["actor"] == user {
+					err = nil
+					break
+				}
+			}
+		}
+	}
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": "pages_promotion_audit_pending", "operation_id": input.OperationID})
 		return
 	}
-	writeJSON(w, 200, map[string]any{"production": result, "deployment_id": deployment["id"], "action": action, "source_sha": deployment["source_sha"], "public_hosting": "conditional_dns_tls"})
+	writeJSON(w, 200, map[string]any{"production": result, "deployment_id": deployment["id"], "action": action, "source_sha": deployment["source_sha"], "public_hosting": pagesHostingStatus()})
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"switchyard/internal/actions"
 )
@@ -82,7 +83,7 @@ func (a *App) handlePagesConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == "GET" {
-		writeJSON(w, 200, map[string]any{"site": site, "version": version, "can_configure": a.pagesAuthority(meta, user, kind), "can_deploy": user != "" && a.CanRepository(meta, user, WriteRepo), "native_hosting": "conditional_dns_tls"})
+		writeJSON(w, 200, map[string]any{"site": site, "version": version, "can_configure": a.pagesAuthority(meta, user, kind), "can_deploy": user != "" && a.CanRepository(meta, user, WriteRepo), "native_hosting": pagesHostingStatus()})
 		return
 	}
 	if a.isDemoGuest(r) || !a.pagesAuthority(meta, user, kind) {
@@ -222,4 +223,12 @@ func (a *App) handlePagesConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]any{"site": current, "version": next, "url": "https://" + config.Owner + ".switchyard.cx" + config.basePath(), "base_path": config.basePath()})
+}
+
+// Native hosting is activated explicitly after DNS/TLS certification.
+func pagesHostingStatus() string {
+	if os.Getenv("SWITCHYARD_PAGES_NATIVE_HOSTING") == "active" {
+		return "active"
+	}
+	return "conditional_dns_tls"
 }

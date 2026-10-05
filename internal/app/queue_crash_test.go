@@ -31,6 +31,7 @@ type queueStore struct {
 	failStepCompletion bool
 	enforceUnique      bool
 	idempotency        map[string]*queueRecord
+	rejectEventReplay  bool
 }
 
 func (f *queueStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -99,6 +100,11 @@ func (f *queueStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		key := collection + "/" + r.Header.Get("Idempotency-Key")
 		if f.enforceUnique {
 			if old := f.idempotency[key]; old != nil && r.Header.Get("Idempotency-Key") != "" {
+				if collection == "events" && f.rejectEventReplay {
+					w.WriteHeader(http.StatusConflict)
+					fmt.Fprint(w, `{"error":"idempotency_input_conflict"}`)
+					return
+				}
 				w.Header().Set("Idempotency-Replayed", "true")
 				json.NewEncoder(w).Encode(map[string]any{"id": old.id, "version": old.version, "values": old.values})
 				return

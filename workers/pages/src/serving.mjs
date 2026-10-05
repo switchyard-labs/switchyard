@@ -60,7 +60,7 @@ export async function serve(request,env){
  const prefix=`pages/${site.site_id}/${site.deployment_id}/files/`;
  if(!entry.key?.startsWith(prefix)||!/^([a-f0-9]{64})$/.test(entry.sha256)||!MIME.test(entry.mime||''))return missing();
  const etag='"'+entry.sha256+'"';
- const headers=new Headers({'Content-Type':entry.mime,'X-Content-Type-Options':'nosniff','ETag':etag,'Cache-Control':immutable?'public, max-age=31536000, immutable':'public, max-age=0, must-revalidate','Accept-Ranges':'bytes','Referrer-Policy':'strict-origin-when-cross-origin'});
+ const headers=new Headers({'Content-Type':entry.mime,'X-Content-Type-Options':'nosniff','ETag':etag,'Cache-Control':immutable?'public, max-age=31536000, immutable, no-transform':'public, max-age=0, must-revalidate, no-transform','Accept-Ranges':'bytes','Referrer-Policy':'strict-origin-when-cross-origin'});
  if(status===200&&request.headers.get('If-None-Match')?.split(',').map(x=>x.trim().replace(/^W\//,'')).includes(etag))return new Response(null,{status:304,headers});
  let range;
  if(status===200&&request.headers.has('Range')&&(!request.headers.has('If-Range')||request.headers.get('If-Range')===etag)){
