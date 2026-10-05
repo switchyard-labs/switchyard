@@ -1,0 +1,26 @@
+{
+  "switchyard_go": "full suite passed",
+  "vet": "passed",
+  "race": "internal/app + internal/refs passed",
+  "sy": "full suite passed",
+  "trestle": "collections + records + store passed",
+  "actions": {
+    "tests": 32,
+    "typecheck": "passed",
+    "dry_build": "passed",
+    "entrypoint": "real fetch bundle; Cloudflare runtime classes mocked"
+  },
+  "pages": {
+    "tests": 17,
+    "nift": "real owner/project builds passed"
+  },
+  "static_product": "passed, 21-page a11y",
+  "repository_browser": 60,
+  "signed_out_delayed_auth": 12,
+  "proposal_browser": 12,
+  "pages_browser": 12,
+  "work_pages_browser": 6,
+  "auth": "real disposable current Trestle, desktop/mobile captured mail passed",
+  "cross_engine": "Chromium only",
+  "real_mail": "not resent in this hardening pass; prior user-certified delivery retained"
+}

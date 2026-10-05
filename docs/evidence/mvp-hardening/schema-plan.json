@@ -1,0 +1,1 @@
+[{"name":"publication_intents","create":true},{"name":"ref_current","create":true},{"name":"iq","create":false,"add_fields":["next_retry_at","source_sha","enqueue_base_sha","approved_by","approval_kind"]}]

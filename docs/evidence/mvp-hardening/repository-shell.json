@@ -1,0 +1,302 @@
+[
+  {
+    "width": 1600,
+    "section": "code",
+    "passed": true
+  },
+  {
+    "width": 1600,
+    "section": "work",
+    "passed": true
+  },
+  {
+    "width": 1600,
+    "section": "proposals",
+    "passed": true
+  },
+  {
+    "width": 1600,
+    "section": "pulls",
+    "passed": true
+  },
+  {
+    "width": 1600,
+    "section": "actions",
+    "passed": true
+  },
+  {
+    "width": 1600,
+    "section": "commits",
+    "passed": true
+  },
+  {
+    "width": 1600,
+    "section": "releases",
+    "passed": true
+  },
+  {
+    "width": 1600,
+    "section": "pages",
+    "passed": true
+  },
+  {
+    "width": 1600,
+    "section": "settings",
+    "passed": true
+  },
+  {
+    "width": 1600,
+    "section": "signed-out signup",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "code",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "work",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "proposals",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "pulls",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "actions",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "commits",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "releases",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "pages",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "settings",
+    "passed": true
+  },
+  {
+    "width": 1280,
+    "section": "signed-out signup",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "code",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "work",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "proposals",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "pulls",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "actions",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "commits",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "releases",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "pages",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "settings",
+    "passed": true
+  },
+  {
+    "width": 1024,
+    "section": "signed-out signup",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "code",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "work",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "proposals",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "pulls",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "actions",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "commits",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "releases",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "pages",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "settings",
+    "passed": true
+  },
+  {
+    "width": 768,
+    "section": "signed-out signup",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "code",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "work",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "proposals",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "pulls",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "actions",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "commits",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "releases",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "pages",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "settings",
+    "passed": true
+  },
+  {
+    "width": 430,
+    "section": "signed-out signup",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "code",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "work",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "proposals",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "pulls",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "actions",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "commits",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "releases",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "pages",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "settings",
+    "passed": true
+  },
+  {
+    "width": 390,
+    "section": "signed-out signup",
+    "passed": true
+  }
+]

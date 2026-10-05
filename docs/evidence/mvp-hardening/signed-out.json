@@ -1,0 +1,96 @@
+[
+  {
+    "width": 1600,
+    "route": "/",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": []
+  },
+  {
+    "width": 1600,
+    "route": "/repositories",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": []
+  },
+  {
+    "width": 1600,
+    "route": "/work",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": [
+      "/api/work"
+    ]
+  },
+  {
+    "width": 1600,
+    "route": "/pulls",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": []
+  },
+  {
+    "width": 1600,
+    "route": "/operations",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": []
+  },
+  {
+    "width": 1600,
+    "route": "/settings",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": [
+      "/api/settings/email",
+      "/api/settings/agent"
+    ]
+  },
+  {
+    "width": 390,
+    "route": "/",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": []
+  },
+  {
+    "width": 390,
+    "route": "/repositories",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": []
+  },
+  {
+    "width": 390,
+    "route": "/work",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": [
+      "/api/work"
+    ]
+  },
+  {
+    "width": 390,
+    "route": "/pulls",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": []
+  },
+  {
+    "width": 390,
+    "route": "/operations",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": []
+  },
+  {
+    "width": 390,
+    "route": "/settings",
+    "delayed_auth_no_flash": true,
+    "anonymous_no_flash": true,
+    "early_unauthorized_requests": [
+      "/api/settings/email",
+      "/api/settings/agent"
+    ]
+  }
+]

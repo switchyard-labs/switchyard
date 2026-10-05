@@ -72,7 +72,11 @@ func TestRecoveryBrowserWithTrestle(t *testing.T) {
 	t.Setenv("SWITCHYARD_PUBLIC_URL", server.URL)
 	defer server.Close()
 	command := exec.Command("node", filepath.Join(root, "scripts/operations/auth-recovery-browser.mjs"))
-	command.Env = append(os.Environ(), "RECOVERY_PREVIEW_URL="+server.URL, "RECOVERY_MAIL_FILE="+mailfile, "RECOVERY_EVIDENCE_DIR="+filepath.Join(root, "docs/evidence/auth-hardening"))
+	evidence := os.Getenv("SWITCHYARD_RECOVERY_EVIDENCE_DIR")
+	if evidence == "" {
+		evidence = filepath.Join(root, "docs/evidence/auth-hardening")
+	}
+	command.Env = append(os.Environ(), "RECOVERY_PREVIEW_URL="+server.URL, "RECOVERY_MAIL_FILE="+mailfile, "RECOVERY_EVIDENCE_DIR="+evidence)
 	output, e := command.CombinedOutput()
 	if e != nil {
 		t.Fatalf("browser certification failed: %s", strings.TrimSpace(string(output)))
