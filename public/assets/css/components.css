@@ -120,3 +120,7 @@ select:not([multiple]):not([size]), select[size="1"] {
 
 /* The account image fills its control; the control owns the single border. */
 .account-chip img { display: block; width: 100%; height: 100%; border: 0; border-radius: inherit; }
+
+.site-main:has(>#signed-in-home), .site-main:has(>[data-auth-content]) { display:flex; flex-direction:column; overflow:hidden; }
+#signed-in-home, [data-auth-content] { flex:1; min-height:0; }
+#signed-in-home>.home-layout, [data-auth-content]>.work-page { height:100%; }

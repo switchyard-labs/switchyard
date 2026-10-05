@@ -445,6 +445,10 @@ func (a *App) handleGetOrgProfile(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 404, map[string]any{"error": "org_not_found"})
 		return
 	}
+	if strOr(a.orgProfile(o)["visibility"]) != "public" && a.orgRole(o, a.currentUser(r)) == "" {
+		writeJSON(w, 404, map[string]any{"error": "org_not_found"})
+		return
+	}
 	writeJSON(w, 200, a.orgProfile(o))
 }
 func (a *App) requireOrgOwner(r *http.Request, key string) (map[string]any, bool) {
@@ -547,10 +551,6 @@ func (a *App) handleOrgRepositories(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleListOrganizations(w http.ResponseWriter, r *http.Request) {
-	if a.currentUser(r) == "" {
-		writeJSON(w, 401, map[string]any{"error": "unauthorized"})
-		return
-	}
 	items, err := a.Trestle.ListRecords("orgs", "")
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})

@@ -166,7 +166,7 @@ func (a *App) handleLogout(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) handleMe(w http.ResponseWriter, r *http.Request) {
 	user := a.currentUser(r)
-	if user == "" {
+	if user == "" || a.isDemoGuest(r) {
 		writeJSON(w, 401, map[string]any{"authed": false})
 		return
 	}

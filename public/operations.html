@@ -6,7 +6,7 @@
 <title>Switchyard</title>
 <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.webp">
 <link rel="stylesheet" href="/assets/css/theme.css?v=c22d">
-<link rel="stylesheet" href="/assets/css/components.css?v=avatar-fill-c42">
+<link rel="stylesheet" href="/assets/css/components.css?v=signedout-c47">
 <link rel="stylesheet" href="/assets/css/app.css?v=c22d">
 	<link rel="stylesheet" href="/assets/css/identity.css?v=profile-c42"><link rel="stylesheet" href="/assets/css/operations.css?v=c21"></head>
 	<body>
@@ -41,7 +41,7 @@
 			</div>
 			<div class="menu-footer">Git stays Git. Agent-native capability appears when you need it.</div>
 		</nav>
-		<main class="site-main" id="main-content">
+		<main class="site-main" id="main-content"><section class="panel" data-auth-prompt><h1>Sign in to your workspace</h1><p>Your work and reviews are available after signing in. You can still explore public repositories and organizations.</p><a class="btn primary" href="/signin">Sign in</a> <a class="btn" href="/repositories">Explore public repositories</a></section><div data-auth-content hidden>
 			<section class="operations-page"><header class="page-heading"><div><p class="eyebrow">Coordination</p><h1>Needs Attention</h1><p class="muted" id="ops-description">Review what stopped, inspect the evidence and choose the next step.</p></div><button id="ops-refresh" class="btn" type="button">Refresh</button></header>
 <nav class="repo-tabs ops-tabs" aria-label="Operations"><button class="active" data-ops="attention">Needs Attention</button><button data-ops="queue">Integration Queue</button><button data-ops="workflows">Workflows</button><button data-ops="agents">Agents</button></nav>
 <p id="ops-error" class="error" role="alert" hidden></p>
@@ -52,9 +52,9 @@
 </section><script src="/assets/js/app-operations.js?v=c21"></script>
 
 
-		</main>
+		</div></main>
 		<script src="/assets/js/code-surface.js?v=c18"></script>
 		<script src="/assets/js/markdown.js?v=c18"></script>
-		<script src="/assets/js/app.js?v=repo-heading-c42b"></script>
+		<script src="/assets/js/app.js?v=signedout-c47"></script>
 	<script src="/assets/js/code-blocks.js"></script></body>
 </html>

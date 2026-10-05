@@ -22,12 +22,13 @@
 			</div>
 		</header>
 		<main class="site-main" id="main-content">
-			<section class="work-page">
+			<section class="panel" data-auth-prompt><h1>Sign in to your workspace</h1><p>Your work and reviews are available after signing in. You can still explore public repositories and organizations.</p><a class="btn primary" href="/signin">Sign in</a> <a class="btn" href="/repositories">Explore public repositories</a></section><div data-auth-content hidden><section class="work-page">
 			  <header class="page-head"><div><h1>Work</h1><p class="muted">Track problems, ideas and the changes that move them forward.</p></div><button class="btn primary" id="new-work">New work</button></header>
 			  <div class="work-list-toolbar"><div class="segmented work-filter"><button class="active" data-work-filter="open">Open</button><button data-work-filter="closed">Closed</button><button data-work-filter="all">All</button></div><input id="work-search" type="search" aria-label="Search work" placeholder="Search work…"><span id="work-count" class="muted"></span></div>
 			  <div id="work-list" class="work-list"><div class="loading-state">Loading work…</div></div>
 			  <dialog id="work-dialog"><form id="work-form" class="form-stack"><div class="dialog-heading"><h2>New work</h2><button class="icon-button" id="work-dialog-close" type="button" aria-label="Close new work">×</button></div><label>Title<input name="title" placeholder="What needs to change?" required maxlength="240"></label><label>Description<textarea name="body" placeholder="Describe the problem or desired outcome"></textarea></label><div class="work-form-meta"><label>Type<select name="kind"><option value="feature">Feature</option><option value="bug">Bug</option><option value="investigation">Investigation</option><option value="benchmark">Benchmark</option><option value="maintenance">Maintenance</option><option value="release">Release</option></select></label><label>Repository (optional)<input name="repo" placeholder="owner/repository"></label><label>Assignee (optional)<input name="assignee" placeholder="Username"></label></div><p id="work-create-error" class="error" role="alert" hidden></p><div class="dialog-actions"><button class="btn primary" type="submit">Create work</button></div></form></dialog>
 			</section>
+			</div>
 		</main>
 		<script src="/assets/js/code-surface.js?v=c18"></script>
 		<script src="/assets/js/markdown.js?v=c18"></script>

@@ -1,7 +1,9 @@
 package app
 
 import (
+	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -40,5 +42,33 @@ func TestLoginThrottle(t *testing.T) {
 	}
 	if !a.allowLogin("127.0.0.2:123") {
 		t.Fatal("other client")
+	}
+}
+
+func TestDemoGuestIsNotAuthenticated(t *testing.T) {
+	a := &App{}
+	r := httptest.NewRequest("GET", "/api/auth/me", nil)
+	r = r.WithContext(contextWithDemoGuest(contextWithUser(r.Context(), "demo"), true))
+	w := httptest.NewRecorder()
+	a.handleMe(w, r)
+	if w.Code != 401 || strings.Contains(w.Body.String(), `"authed":true`) {
+		t.Fatal(w.Code, w.Body.String())
+	}
+}
+
+func TestAnonymousOrganizationRoutes(t *testing.T) {
+	a := &App{}
+	for _, path := range []string{"/api/orgs", "/api/orgs/example", "/api/orgs/example/repositories", "/api/orgs/example/invitations", "/api/orgs/example/policies"} {
+		r := httptest.NewRequest("GET", path, nil)
+		if path != "/api/orgs" {
+			r.SetPathValue("id", "example")
+		}
+		reached := false
+		w := httptest.NewRecorder()
+		a.authorizeHandler(func(w http.ResponseWriter, r *http.Request) { reached = true })(w, r)
+		want := path == "/api/orgs" || path == "/api/orgs/example" || path == "/api/orgs/example/repositories"
+		if reached != want {
+			t.Fatalf("%s: allowed=%v want=%v", path, reached, want)
+		}
 	}
 }

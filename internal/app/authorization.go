@@ -195,12 +195,13 @@ func (a *App) authorizeHandler(next http.HandlerFunc) http.HandlerFunc {
 		user := a.currentUser(r)
 		path := r.URL.Path
 		write := r.Method != "GET" && r.Method != "HEAD"
-		public := r.Method == "GET" && (path == "/api/repositories" || strings.HasPrefix(path, "/api/repositories/")) || strings.HasPrefix(path, "/api/auth/") || path == "/api/demo" || strings.HasPrefix(path, "/api/avatars/") || strings.HasPrefix(path, "/api/owners/") || strings.HasPrefix(path, "/api/users/")
+		publicOrg := r.Method == "GET" && (path == "/api/orgs" || (r.PathValue("id") != "" && (path == "/api/orgs/"+r.PathValue("id") || path == "/api/orgs/"+r.PathValue("id")+"/repositories")))
+		public := publicOrg || r.Method == "GET" && (path == "/api/repositories" || strings.HasPrefix(path, "/api/repositories/")) || strings.HasPrefix(path, "/api/auth/") || path == "/api/demo" || strings.HasPrefix(path, "/api/avatars/") || strings.HasPrefix(path, "/api/owners/") || strings.HasPrefix(path, "/api/users/")
 		if user == "" && !public {
 			writeJSON(w, 401, map[string]any{"error": "unauthorized"})
 			return
 		}
-		if a.isDemoGuest(r) && !(path == "/api/demo" || path == "/api/auth/me" || strings.HasPrefix(path, "/api/repositories") || strings.HasPrefix(path, "/api/users/") || strings.HasPrefix(path, "/api/owners/") || strings.HasPrefix(path, "/api/avatars/")) {
+		if a.isDemoGuest(r) && !publicOrg && !(path == "/api/demo" || path == "/api/auth/me" || strings.HasPrefix(path, "/api/repositories") || strings.HasPrefix(path, "/api/users/") || strings.HasPrefix(path, "/api/owners/") || strings.HasPrefix(path, "/api/avatars/")) {
 			writeJSON(w, 401, map[string]any{"error": "sign_in_required"})
 			return
 		}

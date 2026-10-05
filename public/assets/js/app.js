@@ -68,7 +68,7 @@
       const links = document.createElement("nav");
       links.className = "site-nav";
       links.setAttribute("aria-label", "Primary");
-      links.innerHTML = '<a href="/">Dashboard</a><a href="/repositories">Repositories</a><a href="/work">Work</a><a href="/pulls">Pull requests</a>';
+      links.innerHTML = '<a href="/">Explore</a><a href="/repositories">Public repositories</a><a href="/organizations">Organizations</a>';
       header.querySelector(".header-right").before(links);
     }
     const main = document.querySelector("main");
@@ -89,9 +89,10 @@
         <button class="hamburger" id="mobile-close" type="button" aria-label="Close navigation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       </div>
       <div class="menu-groups">
-        <details class="menu-group" open><summary>Your workspace</summary><div class="menu-links"><a href="/">Home</a><a href="/repositories.html">Repositories</a><a href="/work.html">Work</a><a href="/pulls.html">Pull Requests</a></div></details>
-        <details class="menu-group" open><summary>Coordination</summary><div class="menu-links"><a href="/operations#attention">Needs Attention</a><a href="/operations#queue">Integration Queue</a><a href="/operations#workflows">Workflows</a><a href="/operations#agents">Agents</a></div></details>
-        <details class="menu-group" open><summary>Account</summary><div class="menu-links"><div class="mobile-auth" id="mobile-auth"></div><a href="/organizations">Organizations</a><a href="/settings">Settings</a></div></details>
+        <details class="menu-group" open><summary>Explore</summary><div class="menu-links"><a href="/repositories">Public repositories</a><a href="/organizations">Organizations</a></div></details>
+        <details class="menu-group" data-workspace-menu hidden open><summary>Your workspace</summary><div class="menu-links"><a href="/">Home</a><a href="/repositories.html">Repositories</a><a href="/work.html">Work</a><a href="/pulls.html">Pull Requests</a></div></details>
+        <details class="menu-group" data-workspace-menu hidden open><summary>Coordination</summary><div class="menu-links"><a href="/operations#attention">Needs Attention</a><a href="/operations#queue">Integration Queue</a><a href="/operations#workflows">Workflows</a><a href="/operations#agents">Agents</a></div></details>
+        <details class="menu-group" open><summary>Account</summary><div class="menu-links"><div class="mobile-auth" id="mobile-auth"></div><a href="/organizations">Organizations</a><a href="/settings" data-workspace-menu hidden>Settings</a></div></details>
       </div>
       <div class="menu-footer"><span>Switchyard · Code, work and review in one place.</span><div id="menu-session-actions" class="menu-session-actions"></div><p id="menu-session-error" class="error" role="alert" hidden></p></div>`;
     document.body.insertBefore(nav, document.querySelector("main") || document.body.firstChild);
@@ -152,6 +153,12 @@
   async function refreshAuth() {
     let user = "";
     try { const m = await (authRequest ||= api("/api/auth/me")); if (m.authed) user = m.user; } catch (e) { /* ignore */ }
+    document.querySelectorAll("[data-workspace-menu]").forEach(el => el.hidden = !user);
+    const primary = document.querySelector(".site-nav");
+    if(primary) primary.innerHTML = user ? '<a href="/">Dashboard</a><a href="/repositories">Repositories</a><a href="/work">Work</a><a href="/pulls">Pull requests</a>' : '<a href="/">Explore</a><a href="/repositories">Public repositories</a><a href="/organizations">Organizations</a>';
+    document.querySelectorAll("[data-auth-content]").forEach(el=>el.hidden=!user && !/^\/[^/]+\/[^/]+\/pulls/.test(location.pathname));
+    document.querySelectorAll("[data-auth-prompt]").forEach(el=>el.hidden=!!user || /^\/[^/]+\/[^/]+\/pulls/.test(location.pathname));
+    window.dispatchEvent(new CustomEvent("switchyard-auth", {detail:{user}}));
     const state = document.getElementById("auth-state");
     const mAuth = document.getElementById("mobile-auth");
     if (state) {
@@ -177,7 +184,9 @@
     const reposEl=document.getElementById("repos"),workEl=document.getElementById("work"),pulls=document.getElementById("home-pulls");
     if(!reposEl||!workEl)return;
     const user=await refreshAuth();
-    if(!user){try { const repositories=(await api('/api/repositories')).items||[]; reposEl.innerHTML=repositories.slice(0,12).map(r=>'<a href="/'+encodeURIComponent(r.owner_slug)+'/'+encodeURIComponent(r.slug)+'"><span class="home-repo-icon" aria-hidden="true">'+icon('repository')+'</span><span>'+esc(r.full_name)+'</span></a>').join('')||'<p class="muted">No public repositories yet.</p>'; } catch { reposEl.innerHTML='<p class="error">Public repositories could not be loaded.</p>'; }workEl.innerHTML='<div class="empty-state"><strong>Keep your work together</strong><span>Track issues and review changes in your workspace.</span><a class="btn primary" href="/signin">Sign in</a></div>';pulls.innerHTML='<div class="empty-state"><strong>Review changes in one place</strong><span>Sign in to see pull requests that you can access.</span></div>';return;}
+    if(!user) return;
+    document.getElementById('public-home').hidden=true;
+    document.getElementById('signed-in-home').hidden=false;
     document.getElementById('home-username').textContent=user;
     document.getElementById('home-account-description').textContent='Your personal workspace';
     document.getElementById('home-account').href='/'+encodeURIComponent(user);
