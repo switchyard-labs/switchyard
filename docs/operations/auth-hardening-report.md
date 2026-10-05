@@ -19,8 +19,8 @@ prerequisite. Source has not been pushed, tagged or released.
 | L. Live verification | Trusted-backend issuance plus public signed-out consumption, state and reuse rejection pass. Real verification email delivery not certified. |
 | M. Live reset | Public consumption, old password/session rejection, new login/reuse rejection pass; disposable accounts cleaned. Real reset email delivery not certified. |
 | N. Limits | Standalone storage only for this adapter; replication fails closed. PostgreSQL test environment unavailable. Shared proxy peer budget, in-memory throttles, nondurable reset mail worker. Legacy email assignment and CLI recovery have no new self-service flow. Snapshot restores can revive post-snapshot-consumed tokens; documented incident invalidation is required. |
-| O. Deployment | https://switchyard.cx active on `b2bb0d9`; Trestle implementation `aebb5a4`. Consistent backup `/opt/cp0/switchyard/before-auth-20261005-105212`. Pages, Proposal, cookie isolation and signed-out regressions pass. |
-| P. Local commits | Trestle `aebb5a4` implementation, `6edad83` acceptance tests; Switchyard `b2bb0d9` implementation/UI/tests and subsequent certification documentation commit. |
+| O. Deployment | https://switchyard.cx active on `2fb6cf6`; Trestle implementation `aebb5a4`. Consistent backup `/opt/cp0/switchyard/before-auth-20261005-105212`. Pages, Proposal, cookie isolation and signed-out regressions pass. |
+| P. Local commits | Trestle `aebb5a4` implementation, `6edad83` acceptance tests; Switchyard `b2bb0d9` implementation/UI/tests, `2edbedf` live certification and `2fb6cf6` final verified-status correction; subsequent documentation checkpoint. |
 | Q. Readiness | Feasible implementation/certification complete. Configure authorized SMTP sender plus SPF/DKIM/DMARC, then certify real verification/reset emails before claiming email recovery production-ready. No push/tag/release. |
 
 Evidence: `docs/evidence/auth-hardening/`. Operational setup, routes, privacy,

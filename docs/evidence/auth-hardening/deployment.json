@@ -3,11 +3,15 @@
   "public_url": "https://switchyard.cx",
   "backup": "/opt/cp0/switchyard/before-auth-20261005-105212",
   "trestle_implementation_commit": "aebb5a4",
-  "switchyard_implementation_commit": "b2bb0d9",
+  "switchyard_implementation_commit": "2fb6cf6",
   "trestle_schema": 24,
   "switchyard_schema": 13,
   "service": "active",
   "mail_configured": false,
   "initial_attempt": "binary overwrite blocked before migration; corrected to atomic replacement",
-  "rollback_performed": false
+  "rollback_performed": false,
+  "initial_switchyard_commit": "b2bb0d9",
+  "final_ui_binary_backup": "/opt/cp0/switchyard/before-auth-ui-20261005-110933",
+  "final_desktop_mobile_recheck": "passed",
+  "temporary_local_remote_rehearsal_databases_removed": true
 }

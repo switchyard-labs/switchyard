@@ -79,7 +79,7 @@ Both services are deployed after an exclusive consistent backup at
 `/opt/cp0/switchyard/before-auth-20261005-105212`. The initial binary overwrite
 failed before migration because another process held its executable; atomic
 replacement corrected it. Trestle now reports implementation `aebb5a4`, schema24;
-Switchyard implementation `b2bb0d9`, schema13. The later Trestle `6edad83` is
+Switchyard implementation `2fb6cf6`, schema13. The later Trestle `6edad83` is
 tests only. No push/tag/release occurred.
 
 Live disposable-account checks passed signup surviving mail failure, private
