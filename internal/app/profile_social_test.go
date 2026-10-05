@@ -190,3 +190,43 @@ func TestContributionRepositoryReadsAreBounded(t *testing.T) {
 		t.Fatalf("request-local visibility became stale: status=%d total=%d reads=%d", w.Code, result.Total, reads.Load())
 	}
 }
+
+func TestPrivateOrganizationProfileIsNotPublic(t *testing.T) {
+	a, _, _ := actionFixture(t)
+	for _, record := range []struct {
+		collection string
+		values     map[string]any
+	}{
+		{"orgs", map[string]any{"id": "org_private", "name": "secret-org", "slug": "secret-org", "owner": "alice", "visibility": "private"}},
+		{"org_profiles", map[string]any{"org_id": "org_private", "visibility": "private"}},
+		{"owner_namespaces", map[string]any{"slug": "secret-org", "owner_type": "org", "owner_id": "org_private"}},
+	} {
+		if _, _, err := a.Trestle.CreateRecord(record.collection, record.values, randHex(8)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, direct := range []bool{false, true} {
+		r := httptest.NewRequest("GET", "/api/owners/secret-org", nil)
+		r.SetPathValue("slug", "secret-org")
+		r.SetPathValue("id", "secret-org")
+		w := httptest.NewRecorder()
+		if direct {
+			a.handleGetOrgProfile(w, r)
+		} else {
+			a.handleGetOwnerProfile(w, r)
+		}
+		if w.Code != 404 {
+			t.Fatalf("private org exposed: direct=%v status=%d", direct, w.Code)
+		}
+		r = r.WithContext(contextWithUser(r.Context(), "alice"))
+		w = httptest.NewRecorder()
+		if direct {
+			a.handleGetOrgProfile(w, r)
+		} else {
+			a.handleGetOwnerProfile(w, r)
+		}
+		if w.Code != 200 {
+			t.Fatalf("owner denied: %d", w.Code)
+		}
+	}
+}

@@ -432,6 +432,10 @@ func (a *App) handleGetOwnerProfile(w http.ResponseWriter, r *http.Request) {
 	if typ == "org" {
 		if o := a.orgBySlugOrID(id); o != nil {
 			p := a.orgProfile(o)
+			if strOr(p["visibility"]) != "public" && a.orgRole(o, a.currentUser(r)) == "" {
+				writeJSON(w, 404, map[string]any{"error": "owner_not_found"})
+				return
+			}
 			p["owner_type"] = "org"
 			writeJSON(w, 200, p)
 			return
