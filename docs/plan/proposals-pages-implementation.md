@@ -11,9 +11,11 @@ conditional. Signed-out surfaces default to public exploration or sign-in prompt
 without flashing Alice's workspace. Public repositories remain public.
 
 See [A–U handover](proposals-pages-live-handover.md) and
-[live evidence](../evidence/proposals-pages/live/). Deployed app source is
-`2ce7c717b22bed1d6f33e1d448ca968fa2bc1fb3`; the later `c5cefb4` adds a regression
-test only. CLI `85f7683` passed the live reads and promotion/rollback sequence.
+[live evidence](../evidence/proposals-pages/live/). The initial Pages-certified app source was
+`2ce7c717b22bed1d6f33e1d448ca968fa2bc1fb3`; signup follow-up now deploys
+`c27c3fd0e8880acd77ca7e2ab5afda7e23707c37` with additive schema 12.
+[Self-service signup audit](../operations/signup.md) proves the four-field browser/API
+flow, private unique email, auto-session, later login and authorization on Linode. CLI `85f7683` passed the live reads and promotion/rollback sequence.
 No campaign source was pushed, tagged or released. Disposable fixture Git pushes
 were performed as authorized. Production fixture mapping is generation 6, owner
 and project both restored to A; later ready previews remain immutable.

@@ -1,0 +1,35 @@
+[
+  {
+    "path": "/signup",
+    "bounds": {
+      "docHeight": 844,
+      "height": 844,
+      "docWidth": 375,
+      "width": 390,
+      "cardScrolls": "auto"
+    }
+  },
+  {
+    "path": "/register",
+    "bounds": {
+      "docHeight": 844,
+      "height": 844,
+      "docWidth": 375,
+      "width": 390,
+      "cardScrolls": "auto"
+    }
+  },
+  {
+    "path": "/signin.html#register",
+    "bounds": {
+      "docHeight": 844,
+      "height": 844,
+      "docWidth": 375,
+      "width": 390,
+      "cardScrolls": "auto"
+    }
+  },
+  {
+    "disabledPolicyUIDisablesSignup": true
+  }
+]

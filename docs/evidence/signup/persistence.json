@@ -1,0 +1,28 @@
+{
+  "accounts": [
+    {
+      "username": "signup-1600-6d3858",
+      "userPersisted": true,
+      "emailPersistedPrivately": true,
+      "bcryptStored": true,
+      "namespacePersisted": true,
+      "uniqueEmailDatabaseIndex": true
+    },
+    {
+      "username": "signup-390-6d3858",
+      "userPersisted": true,
+      "emailPersistedPrivately": true,
+      "bcryptStored": true,
+      "namespacePersisted": true,
+      "uniqueEmailDatabaseIndex": true
+    }
+  ],
+  "private_repository_owner": 200,
+  "private_fixture_removed": true,
+  "private_repository_anonymous": 404,
+  "private_repository_new_account": 404,
+  "policy": {
+    "email_verification": false,
+    "mode": "open"
+  }
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "width": 1600,
+    "fields": 4,
+    "noDisplayName": true,
+    "confirmationBlockedWithoutRequest": true,
+    "signup": 201,
+    "authenticated": true,
+    "logout": 401,
+    "login": 200,
+    "duplicateUsername": 409,
+    "duplicateEmail": 409,
+    "publicRead": 200,
+    "unrelatedRepoAdministration": 403,
+    "emailPrivate": true,
+    "bounds": {
+      "width": 1600,
+      "docWidth": 1585,
+      "docHeight": 900,
+      "height": 900
+    }
+  },
+  {
+    "width": 390,
+    "fields": 4,
+    "noDisplayName": true,
+    "confirmationBlockedWithoutRequest": true,
+    "signup": 201,
+    "authenticated": true,
+    "logout": 401,
+    "login": 200,
+    "duplicateUsername": 409,
+    "duplicateEmail": 409,
+    "publicRead": 200,
+    "unrelatedRepoAdministration": 403,
+    "emailPrivate": true,
+    "bounds": {
+      "width": 390,
+      "docWidth": 375,
+      "docHeight": 900,
+      "height": 900
+    }
+  }
+]

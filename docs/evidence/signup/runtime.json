@@ -1,0 +1,24 @@
+{
+  "status": "IMPLEMENTED",
+  "previous_status": "PARTIAL",
+  "deployed_source": "c27c3fd0e8880acd77ca7e2ab5afda7e23707c37",
+  "binary_sha256": "dc90c16e83068f61155437c3c36172c9202b3861735ef902ca4cc33b9e0d47d0",
+  "service": "active",
+  "schema": 12,
+  "registration_policy": "open",
+  "email_verification": false,
+  "schema_backup": "/opt/cp0/switchyard/before-signup-20261005-085011/",
+  "compatible_binary_backup": "/opt/cp0/switchyard/before-signedout-20261005-091116/",
+  "tests": [
+    "go test ./...",
+    "go vet ./...",
+    "focused auth/signup race tests",
+    "live desktop/mobile browser signup",
+    "real Trestle persistence and unique index",
+    "private metadata authorization fixture",
+    "live API invalid email/confirmation"
+  ],
+  "source_push": false,
+  "tags": false,
+  "releases": false
+}

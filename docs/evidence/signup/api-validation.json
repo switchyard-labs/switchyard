@@ -1,0 +1,10 @@
+[
+  {
+    "status": 400,
+    "error": "email_invalid"
+  },
+  {
+    "status": 400,
+    "error": "password_confirmation_mismatch"
+  }
+]

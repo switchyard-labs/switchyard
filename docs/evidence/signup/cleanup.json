@@ -1,0 +1,42 @@
+[
+  {
+    "username": "signup-1600-6d3858",
+    "collection": "sessions",
+    "removed": 1
+  },
+  {
+    "username": "signup-1600-6d3858",
+    "collection": "owner_namespaces",
+    "removed": 1
+  },
+  {
+    "username": "signup-1600-6d3858",
+    "collection": "account_emails",
+    "removed": 1
+  },
+  {
+    "username": "signup-1600-6d3858",
+    "collection": "users",
+    "removed": 1
+  },
+  {
+    "username": "signup-390-6d3858",
+    "collection": "sessions",
+    "removed": 0
+  },
+  {
+    "username": "signup-390-6d3858",
+    "collection": "owner_namespaces",
+    "removed": 1
+  },
+  {
+    "username": "signup-390-6d3858",
+    "collection": "account_emails",
+    "removed": 1
+  },
+  {
+    "username": "signup-390-6d3858",
+    "collection": "users",
+    "removed": 1
+  }
+]

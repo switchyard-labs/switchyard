@@ -1,6 +1,6 @@
 # Proposal + Pages live activation handover
 
-Certified 5 October 2026. [Evidence](../evidence/proposals-pages/live/) contains sanitized results and desktop/mobile captures. No campaign source push, tag or GitHub release was performed. Disposable fixture Git pushes were explicitly authorized.
+Certified 5 October 2026. Subsequent [signup audit](../operations/signup.md) completed the four-field registration contract and updated Linode to `c27c3fd` / schema 12; deployed-source/schema statements below are the earlier Pages certification snapshot. [Evidence](../evidence/proposals-pages/live/) contains sanitized results and desktop/mobile captures. No campaign source push, tag or GitHub release was performed. Disposable fixture Git pushes were explicitly authorized.
 
 ## A. Cloudflare zone state
 
