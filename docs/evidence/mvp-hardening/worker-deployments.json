@@ -1,0 +1,14 @@
+[
+  {
+    "component": "actions",
+    "commit": "a7154d13de4f0397c12db8bb34254c1b8f12428f",
+    "exit_code": 0,
+    "log": "/tmp/switchyard-cp7/actions-deployment.log"
+  },
+  {
+    "component": "pages",
+    "commit": "a7154d13de4f0397c12db8bb34254c1b8f12428f",
+    "exit_code": 0,
+    "log": "/tmp/switchyard-cp7/pages-deployment.log"
+  }
+]

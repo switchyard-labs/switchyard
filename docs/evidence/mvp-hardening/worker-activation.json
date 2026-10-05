@@ -1,0 +1,21 @@
+{
+  "switchyard-actions-probe-20261003": {
+    "versions": [
+      {
+        "version_id": "09ed49a7-4b6a-45ec-8d87-4de4a4d80ae3",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-05T20:06:48.023754Z"
+  },
+  "switchyard-pages": {
+    "versions": [
+      {
+        "version_id": "9cf8ad7f-1d20-47e0-aef6-b0e106db1983",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-05T20:07:00.388787Z"
+  },
+  "unsigned_dispatch": 401
+}

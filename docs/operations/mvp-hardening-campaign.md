@@ -131,3 +131,27 @@ and raw CLI 401 behavior are explicit. Existing Nift workflow rebuilt eight chan
 brochure pages; CNAME/publication arrangement is preserved. The app Nift check
 reports ten generated pages up to date. The changed enqueue script gets a fresh
 query version to avoid stale browser code at rollout. No deployment yet.
+
+
+## CP7: certification and live reconciliation (2026-10-06)
+
+The earlier no-deployment statements describe the individual checkpoint times.
+Final certification and rollout are now complete; see
+[mvp-hardening-readiness.md](mvp-hardening-readiness.md) for the disposition,
+exact review SHAs, deployment identity, retained limitations and deferred pushes.
+The full regression evidence is in `docs/evidence/mvp-hardening`.
+
+Full Go, vet, affected race tests, companion suites and Worker tests passed.
+Chromium responsive/auth fixtures and the permanent delayed-auth no-private-state
+flash regression passed. New process-death, ambiguous-push and provenance-store
+failure tests passed. These are local certification tests; production verification
+was deliberately limited to read-only checks and rejected-origin/unsigned requests.
+
+The exclusive verified snapshot preceded the reviewed additive schema 13-to-16
+migration. Every pre-existing collection count was preserved during migration and
+SQLite integrity passed. Two legacy blocked queue items and their two unprepared
+integration effects were retained without invented identities. Switchyard serves
+the tested runtime; both changed Workers are active at their intended versions.
+Trestle was not redeployed. All 61 served app assets match local files. The brochure
+was rebuilt and committed but its GitHub Pages publication awaits the normal push.
+No normal pushes, tags or releases were performed.

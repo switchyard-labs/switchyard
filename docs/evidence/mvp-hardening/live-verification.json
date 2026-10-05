@@ -1,0 +1,321 @@
+{
+  "reads_and_origin_checks": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/repositories",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 401
+    },
+    {
+      "path": "/api/repositories",
+      "status": 200
+    },
+    {
+      "path": "/api/work",
+      "status": 401
+    },
+    {
+      "path": "/api/queue",
+      "status": 401
+    },
+    {
+      "path": "/api/credentials",
+      "status": 401
+    },
+    {
+      "path": "/api/repositories/alice/demo-semantic",
+      "status": 200
+    },
+    {
+      "path": "/api/repositories/alice/demo-semantic/releases",
+      "status": 200
+    },
+    {
+      "path": "/api/repositories/alice/demo-semantic/proposals",
+      "origin": "https://foreign.example",
+      "rejected_before_mutation": true
+    },
+    {
+      "path": "/api/repositories/alice/demo-semantic/proposals",
+      "origin": "https://alice.switchyard.cx",
+      "rejected_before_mutation": true
+    },
+    {
+      "path": "/api/repositories/alice/demo-semantic/pages/configuration",
+      "origin": "https://foreign.example",
+      "rejected_before_mutation": true
+    },
+    {
+      "path": "/api/repositories/alice/demo-semantic/pages/configuration",
+      "origin": "https://alice.switchyard.cx",
+      "rejected_before_mutation": true
+    },
+    {
+      "url": "https://pages-probe-1005.switchyard.cx/",
+      "status": 200,
+      "bytes": 214
+    },
+    {
+      "url": "https://pages-probe-1005.switchyard.cx/foo.js/",
+      "status": 200,
+      "bytes": 228
+    },
+    {
+      "url": "https://docs.switchyard.cx/",
+      "status": 200,
+      "bytes": 11272
+    }
+  ],
+  "asset_parity": [
+    {
+      "path": "/actions.html",
+      "match": true
+    },
+    {
+      "path": "/assets/css/actions.css",
+      "match": true
+    },
+    {
+      "path": "/assets/css/app.css",
+      "match": true
+    },
+    {
+      "path": "/assets/css/components.css",
+      "match": true
+    },
+    {
+      "path": "/assets/css/diff.css",
+      "match": true
+    },
+    {
+      "path": "/assets/css/editor.css",
+      "match": true
+    },
+    {
+      "path": "/assets/css/identity.css",
+      "match": true
+    },
+    {
+      "path": "/assets/css/operations.css",
+      "match": true
+    },
+    {
+      "path": "/assets/css/releases.css",
+      "match": true
+    },
+    {
+      "path": "/assets/css/repository.css",
+      "match": true
+    },
+    {
+      "path": "/assets/css/theme.css",
+      "match": true
+    },
+    {
+      "path": "/assets/images/favicon.svg",
+      "match": true
+    },
+    {
+      "path": "/assets/images/favicon.webp",
+      "match": true
+    },
+    {
+      "path": "/assets/js/agent-settings.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/agent-task-picker.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-actions.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-editor.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-history.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-operations.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-org-settings.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-organizations.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-pages.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-profile.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-proposals.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-pulls.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-releases.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-repo-settings.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-repo.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-repositories.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-settings.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app-work-detail.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/app.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/auth-recovery.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/cm6.bundle.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/code-blocks.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/code-surface.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/commit-activity.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/diff-surface.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/markdown.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/repository-tree.js",
+      "match": true
+    },
+    {
+      "path": "/assets/js/settings-navigation.js",
+      "match": true
+    },
+    {
+      "path": "/edit.html",
+      "match": true
+    },
+    {
+      "path": "/history.html",
+      "match": true
+    },
+    {
+      "path": "/index.html",
+      "match": true
+    },
+    {
+      "path": "/operations.html",
+      "match": true
+    },
+    {
+      "path": "/org-settings.html",
+      "match": true
+    },
+    {
+      "path": "/organizations.html",
+      "match": true
+    },
+    {
+      "path": "/pages.html",
+      "match": true
+    },
+    {
+      "path": "/profile.html",
+      "match": true
+    },
+    {
+      "path": "/proposals.html",
+      "match": true
+    },
+    {
+      "path": "/pull.html",
+      "match": true
+    },
+    {
+      "path": "/pulls.html",
+      "match": true
+    },
+    {
+      "path": "/recovery.html",
+      "match": true
+    },
+    {
+      "path": "/releases.html",
+      "match": true
+    },
+    {
+      "path": "/repo-settings.html",
+      "match": true
+    },
+    {
+      "path": "/repo.html",
+      "match": true
+    },
+    {
+      "path": "/repositories.html",
+      "match": true
+    },
+    {
+      "path": "/settings.html",
+      "match": true
+    },
+    {
+      "path": "/signin.html",
+      "match": true
+    },
+    {
+      "path": "/work-detail.html",
+      "match": true
+    },
+    {
+      "path": "/work.html",
+      "match": true
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "runtime_commit": "0d4448d",
+  "tested_code_commit": "a7154d13de4f0397c12db8bb34254c1b8f12428f",
+  "binary_sha256": "d6b39b93c0507efae6c91124209171f0c15a4d0b763fa16652802f1516a6421b",
+  "schema_before": 13,
+  "schema_after": 16,
+  "snapshot": "/opt/cp0/switchyard/before-mvp-hardening-20261005-200527",
+  "snapshot_manifest_files": 10814,
+  "sqlite_integrity": "ok",
+  "existing_collection_counts_preserved_during_migration": true,
+  "service": "active",
+  "trestle_redeployed": false,
+  "brochure_published": false,
+  "reason": "Normal brochure pushes deferred pending final review",
+  "production_mutation_campaign": false,
+  "verification_qualification": "Cloudflare browser-integrity check rejects default Python User-Agent with 1010; browser-like User-Agent public probes pass."
+}

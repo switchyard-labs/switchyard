@@ -1,0 +1,241 @@
+{
+  "integrity": "ok",
+  "collections": {
+    "users": {
+      "count": 4
+    },
+    "sessions": {
+      "count": 146
+    },
+    "repos": {
+      "count": 5
+    },
+    "events": {
+      "count": 324
+    },
+    "work": {
+      "count": 13
+    },
+    "ref_updates": {
+      "count": 417
+    },
+    "attempts": {
+      "count": 13
+    },
+    "runs": {
+      "count": 3
+    },
+    "prs": {
+      "count": 8
+    },
+    "pr_checks": {
+      "count": 8
+    },
+    "ref_obs": {
+      "count": 467
+    },
+    "credentials": {
+      "count": 1
+    },
+    "executions": {
+      "count": 9
+    },
+    "workflows": {
+      "count": 4
+    },
+    "workflow_runs": {
+      "count": 4,
+      "statuses": {
+        "completed": 4
+      }
+    },
+    "wf_steps": {
+      "count": 54
+    },
+    "findings": {
+      "count": 3
+    },
+    "iq": {
+      "count": 2,
+      "statuses": {
+        "blocked": 2
+      }
+    },
+    "escalations": {
+      "count": 0
+    },
+    "orgs": {
+      "count": 1
+    },
+    "policies": {
+      "count": 1
+    },
+    "audit": {
+      "count": 8
+    },
+    "drafts": {
+      "count": 2
+    },
+    "owner_namespaces": {
+      "count": 4
+    },
+    "repository_meta": {
+      "count": 6
+    },
+    "work_details": {
+      "count": 5
+    },
+    "work_comments": {
+      "count": 1
+    },
+    "repository_settings": {
+      "count": 0
+    },
+    "repo_collaborators": {
+      "count": 0
+    },
+    "repo_protected_refs": {
+      "count": 0
+    },
+    "org_memberships": {
+      "count": 0
+    },
+    "org_invitations": {
+      "count": 0
+    },
+    "org_teams": {
+      "count": 0
+    },
+    "org_team_members": {
+      "count": 0
+    },
+    "org_repo_access": {
+      "count": 0
+    },
+    "user_profiles": {
+      "count": 1
+    },
+    "org_profiles": {
+      "count": 0
+    },
+    "action_definitions": {
+      "count": 10
+    },
+    "action_settings": {
+      "count": 1
+    },
+    "action_runs": {
+      "count": 14
+    },
+    "action_jobs": {
+      "count": 27
+    },
+    "action_steps": {
+      "count": 20
+    },
+    "action_checks": {
+      "count": 27
+    },
+    "external_executions": {
+      "count": 14
+    },
+    "event_receipts": {
+      "count": 75
+    },
+    "commit_checks": {
+      "count": 0
+    },
+    "credential_owners": {
+      "count": 0
+    },
+    "execution_metadata": {
+      "count": 0
+    },
+    "integration_effects": {
+      "count": 2,
+      "phases": {
+        "claimed": 1,
+        "validating": 1
+      },
+      "candidate_count": 0
+    },
+    "workflow_git_effects": {
+      "count": 0,
+      "phases": {},
+      "candidate_count": 0
+    },
+    "workflow_claims": {
+      "count": 0
+    },
+    "workflow_owners": {
+      "count": 0
+    },
+    "switchyard_schema": {
+      "count": 9,
+      "versions": [
+        "11",
+        "12",
+        "13",
+        "16",
+        "3",
+        "4",
+        "5",
+        "7",
+        "8"
+      ]
+    },
+    "repository_stars": {
+      "count": 0
+    },
+    "user_follows": {
+      "count": 0
+    },
+    "agent_preferences": {
+      "count": 0
+    },
+    "releases": {
+      "count": 0
+    },
+    "release_assets": {
+      "count": 0
+    },
+    "demo_action_exclusions": {
+      "count": 0
+    },
+    "proposal_graphs": {
+      "count": 0
+    },
+    "proposals": {
+      "count": 1
+    },
+    "proposal_comments": {
+      "count": 0
+    },
+    "proposal_links": {
+      "count": 0
+    },
+    "proposal_settings": {
+      "count": 0
+    },
+    "pages_mounts": {
+      "count": 2
+    },
+    "pages_sites": {
+      "count": 2
+    },
+    "pages_deployments": {
+      "count": 22
+    },
+    "account_emails": {
+      "count": 0
+    },
+    "publication_intents": {
+      "count": 0,
+      "phases": {},
+      "candidate_count": 0
+    },
+    "ref_current": {
+      "count": 267
+    }
+  }
+}
