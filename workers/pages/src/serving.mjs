@@ -28,7 +28,7 @@ export async function serve(request,env){
  const suffix='.'+(env.PAGES_DOMAIN||'switchyard.cx');
  if(!url.hostname.endsWith(suffix))return missing();
  const owner=url.hostname.slice(0,-suffix.length);
- if(!OWNER.test(owner)||owner.includes('.')||['www','api','admin','assets','static','pages','login','signup','sy'].includes(owner))return missing();
+ if(!OWNER.test(owner)||owner.includes('.')||['www','docs','app','api','admin','assets','static','pages','login','signup','sy'].includes(owner))return missing();
  let mapping,site,immutable=false;
  try{
  if(owner.startsWith('dpl-')){

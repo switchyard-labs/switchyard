@@ -43,7 +43,7 @@ func (p PagesConfig) validate(privateSource bool) error {
 		return fmt.Errorf("pages_owner_invalid")
 	}
 	switch p.Owner {
-	case "www", "api", "admin", "assets", "static", "pages", "login", "signup", "sy":
+	case "www", "docs", "app", "api", "admin", "assets", "static", "pages", "login", "signup", "sy":
 		return fmt.Errorf("pages_owner_reserved")
 	}
 	if p.Project != "" && (!pagesProject.MatchString(p.Project) || p.Project == ".git") {

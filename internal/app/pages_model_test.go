@@ -84,3 +84,13 @@ func TestPagesSPAFallbackIsExplicitAndContained(t *testing.T) {
 		t.Fatal("escaping fallback accepted")
 	}
 }
+
+func TestPagesInfrastructureOwnersReserved(t *testing.T) {
+	p := PagesConfig{RepositoryID: "repo", Ref: "main", WorkingDirectory: ".", BuildCommand: "nift build", OutputDirectory: "public"}
+	for _, owner := range []string{"www", "docs", "app", "api", "admin", "assets", "static", "pages", "login", "signup", "sy", "dpl-abc"} {
+		p.Owner = owner
+		if p.validate(false) == nil {
+			t.Fatal("infrastructure owner accepted", owner)
+		}
+	}
+}

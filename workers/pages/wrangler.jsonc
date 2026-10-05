@@ -4,6 +4,20 @@
   "main": "src/serving.mjs",
   "compatibility_date": "2026-10-05",
   "workers_dev": false,
-  "r2_buckets": [{"binding": "PAGES_BUCKET", "bucket_name": "switchyard-actions-probe-20261003"}],
-  "vars": {"PAGES_DOMAIN": "switchyard.cx"}
+  "r2_buckets": [
+    {
+      "binding": "PAGES_BUCKET",
+      "bucket_name": "switchyard-actions-probe-20261003"
+    }
+  ],
+  "vars": {
+    "PAGES_DOMAIN": "switchyard.cx"
+  },
+  "account_id": "b7f20353ee8a9e5d2003f52c74ba795e",
+  "routes": [
+    {
+      "pattern": "*.switchyard.cx/*",
+      "zone_name": "switchyard.cx"
+    }
+  ]
 }
