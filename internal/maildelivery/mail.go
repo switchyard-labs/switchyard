@@ -24,15 +24,15 @@ type Mailer interface {
 var ErrUnavailable = errors.New("mail delivery unavailable")
 
 type SMTP struct {
-	Address, Username, Password, From string
-	dial                              func(context.Context, string, string) (net.Conn, error)
+	Address, Username, Password, From, TLSMode string
+	dial                                       func(context.Context, string, string) (net.Conn, error)
 }
 
-// SMTP uses authenticated implicit TLS (usually port 465). No fallback to
+// SMTP uses implicit TLS by default, or required STARTTLS when configured. No fallback to
 // plaintext, no credentials or provider errors in returned auth-facing errors.
 func (s SMTP) Send(ctx context.Context, m Message) error {
 	host, _, err := net.SplitHostPort(s.Address)
-	if err != nil || s.Username == "" || s.Password == "" {
+	if err != nil || s.Username == "" || s.Password == "" || (s.TLSMode != "" && s.TLSMode != "implicit" && s.TLSMode != "starttls") {
 		return ErrUnavailable
 	}
 	from, err := mail.ParseAddress(s.From)
@@ -67,6 +67,9 @@ func (s SMTP) Send(ctx context.Context, m Message) error {
 	}
 	dialer := tls.Dialer{NetDialer: &net.Dialer{Timeout: 15 * time.Second}, Config: &tls.Config{ServerName: host, MinVersion: tls.VersionTLS12}}
 	dial := dialer.DialContext
+	if s.TLSMode == "starttls" {
+		dial = (&net.Dialer{Timeout: 15 * time.Second}).DialContext
+	}
 	if s.dial != nil {
 		dial = s.dial
 	}
@@ -83,6 +86,11 @@ func (s SMTP) Send(ctx context.Context, m Message) error {
 		return ErrUnavailable
 	}
 	defer client.Close()
+	if s.TLSMode == "starttls" {
+		if err = client.StartTLS(&tls.Config{ServerName: host, MinVersion: tls.VersionTLS12}); err != nil {
+			return ErrUnavailable
+		}
+	}
 	if err = client.Auth(smtp.PlainAuth("", s.Username, s.Password, host)); err != nil {
 		return ErrUnavailable
 	}

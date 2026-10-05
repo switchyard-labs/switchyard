@@ -36,7 +36,7 @@ func (a *App) accountMailer() maildelivery.Mailer {
 	if a.Mailer != nil {
 		return a.Mailer
 	}
-	return maildelivery.SMTP{Address: os.Getenv("SWITCHYARD_SMTP_ADDRESS"), Username: os.Getenv("SWITCHYARD_SMTP_USERNAME"), Password: os.Getenv("SWITCHYARD_SMTP_PASSWORD"), From: os.Getenv("SWITCHYARD_MAIL_FROM")}
+	return maildelivery.SMTP{TLSMode: os.Getenv("SWITCHYARD_SMTP_TLS_MODE"), Address: os.Getenv("SWITCHYARD_SMTP_ADDRESS"), Username: os.Getenv("SWITCHYARD_SMTP_USERNAME"), Password: os.Getenv("SWITCHYARD_SMTP_PASSWORD"), From: os.Getenv("SWITCHYARD_MAIL_FROM")}
 }
 func (a *App) allowAccountMail(r *http.Request, email string) bool {
 	host, _, e := net.SplitHostPort(r.RemoteAddr)

@@ -1,0 +1,23 @@
+[
+  {
+    "name": "mg.switchyard.cx",
+    "type": "TXT",
+    "content": "v=spf1 include:mailgun.org ~all",
+    "created": true,
+    "cloudflare_readback": true
+  },
+  {
+    "name": "mx._domainkey.mg.switchyard.cx",
+    "type": "TXT",
+    "content": "k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCoSUDDkZNBW7Q9tb8YDXT8UFScLsssEeHxUAngemyVMLQHuQBavNZEr4CSRl+d67OkkFLs/QNg8pNNBNqLC4Ht/VXEQYZqZ7NH8qk+xAzC4udIKKqzUOr4rqipBDK73GO4YAHqST4rR11MSgBx17Vy/72wPIAm2hNuTEwbSI2yOwIDAQAB",
+    "created": true,
+    "cloudflare_readback": true
+  },
+  {
+    "name": "_dmarc.mg.switchyard.cx",
+    "type": "TXT",
+    "content": "v=DMARC1; p=none; pct=100; fo=1; ri=3600; rua=mailto:215106f@dmarc.mailgun.org,mailto:xmgoacpuu7j@inbox.ondmarc.com; ruf=mailto:215106f@dmarc.mailgun.org,mailto:xmgoacpuu7j@inbox.ondmarc.com;",
+    "created": true,
+    "cloudflare_readback": true
+  }
+]

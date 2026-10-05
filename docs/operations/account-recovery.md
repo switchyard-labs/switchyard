@@ -47,21 +47,27 @@ static operation name, duration and status.
 
 ## Delivery configuration
 
-One production adapter: authenticated SMTP over implicit TLS, normally port
-465, certificate verification enabled and TLS 1.2 or newer. No plaintext
-fallback. Configure these in the private host environment, never in Git:
+One production adapter: authenticated SMTP with certificate verification and
+TLS 1.2 or newer. `SWITCHYARD_SMTP_TLS_MODE` defaults to `implicit`; `starttls`
+requires a successful TLS upgrade before authentication. Unknown modes fail
+closed, and neither mode falls back to plaintext. Configure privately:
 
-- `SWITCHYARD_SMTP_ADDRESS=provider-host:465`
+- `SWITCHYARD_SMTP_ADDRESS=provider-host:port`
+- `SWITCHYARD_SMTP_TLS_MODE=implicit` or `starttls`
 - `SWITCHYARD_SMTP_USERNAME`
 - `SWITCHYARD_SMTP_PASSWORD`
-- `SWITCHYARD_MAIL_FROM=Switchyard <no-reply@switchyard.cx>`
+- `SWITCHYARD_MAIL_FROM=Switchyard <no-reply@mg.switchyard.cx>`
 - `SWITCHYARD_PUBLIC_URL=https://switchyard.cx`
 
-The provider must authorize the sender. Set its prescribed DKIM records, merge
-its SPF requirements with existing senders, and configure/verify DMARC. Current
-read-only DNS inspection found registrar-forwarding SPF but no DKIM or DMARC.
-No sender DNS was changed. SMTP credentials are currently absent, so real email
-verification/reset delivery is **not production-certified**.
+On 6 October 2026, Linode authenticated to Mailgun at `smtp.mailgun.org:2525`
+using required STARTTLS. Port 465 timed out. The supplied Mailgun SPF, DKIM and
+monitoring DMARC records for `mg.switchyard.cx` are published and confirmed
+through public DNS. Existing apex SPF and routing are preserved. Credentials
+are stored only in the protected host environment. Real registration verification and reset emails reached the approved inbox;
+the user completed both links and logged in with the new password. The live
+API confirmed verification persistence and rejection of the old password and
+session. Real resend, expiry and duplicate-link mail scenarios remain separate
+certification checks; do not infer them from this successful flow.
 
 Mail contains restrained plain-text and HTML alternatives, the one-time HTTPS
 link, UTC expiry and an unsolicited-message notice. Signup survives delivery

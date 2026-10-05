@@ -18,7 +18,7 @@ Schema 12 adds nullable `users.email` and a new unique-email reservation collect
 
 Current live policy: **open self-service signup**. `SWITCHYARD_REGISTRATION_POLICY=open` or unset enables it. `disabled` and every unknown value disable registration; UI checks policy before enabling account creation. Invite-only registration is not implemented or implied.
 
-Safe to expose for username/password accounts with the tested repository authorization boundaries. Email is **not verified**, and there is no email recovery flow. Email must not establish identity, grant organization/repository access, or drive recovery until verification is implemented. New accounts do not inherit Alice's permissions. Public profiles omit email.
+Safe to expose for username/password accounts with the tested repository authorization boundaries. Email verification and password recovery are implemented; new accounts remain unverified until the single-use verification link is consumed. Real-mail certification is tracked separately in the account recovery operations report. Email does not grant organization/repository access. New accounts do not inherit Alice's permissions. Public profiles omit email.
 
 Same-origin write checks and host-only Secure/HttpOnly/SameSite=Lax cookies apply. Signup and login have separate bounded, in-memory throttles: 10 attempts per transport peer IP per 5 minutes, per app process. Forwarded headers are not trusted for this limiter; behind the current reverse proxy the signup budget is shared by that proxy's traffic. This is a conservative initial throttle, not distributed anti-abuse protection.
 

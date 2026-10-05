@@ -82,3 +82,33 @@ func TestSMTPUnavailableDoesNotExposeCredentials(t *testing.T) {
 		t.Fatal("unsafe provider error")
 	}
 }
+
+func TestSMTPRequiresSTARTTLSBeforeAuthentication(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listener.Close()
+	commands := make(chan string, 1)
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+		rw.WriteString("220 fixture ESMTP\r\n")
+		rw.Flush()
+		line, _ := rw.ReadString('\n')
+		commands <- line
+		rw.WriteString("250 fixture\r\n")
+		rw.Flush()
+	}()
+	transport := SMTP{Address: listener.Addr().String(), TLSMode: "starttls", Username: "private-user", Password: "private-password", From: "no-reply@example.test"}
+	if err := transport.Send(context.Background(), Message{To: "user@example.test"}); err != ErrUnavailable {
+		t.Fatalf("unencrypted server accepted: %v", err)
+	}
+	if command := <-commands; !strings.HasPrefix(command, "EHLO") {
+		t.Fatalf("unexpected pre-TLS command: %q", command)
+	}
+}

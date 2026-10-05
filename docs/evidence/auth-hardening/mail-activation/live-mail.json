@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-06",
+  "provider": "Mailgun US",
+  "smtp_host": "smtp.mailgun.org",
+  "smtp_port": 2525,
+  "tls": "required STARTTLS; verified certificates; TLS >= 1.2",
+  "smtp_authentication": true,
+  "verification_smtp_accepted": true,
+  "verification_inbox_receipt": "confirmed by user",
+  "verification_consumed": "confirmed by user and private settings API verified_at",
+  "reset_request_status": 202,
+  "reset_inbox_and_consumption": "confirmed by user",
+  "switchyard_binary_sha256": "a27d4b7609d97c9d4665b2a958f1e6c4a9e63d01ac171fb9ae29a2be2515d4c7",
+  "tests": [
+    "go test ./...",
+    "go vet ./internal/maildelivery ./internal/app",
+    "go test ./internal/maildelivery -race -count=1",
+    "git diff --check"
+  ],
+  "secrets_in_evidence": false,
+  "new_password_login": "confirmed by user",
+  "old_password_rejected": true,
+  "old_session_rejected": true,
+  "disposable_account_cleaned": true
+}
