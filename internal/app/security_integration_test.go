@@ -166,3 +166,37 @@ func TestLogoutAndPasswordChangeInvalidateSession(t *testing.T) {
 		t.Fatal("durable logout failed", w.Code)
 	}
 }
+
+func TestFleetRequestedOrganizationIntersection(t *testing.T) {
+	records := map[string][]map[string]any{
+		"orgs":            {{"id": "org-a", "name": "org-a", "owner": "owner"}, {"id": "org-b", "name": "org-b", "owner": "other"}},
+		"org_memberships": {{"org_id": "org-a", "username": "admin", "role": "admin"}, {"org_id": "org-a", "username": "member", "role": "member"}},
+		"repository_meta": {{"id": "a", "owner_type": "org", "owner_id": "org-a", "artifact_name": "repo-a", "visibility": "internal"}, {"id": "b", "owner_type": "org", "owner_id": "org-b", "artifact_name": "repo-b", "visibility": "public"}},
+		"iq":              {{"id": "qa", "repo": "repo-a"}, {"id": "qb", "repo": "repo-b"}},
+		"workflow_runs":   {{"id": "ra", "params": map[string]any{"repo": "repo-a", "_actor": "owner"}}, {"id": "rb", "params": map[string]any{"repo": "repo-b", "_actor": "owner"}}},
+		"escalations":     {{"id": "ea", "packet": map[string]any{"repo": "repo-a"}}, {"id": "eb", "packet": map[string]any{"repo": "repo-b"}}},
+	}
+	a := securityFixture(t, records)
+	for _, user := range []string{"owner", "admin", "member"} {
+		r := httptest.NewRequest("GET", "/api/orgs/org-a/fleet", nil)
+		r.SetPathValue("id", "org-a")
+		r = r.WithContext(contextWithUser(r.Context(), user))
+		w := httptest.NewRecorder()
+		a.handleFleet(w, r)
+		if w.Code != 200 || strings.Contains(w.Body.String(), "repo-b") {
+			t.Fatal(user, w.Code, w.Body.String())
+		}
+		var out map[string]any
+		json.Unmarshal(w.Body.Bytes(), &out)
+		if out["repos"] != float64(1) || out["queue_items"] != float64(1) || out["escalations"] != float64(1) {
+			t.Fatal(user, out)
+		}
+		wantRuns := float64(0)
+		if user == "owner" {
+			wantRuns = 1
+		}
+		if out["workflow_runs"] != wantRuns {
+			t.Fatal(user, out)
+		}
+	}
+}

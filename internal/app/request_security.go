@@ -76,3 +76,25 @@ func safeWebURL(raw string) bool {
 	u, err := url.Parse(raw)
 	return err == nil && (u.Scheme == "https" || u.Scheme == "http") && u.Hostname() != "" && u.User == nil
 }
+
+// Production never accepts the legacy cookie name: sibling Pages content can
+// create a parent-domain cookie with that name. Plain HTTP development retains
+// its separate cookie because browsers require Secure for the __Host- prefix.
+func sessionCookieName(r *http.Request) string {
+	if secureRequest(r) {
+		return "__Host-switchyard_session"
+	}
+	return "switchyard_session"
+}
+
+// Origin checks are independent of entity authorization so routes with their
+// own permission model (including Proposal intake) cannot skip this boundary.
+func mutationOriginGuard(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/api/") && r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions && !sameOrigin(r) {
+			writeJSON(w, http.StatusForbidden, map[string]any{"error": "cross_origin_request_denied"})
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}

@@ -322,7 +322,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /api/queue", a.authorizeHandler(a.handleListQueue))
 	mux.HandleFunc("POST /api/queue/{id}/requeue", a.authorizeHandler(a.handleRequeueItem))
 
-	return a.measureHTTP(a.withSession(mux))
+	return a.measureHTTP(mutationOriginGuard(a.withSession(mux)))
 }
 
 // serveStatic serves the Nift-built public/ directory. Unknown paths that look
@@ -475,7 +475,7 @@ func (a *App) withSession(next http.Handler) http.Handler {
 		if strings.HasPrefix(r.URL.Path, "/api/") {
 			user := ""
 			demoGuest := false
-			if c, err := r.Cookie("switchyard_session"); err == nil {
+			if c, err := r.Cookie(sessionCookieName(r)); err == nil {
 				if u, ok := a.userForSession(r, c.Value); ok {
 					user = u
 				}

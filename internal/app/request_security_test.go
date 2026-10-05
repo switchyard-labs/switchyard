@@ -75,3 +75,45 @@ func TestAnonymousOrganizationRoutes(t *testing.T) {
 		}
 	}
 }
+
+func TestMutationOriginsThroughMux(t *testing.T) {
+	t.Setenv("SWITCHYARD_PUBLIC_URL", "https://switchyard.cx")
+	a := &App{}
+	for _, path := range []string{"/api/auth/login", "/api/repositories/alice/repo/proposals", "/api/repositories/alice/repo/pages/deploy"} {
+		for _, origin := range []string{"https://evil.example", "https://alice.switchyard.cx"} {
+			r := httptest.NewRequest("POST", path, strings.NewReader(`{}`))
+			r.Header.Set("Origin", origin)
+			r.Header.Set("Content-Type", "text/plain")
+			w := httptest.NewRecorder()
+			a.Handler().ServeHTTP(w, r)
+			if w.Code != 403 || !strings.Contains(w.Body.String(), "cross_origin_request_denied") {
+				t.Fatalf("%s %s: %d %s", path, origin, w.Code, w.Body.String())
+			}
+		}
+	}
+	for _, origin := range []string{"", "https://switchyard.cx"} {
+		reached := false
+		handler := mutationOriginGuard(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { reached = true }))
+		r := httptest.NewRequest("POST", "/api/test", nil)
+		r.Header.Set("Origin", origin)
+		handler.ServeHTTP(httptest.NewRecorder(), r)
+		if !reached {
+			t.Fatalf("CLI/same-origin denied: %q", origin)
+		}
+	}
+}
+
+func TestProductionSessionCookieDoesNotAcceptLegacyName(t *testing.T) {
+	t.Setenv("SWITCHYARD_PUBLIC_URL", "https://switchyard.cx")
+	a := &App{}
+	r := httptest.NewRequest("GET", "/api/auth/me", nil)
+	r.AddCookie(&http.Cookie{Name: "switchyard_session", Value: "attacker"})
+	w := httptest.NewRecorder()
+	a.Handler().ServeHTTP(w, r)
+	if w.Code != 401 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	if sessionCookieName(r) != "__Host-switchyard_session" {
+		t.Fatal("unsafe production cookie")
+	}
+}

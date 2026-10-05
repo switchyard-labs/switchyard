@@ -230,23 +230,52 @@ func (a *App) handleFleet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	org := strOr(o["id"])
-	orgs, _ := a.Trestle.ListRecords("orgs", `id = "`+org+`"`)
-	orgView := map[string]any{}
-	if len(orgs) > 0 {
-		orgView = orgs[0]
+	metas, err := a.Trestle.ListRecords("repository_meta", filterEq("owner_id", org))
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "fleet_unavailable"})
+		return
 	}
-	repos, _ := a.Trestle.ListRecords("repos", "")
-	queue, _ := a.Trestle.ListRecords("iq", "")
-	runs, _ := a.Trestle.ListRecords("workflow_runs", "")
-	escs, _ := a.Trestle.ListRecords("escalations", "")
-	writeJSON(w, 200, map[string]any{
-		"org":           orgView,
-		"repos":         len(repos),
-		"queue_items":   len(queue),
-		"workflow_runs": len(runs),
-		"escalations":   len(escs),
-		"queue":         queue,
-	})
+	allowed := map[string]bool{}
+	queue := []map[string]any{}
+	for _, meta := range metas {
+		if strOr(meta["owner_type"]) != "org" || !a.CanRepository(meta, user, ReadRepo) {
+			continue
+		}
+		repo := strOr(meta["artifact_name"])
+		if repo == "" {
+			continue
+		}
+		allowed[repo] = true
+		items, e := a.Trestle.ListRecords("iq", filterEq("repo", repo))
+		if e != nil {
+			writeJSON(w, 502, map[string]any{"error": "fleet_unavailable"})
+			return
+		}
+		queue = append(queue, items...)
+	}
+	// Legacy workflow/escalation schemas keep repository association inside JSON.
+	// Filter those associations before deriving counts; never return global totals.
+	runs, err := a.Trestle.ListRecords("workflow_runs", "")
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "fleet_unavailable"})
+		return
+	}
+	escs, err := a.Trestle.ListRecords("escalations", "")
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "fleet_unavailable"})
+		return
+	}
+	scoped := func(collection string, items []map[string]any) int {
+		n := 0
+		for _, item := range items {
+			if allowed[a.fleetRecordRepo(collection, item)] && a.recordAccess(collection, item, user, ReadRepo) {
+				n++
+			}
+		}
+		return n
+	}
+	writeJSON(w, 200, map[string]any{"org": o, "repos": len(allowed), "queue_items": len(queue), "queue": queue,
+		"workflow_runs": scoped("workflow_runs", runs), "escalations": scoped("escalations", escs)})
 }
 
 func (a *App) handleAudit(w http.ResponseWriter, r *http.Request) {
@@ -304,3 +333,23 @@ func (e *policyDenied) Error() string { return e.Reason }
 
 var _ = strings.TrimSpace
 var _ = time.RFC3339
+
+// Resolve only the known fleet associations; unknown/unscoped records fail closed.
+func (a *App) fleetRecordRepo(collection string, item map[string]any) string {
+	if repo := strOr(item["repo"]); repo != "" {
+		return repo
+	}
+	if params, ok := item["params"].(map[string]any); ok {
+		return strOr(params["repo"])
+	}
+	if packet, ok := item["packet"].(map[string]any); ok {
+		if repo := strOr(packet["repo"]); repo != "" {
+			return repo
+		}
+		target := map[string]string{"queue_blocked": "iq", "workflow_approval": "workflow_runs"}[strOr(packet["target_kind"])]
+		if target != "" {
+			return a.fleetRecordRepo(target, a.scopedRecord(target, strOr(packet["target_id"])))
+		}
+	}
+	return ""
+}

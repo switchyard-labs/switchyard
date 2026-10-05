@@ -342,7 +342,7 @@ func (a *App) handleListSessions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	current := ""
-	if c, e := r.Cookie("switchyard_session"); e == nil {
+	if c, e := r.Cookie(sessionCookieName(r)); e == nil {
 		current = c.Value
 	}
 	it, err := a.Trestle.ListRecords("sessions", `username = "`+u+`"`)
@@ -364,7 +364,7 @@ func (a *App) handleRevokeOtherSessions(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	current := ""
-	if c, e := r.Cookie("switchyard_session"); e == nil {
+	if c, e := r.Cookie(sessionCookieName(r)); e == nil {
 		current = c.Value
 	}
 	it, _ := a.Trestle.ListRecords("sessions", `username = "`+u+`"`)

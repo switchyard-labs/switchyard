@@ -18,7 +18,7 @@ func (a *App) redirectLegacyRepository(w http.ResponseWriter, r *http.Request) b
 	}
 	meta := a.repositoryMetaByArtifact(r.URL.Query().Get("name"))
 	user := ""
-	if cookie, err := r.Cookie("switchyard_session"); err == nil {
+	if cookie, err := r.Cookie(sessionCookieName(r)); err == nil {
 		if u, ok := a.userForSession(r, cookie.Value); ok {
 			user = u
 		}

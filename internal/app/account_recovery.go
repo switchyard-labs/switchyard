@@ -223,7 +223,7 @@ func (a *App) accountTokenOperation(w http.ResponseWriter, r *http.Request, purp
 		return
 	}
 	if action == "consume" && purpose == "password_reset" {
-		http.SetCookie(w, &http.Cookie{Name: "switchyard_session", Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: secureRequest(r), SameSite: http.SameSiteLaxMode})
+		http.SetCookie(w, &http.Cookie{Name: sessionCookieName(r), Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: secureRequest(r), SameSite: http.SameSiteLaxMode})
 	}
 	writeJSON(w, 200, map[string]any{"ok": true})
 }

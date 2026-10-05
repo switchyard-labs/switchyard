@@ -228,14 +228,14 @@ func (a *App) startSession(w http.ResponseWriter, r *http.Request, username stri
 		return err
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name: "switchyard_session", Value: token, Path: "/",
+		Name: sessionCookieName(r), Value: token, Path: "/",
 		HttpOnly: true, Secure: secureRequest(r), SameSite: http.SameSiteLaxMode, MaxAge: 7 * 24 * 3600,
 	})
 	return nil
 }
 
 func (a *App) handleLogout(w http.ResponseWriter, r *http.Request) {
-	if c, err := r.Cookie("switchyard_session"); err == nil {
+	if c, err := r.Cookie(sessionCookieName(r)); err == nil {
 		rid, ver, _, e := a.Trestle.FindRecord("sessions", filterEq("token", c.Value))
 		if e != nil {
 			writeJSON(w, 502, map[string]any{"error": "logout_persistence_failed"})
@@ -249,7 +249,7 @@ func (a *App) handleLogout(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	http.SetCookie(w, &http.Cookie{Name: "switchyard_session", Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: secureRequest(r), SameSite: http.SameSiteLaxMode})
+	http.SetCookie(w, &http.Cookie{Name: sessionCookieName(r), Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: secureRequest(r), SameSite: http.SameSiteLaxMode})
 	writeJSON(w, 200, map[string]any{"ok": true})
 }
 

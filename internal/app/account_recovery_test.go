@@ -132,7 +132,7 @@ func TestVerificationAndResetDelegation(t *testing.T) {
 		t.Fatal("reset failed", w.Code)
 	}
 	cookies := w.Result().Cookies()
-	if len(cookies) != 1 || cookies[0].Name != "switchyard_session" || cookies[0].MaxAge != -1 {
+	if len(cookies) != 1 || cookies[0].Name != "__Host-switchyard_session" || cookies[0].MaxAge != -1 {
 		t.Fatal("session cookie not cleared")
 	}
 }
