@@ -47,6 +47,10 @@ func TestActionDispatchIntentReplayAndExactRerun(t *testing.T) {
 		return w
 	}
 	body := `{"request_id":"fixture-request-0001","sha":"` + snapshot.Manifest.Run.SHA + `","ref":"refs/heads/main"}`
+	if w := invoke(strings.Replace(body, "refs/heads/main", "refs/heads/unapproved", 1), ""); w.Code != 422 || len(provider.calls) != 0 || len(store.records["action_runs"]) != 0 {
+		t.Fatal("unapproved ref admitted", w.Code)
+	}
+
 	if w := invoke(body, ""); w.Code != 502 || len(store.records["action_runs"]) != 1 {
 		t.Fatalf("intent lost: %d", w.Code)
 	}

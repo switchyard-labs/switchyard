@@ -32,7 +32,7 @@ func (a *App) allowAuthAttempt(remote, purpose string) bool {
 			delete(a.loginAttempts, k)
 		}
 	}
-	if len(a.loginAttempts) >= 10000 {
+	if _, existing := a.loginAttempts[host]; !existing && len(a.loginAttempts) >= 10000 {
 		return false
 	}
 	v := a.loginAttempts[host]

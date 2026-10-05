@@ -191,7 +191,11 @@ func (a *App) handleActionDispatch(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 422, map[string]any{"error": "invalid_source_identity"})
 		return
 	}
-	if run.Release != nil && (!strings.HasPrefix(run.Ref, "refs/tags/") || !slices.Contains(definition.Refs, run.Ref)) {
+	if !slices.Contains(definition.Refs, run.Ref) {
+		writeJSON(w, 422, map[string]any{"error": "ref_not_approved"})
+		return
+	}
+	if run.Release != nil && !strings.HasPrefix(run.Ref, "refs/tags/") {
 		writeJSON(w, 422, map[string]any{"error": "release_requires_approved_tag"})
 		return
 	}

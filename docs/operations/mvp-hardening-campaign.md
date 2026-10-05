@@ -94,3 +94,27 @@ Base movement preserves the pinned source. Provenance-store failure after a push
 recovers without another push, even after policy revocation. Queue errors and
 repeated base movement have backoff and bounded retries; explicit requeue resets
 the budget. No live migration or deployment has occurred yet.
+
+## CP5: bounded medium hardening
+
+Release API asset DTOs omit storage keys while internal downloads retain them.
+Queue backoff/budgets were included in CP4. Schema version 16 adds a unique
+`ref_current` cursor, separate from immutable transition receipts: repeated
+transitions advance current state even when an event receipt is replayed; known
+missing refs produce deletion observations. Legacy timestamp selection parses
+actual timestamps. Periodic polling cannot reconstruct intermediate pushes and
+identical transition tuples still share an immutable event receipt.
+
+Manual/PR Actions dispatch requires an approved exact ref. The Worker checks
+archived approved revision/jobs/ref before admitting dispatch and again before
+execution. A bundled entrypoint test exercises real fetch/HMAC/receipt code with
+only Cloudflare runtime classes mocked. Pages rejects reserved inherited-object
+project keys; owner origins remain shared. Semantic `field_equals` evaluation is
+bounded to 100 rules, 128 KiB contract, 1 MiB individual input, 8 MiB aggregate
+input and 32 selector levels. Semantic-conflict Attempts enter Needs Attention.
+Throttle saturation retains limits for existing buckets and refuses new buckets
+at capacity; it does not add distributed or persistent throttling.
+
+Validation: full app/refs suites pass; Actions 32 tests, typecheck and dry build
+pass; Pages 17 tests pass. Export/Nift tests require the local subprocess/fixture
+permissions used by the existing suite. No live migration/deployment yet.

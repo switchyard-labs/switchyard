@@ -46,7 +46,7 @@ func (p PagesConfig) validate(privateSource bool) error {
 	case "www", "docs", "app", "api", "admin", "assets", "static", "pages", "login", "signup", "sy":
 		return fmt.Errorf("pages_owner_reserved")
 	}
-	if p.Project != "" && (!pagesProject.MatchString(p.Project) || p.Project == ".git") {
+	if p.Project != "" && (!pagesProject.MatchString(p.Project) || p.Project == ".git" || p.Project == "__proto__" || p.Project == "constructor" || p.Project == "prototype") {
 		return fmt.Errorf("pages_project_invalid")
 	}
 	if p.SPAFallback != "" && !pagesRelativePath(p.SPAFallback, false) {

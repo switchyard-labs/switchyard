@@ -50,7 +50,11 @@ func (a *App) releaseView(meta, record map[string]any) map[string]any {
 	base := "/" + url.PathEscape(strOf(meta["owner_slug"])) + "/" + url.PathEscape(strOf(meta["slug"]))
 	assets, err := releaseAssets(record)
 	if err == nil {
-		out["assets"] = assets
+		publicAssets := make([]map[string]any, 0, len(assets))
+		for _, asset := range assets {
+			publicAssets = append(publicAssets, map[string]any{"id": asset.ID, "name": asset.Name, "size": asset.Size, "sha256": asset.SHA256, "content_type": asset.ContentType, "created_at": asset.CreatedAt, "state": asset.State})
+		}
+		out["assets"] = publicAssets
 	}
 	out["source_zip"] = base + "/archive/" + strOf(record["target_sha"]) + ".zip"
 	out["source_tar_gz"] = base + "/archive/" + strOf(record["target_sha"]) + ".tar.gz"

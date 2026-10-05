@@ -1,4 +1,4 @@
-import {approvedDefinition,saveApprovedDefinition} from './approved-definition.mjs';
+import {approvedDefinition,saveApprovedDefinition,validateApprovedRun} from './approved-definition.mjs';
 import { CIWorkflow, type CiContext, type CiParams, type CloudflareArtifacts, type CiRunnerResult, isCiRunnerFailure } from '@cloudflare/ci';
 import { type CiBindings, CiSandbox } from '@cloudflare/ci/worker';
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
@@ -40,6 +40,7 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
    input={...input,run_id:event.instanceId,definition_revision:definition.revision,jobs:definition.jobs,...(definition.release?{release:definition.release}:{})};
   }
   const run=validateRun(input,this.env.ARTIFACTS_NAMESPACE,this.env.ALLOWED_REPOS.split(',')) as Run;
+  await step.do('validate-approved-run',()=>validateApprovedRun(this.env.BACKUP_BUCKET,run));
   if (!('run_id' in event.payload)) {
    const owner=await step.do('claim-native-event',async()=>{
     const identity=await digest(JSON.stringify([run.owner,run.repo,run.ref,run.sha,(event.payload as any).beforeSha||'',run.definition_revision]));
@@ -155,6 +156,7 @@ export default {
    }
    if(request.method==='POST'&&url.pathname==='/dispatch') {
     const run=validateRun(JSON.parse(body),env.ARTIFACTS_NAMESPACE,env.ALLOWED_REPOS.split(',')) as Run;
+    try{await validateApprovedRun(env.BACKUP_BUCKET,run);}catch{return json({error:'approved_definition_required'},422);}
     const identity=await digest(body),receipt=`runs/${run.run_id}/intent.json`;const existing=await env.BACKUP_BUCKET.get(receipt);
     if(existing && (await existing.json<{digest:string}>()).digest!==identity)return json({error:'run_identity_conflict'},409);
     // Workflow IDs are the durable at-most-one execution boundary. A retry

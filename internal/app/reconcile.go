@@ -2,7 +2,9 @@ package app
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -72,48 +74,68 @@ func (a *App) reconcileRepo(repo string) error {
 	if err != nil {
 		return err
 	}
+	current := map[string]string{}
 	for ref, sha := range refsMap {
 		if ref != "HEAD" {
-			branch := shortRef(ref)
-			if err := a.reconcileRef(repo, branch, sha); err != nil {
-				return err
+			current[shortRef(ref)] = sha
+		}
+	}
+	// Retain known refs after deletion, including pre-cursor observations.
+	for _, collection := range []string{"ref_current", "ref_obs"} {
+		known, err := a.Trestle.ListRecords(collection, filterEq("repo", repo))
+		if err != nil {
+			return err
+		}
+		for _, row := range known {
+			branch := strOr(row["branch"])
+			if _, exists := current[branch]; !exists {
+				current[branch] = ""
 			}
 		}
 	}
+	for branch, sha := range current {
+		if err := a.reconcileRef(repo, branch, sha); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
+// The current cursor is separate from immutable, deduplicated event receipts.
+// A->B->A->B must advance the cursor even when the A->B receipt already exists.
 func (a *App) reconcileRef(repo, branch, sha string) error {
-	// latest recorded observation for this branch
-	latest, err := a.latestRefObs(repo, branch)
+	id := fmt.Sprintf("ref-%x", sha256.Sum256([]byte(repo+"\x00"+branch)))
+	rid, version, cursor, err := a.Trestle.FindRecord("ref_current", filterEq("id", id))
 	if err != nil {
 		return err
 	}
-	if latest == sha {
+	if cursor == nil {
+		previous, err := a.latestRefObs(repo, branch)
+		if err != nil {
+			return err
+		}
+		baseline := previous
+		if baseline == "" {
+			baseline = sha
+		}
+		_, _, err = a.Trestle.CreateRecord("ref_current", map[string]any{"id": id, "repo": repo, "branch": branch, "sha": baseline, "seen_at": time.Now().UTC().Format(time.RFC3339Nano)}, "ref-current-"+id)
+		rid, version, cursor, err = a.Trestle.FindRecord("ref_current", filterEq("id", id))
+		if err != nil {
+			return err
+		}
+		if cursor == nil {
+			return fmt.Errorf("ref cursor unavailable")
+		}
+	}
+	previous := strOr(cursor["sha"])
+	if previous == sha {
 		return nil
 	}
-	// First observation of this branch: record a baseline observation only,
-	// with no domain event. Reconciliation cannot distinguish "branch just
-	// created then pushed" from "already existed", so a fabricated before=""
-	// transition would collide with the queue event's authoritative before and
-	// create a second domain fact. The queue event (if any) carries the true
-	// `before`; the baseline here makes later transitions (before -> after)
-	// well-defined.
-	if latest == "" {
-		now := time.Now().UTC().Format(time.RFC3339)
-		_, _, err := a.Trestle.CreateRecord("ref_obs", map[string]any{
-			"repo": repo, "branch": branch, "sha": sha, "seen_at": now,
-		}, "refobs-"+repo+"-"+branch+"-"+sha+"-baseline-"+now)
+	if _, err := a.observeTransition(repo, branch, previous, sha, "reconciliation"); err != nil {
 		return err
 	}
-	// shared normalized ingest (also used by the queue fast path); domain
-	// event is deduplicated by ref-transition identity (repo, ref, before,
-	// after), so reconciliation never duplicates what the queue already
-	// recorded, and vice versa.
-	if _, err := a.observeTransition(repo, branch, latest, sha, "reconciliation"); err != nil {
-		return err
-	}
-	return nil
+	return a.Trestle.PatchRecord("ref_current", rid, version, map[string]any{"sha": sha, "seen_at": time.Now().UTC().Format(time.RFC3339Nano)})
 }
 
 func (a *App) latestRefObs(repo, branch string) (string, error) {
@@ -130,7 +152,9 @@ func (a *App) latestRefObs(repo, branch string) (string, error) {
 			continue
 		}
 		ts, _ := it["seen_at"].(string)
-		if ts > bestTS {
+		parsed, err := time.Parse(time.RFC3339Nano, ts)
+		bestTime, _ := time.Parse(time.RFC3339Nano, bestTS)
+		if err == nil && (bestTS == "" || parsed.After(bestTime)) {
 			bestTS = ts
 			best, _ = it["sha"].(string)
 		}

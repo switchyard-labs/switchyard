@@ -29,7 +29,7 @@ func TestPagesExplicitSourceAndPrefixes(t *testing.T) {
 	if err := p.validate(true); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"..", ".", ".git", "x/y", "x%2fy", "x\\y"} {
+	for _, name := range []string{"..", ".", ".git", "__proto__", "constructor", "prototype", "x/y", "x%2fy", "x\\y"} {
 		p.Project = name
 		if p.validate(false) == nil {
 			t.Fatal("accepted project", name)

@@ -11,3 +11,12 @@ test('a new project approval preserves an admitted owner build revision',async()
  assert.deepEqual((await approvedDefinition(b,'repo','owner')).jobs,['owner']);
 });
 test('legacy current approvals work only for the matching revision',async()=>{const b=new Bucket();await b.put('definitions/repo.json',JSON.stringify({revision:'legacy',upload_origin:'https://worker.example'}));assert.equal((await approvedDefinition(b,'repo','legacy')).revision,'legacy');await assert.rejects(approvedDefinition(b,'repo','other'));});
+
+test('manual and PR source refs and jobs must match the approved revision',async()=>{
+ const {validateApprovedRun}=await import('../src/approved-definition.mjs');const b=new Bucket();
+ const definition={revision:'revision',upload_origin:'https://worker.example',refs:['refs/heads/main'],jobs:[{id:'test',steps:[{id:'test',command:'true'}]}]};await saveApprovedDefinition(b,'repo',definition);
+ const run={repo:'repo',ref:'refs/heads/main',definition_revision:'revision',jobs:definition.jobs};
+ await validateApprovedRun(b,run);
+ await assert.rejects(validateApprovedRun(b,{...run,ref:'refs/heads/unapproved',trigger:'pull_request'}),/ref_not_approved/);
+ await assert.rejects(validateApprovedRun(b,{...run,jobs:[{id:'test',steps:[{id:'test',command:'different'}]}]}),/input_conflict/);
+});

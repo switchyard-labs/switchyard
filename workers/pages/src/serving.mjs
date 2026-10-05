@@ -88,7 +88,9 @@ export async function promote(bucket,owner,siteKey,target,expectedGeneration,ope
  if(map.generation!==expectedGeneration)throw new Error('promotion_conflict');
  const mount=siteKey==='/'?'/':'/'+siteKey+'/';
  if(target.base_path!==mount||siteKey!=='/'&&!/^[a-z0-9_-][a-z0-9._-]{0,99}$/.test(siteKey))throw new Error('base_path_mismatch');
- const existing=siteKey==='/'?map.root:map.projects[siteKey];
+ if(['__proto__','constructor','prototype'].includes(siteKey))throw new Error('invalid_project_name');
+ if(!map.projects||typeof map.projects!=='object'||Array.isArray(map.projects))throw new Error('invalid_project_map');
+ const existing=siteKey==='/'?map.root:(Object.hasOwn(map.projects,siteKey)?map.projects[siteKey]:null);
  if(existing&&existing.site_id!==target.site_id)throw new Error('prefix_owned_by_another_site');
  const manifest=await deploymentManifest(bucket,target);
  if(!manifest||manifest.base_path!==mount)throw new Error('deployment_not_ready');

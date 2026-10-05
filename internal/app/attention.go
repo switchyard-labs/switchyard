@@ -52,7 +52,7 @@ func attentionProjection(collection string, x map[string]any) map[string]any {
 	repo, branch := strOr(x["repo"]), strOr(x["branch"])
 	switch collection {
 	case "attempts":
-		if status != "conflict" {
+		if status != "conflict" && status != "semantic_conflict" {
 			return nil
 		}
 		kind, title, reason = "attempt_conflict", "Attempt needs conflict resolution", "The Attempt is parked in conflict. Review the conflicting versions before changing its branch."

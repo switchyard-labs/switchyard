@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"switchyard/internal/refs"
@@ -58,7 +59,7 @@ func semanticFindingsInTree(dir string) ([]map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	raw, err := os.ReadFile(contractPath)
+	raw, err := boundedSemanticRead(contractPath, 128<<10)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -71,19 +72,35 @@ func semanticFindingsInTree(dir string) ([]map[string]any, error) {
 	if err := json.Unmarshal(raw, &contract); err != nil {
 		return nil, fmt.Errorf("semantic contract parse: %v", err)
 	}
+	if len(contract.Rules) > 100 {
+		return nil, fmt.Errorf("semantic rule count exceeds 100")
+	}
+	// Bound aggregate work as well as individual files. Cache selector results.
+	remaining := int64(8 << 20)
+	cache := map[string]string{}
+	readField := func(selector string) (string, error) {
+		if value, ok := cache[selector]; ok {
+			return value, nil
+		}
+		value, err := boundedMergedJSONField(dir, selector, &remaining)
+		if err == nil {
+			cache[selector] = value
+		}
+		return value, err
+	}
 	findings := []map[string]any{}
 	for _, rule := range contract.Rules {
 		if rule.Kind != "field_equals" {
 			return nil, fmt.Errorf("unsupported semantic rule %q", rule.Kind)
 		}
-		va, errA := mergedJSONField(dir, rule.A)
+		va, errA := readField(rule.A)
 		if errA != nil {
 			findings = append(findings, map[string]any{
 				"severity": "error", "message": "semantic conflict: cannot read " + rule.A + ": " + errA.Error(), "file": fileA(rule.A),
 			})
 			continue
 		}
-		vb, errB := mergedJSONField(dir, rule.B)
+		vb, errB := readField(rule.B)
 		if errB != nil {
 			findings = append(findings, map[string]any{
 				"severity": "error", "message": "semantic conflict: cannot read " + rule.B + ": " + errB.Error(), "file": fileA(rule.B),
@@ -104,18 +121,24 @@ func semanticFindingsInTree(dir string) ([]map[string]any, error) {
 // mergedJSONField reads a JSON file from the merged tree and returns the
 // dotted-field value as a string.
 func mergedJSONField(dir, selector string) (string, error) {
+	remaining := int64(8 << 20)
+	return boundedMergedJSONField(dir, selector, &remaining)
+}
+
+func boundedMergedJSONField(dir, selector string, remaining *int64) (string, error) {
 	parts := strings.SplitN(selector, ":", 2)
-	if len(parts) != 2 {
+	if len(selector) > 1024 || len(parts) != 2 || len(strings.Split(parts[1], ".")) > 32 {
 		return "", fmt.Errorf("selector %q must be path:field", selector)
 	}
 	filePath, err := refs.ContainedPath(dir, parts[0])
 	if err != nil {
 		return "", err
 	}
-	b, err := os.ReadFile(filePath)
+	b, err := boundedSemanticRead(filePath, min(1<<20, *remaining))
 	if err != nil {
 		return "", err
 	}
+	*remaining -= int64(len(b))
 	var obj map[string]any
 	if err := json.Unmarshal(b, &obj); err != nil {
 		return "", err
@@ -141,4 +164,27 @@ func fileA(selector string) string {
 		return parts[0]
 	}
 	return selector
+}
+
+func boundedSemanticRead(path string, limit int64) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	info, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() || info.Size() > limit {
+		return nil, fmt.Errorf("semantic input exceeds limit or is not a regular file")
+	}
+	b, err := io.ReadAll(io.LimitReader(f, limit+1))
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(b)) > limit {
+		return nil, fmt.Errorf("semantic input exceeds limit")
+	}
+	return b, nil
 }

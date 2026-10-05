@@ -20,3 +20,10 @@ test('concurrent promotions acknowledge exactly one map write',async()=>{const {
 test('operation replay cannot change manifest or site identity',async()=>{const {bucket,docs}=await fixture();await promote(bucket,'strut-labs','foo.js',docs,1,'replay');await assert.rejects(promote(bucket,'strut-labs','foo.js',{...docs,manifest_hash:'b'.repeat(64)},2,'replay'),/input_conflict/);});
 
 test('infrastructure owner names agree with application validation',async()=>{const {bucket,root}=await fixture();for(const owner of ['www','docs','app','api','admin','assets','static','pages','login','signup','sy']){await bucket.put('pages-hosts/'+owner+'.json',JSON.stringify({generation:1,root,projects:{}}));assert.equal((await serve(new Request('https://'+owner+'.switchyard.cx/'),{PAGES_BUCKET:bucket})).status,404,owner);}});
+
+test('inherited project keys cannot claim or mutate a production prefix',async()=>{
+ const {bucket,docs}=await fixture();
+ for(const name of ['__proto__','constructor','prototype'])await assert.rejects(promote(bucket,'strut-labs',name,{...docs,base_path:'/'+name+'/'},1,'unsafe-'+name),/invalid_project_name/);
+ assert.equal(JSON.parse(await (await bucket.get('pages-hosts/strut-labs.json')).text()).generation,1);
+ assert.equal({}.site_id,undefined);
+});
