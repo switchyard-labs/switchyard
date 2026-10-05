@@ -1,27 +1,88 @@
-# Auth hardening acceptance report — 2026-10-05
+# Auth and repository UI acceptance report — 2026-10-06
 
-Implemented and deployed; real provider delivery is the remaining infrastructure
-prerequisite. Source has not been pushed, tagged or released.
+## A. Mailgun state
 
-| Item | Result |
-|---|---|
-| A. Trestle | Administrator/CSRF-protected generic collection account-token operation; atomic update/consume and minimal audit. Native Argon2id auth unchanged; actual Switchyard bcrypt identities preserved. |
-| B. Tokens | 256-bit CSPRNG, hash-only bounded account JSON slots, account/collection/purpose/email/password-state binding, expiry, latest-only, single-use. |
-| C. Verification | Signup issues link, automatic sign-in retained, mail failure preserves unverified account; private settings/resend; browser GET and explicit POST consumption. |
-| D. Reset | Email-only request with equivalent 202 response; new/confirm password; atomic Trestle password change; returns to sign-in. |
-| E. Sessions | Password-state change rejects every old session; login race cannot bind a validated old password to the new hash. No fresh reset session. Old rows may remain but cannot authenticate. |
-| F. Transport | One authenticated implicit-TLS SMTP adapter, TLS>=1.2/certificate verification, plain/HTML templates, deterministic fake. Production credentials absent. |
-| G. DNS | Existing registrar-forwarder SPF preserved. No DKIM/DMARC found; provider-specific sender records not configured. |
-| H. Limits | Mail IP10/email3/global100 per five minutes; existing consume/signup throttles. Verification24h (60s–48h), reset30m (60s–2h), configurable. |
-| I. Migration | Users stay usable/unverified; no fabricated email/timestamp. Trestle23→24 and Switchyard12→13 rehearsed and backed up. Missing-email legacy accounts need private administrator repair. |
-| J. UX | Four-field signup, settings status/resend, forgot discovery, safe invalid/reused links, immediate URL clearing. Desktop1600/mobile390 tested locally and deployed. |
-| K. Tests | Full build/tests/vet; affected race; atomic reset/verification, resend-vs-verify, expiry, rollback fault, latest/email/disable binding; portable restore; SMTP/MIME tests; real-Trestle captured-mail browser flows pass. |
-| L. Live verification | Trusted-backend issuance plus public signed-out consumption, state and reuse rejection pass. Real verification email delivery not certified. |
-| M. Live reset | Public consumption, old password/session rejection, new login/reuse rejection pass; disposable accounts cleaned. Real reset email delivery not certified. |
-| N. Limits | Standalone storage only for this adapter; replication fails closed. PostgreSQL test environment unavailable. Shared proxy peer budget, in-memory throttles, nondurable reset mail worker. Legacy email assignment and CLI recovery have no new self-service flow. Snapshot restores can revive post-snapshot-consumed tokens; documented incident invalidation is required. |
-| O. Deployment | https://switchyard.cx active on `2fb6cf6`; Trestle implementation `aebb5a4`. Consistent backup `/opt/cp0/switchyard/before-auth-20261005-105212`. Pages, Proposal, cookie isolation and signed-out regressions pass. |
-| P. Local commits | Trestle `aebb5a4` implementation, `6edad83` acceptance tests; Switchyard `b2bb0d9` implementation/UI/tests, `2edbedf` live certification and `2fb6cf6` final verified-status correction; subsequent documentation checkpoint. |
-| Q. Readiness | Feasible implementation/certification complete. Configure authorized SMTP sender plus SPF/DKIM/DMARC, then certify real verification/reset emails before claiming email recovery production-ready. No push/tag/release. |
+Active on Linode: authenticated Mailgun US SMTP, port 2525, required STARTTLS,
+verified certificates and TLS 1.2 or newer. Sender: Switchyard
+<no-reply@mg.switchyard.cx>. SPF, DKIM and monitoring DMARC are published;
+existing apex mail routing is preserved. The user confirmed inbox delivery,
+sender identity, expiry copy and mobile email layout. Recipient authentication
+headers were not independently inspected. Credentials are confined to the
+protected host environment and are absent from evidence.
 
-Evidence: `docs/evidence/auth-hardening/`. Operational setup, routes, privacy,
-limits, failure handling and rollback: `docs/operations/account-recovery.md`.
+## B–F. Link certification
+
+- Verification resend: the user confirmed the old link was rejected and the new
+  link verified the account. Verification persistence was checked through the API.
+- Verification expiry: controlled-clock Trestle tests pass, including expired
+  tokens and transactional rollback; no claim of waiting 24 hours for real mail.
+- Verification reuse: the user confirmed the consumed link was rejected.
+- Reset expiry: controlled-clock Trestle tests pass; no claim of waiting 30 minutes
+  for a live email to expire.
+- Reset reuse: the user confirmed rejection and successful login with the first
+  replacement password. Live API checks reject the old password and session.
+
+## G. Auth UI fixes
+
+Signed-out headers now show Sign in and Sign up. Signup retains exactly Username,
+Email, Password and Confirm password. Recovery links are checked on arrival,
+before the form becomes visible. This read-only validation does not consume the
+link, change the account version or produce an account audit mutation. Expired,
+superseded and consumed links show the invalid-link message immediately. Submit
+still validates atomically at consumption. Successful reset hides both the form
+and its introductory instructions and offers sign-in with the new password.
+Fragment tokens are immediately removed from the URL; responses retain no-store
+and no-referrer. Known/unknown/disabled reset requests have equivalent responses
+and a minimum response time; deterministic tests cover provider failure too.
+
+## H. Screenshot-driven fixes
+
+| Route | Problem / root cause | Fix / regression |
+|---|---|---|
+| Signed-out pages | Only one auth header action | Adjacent signup action; tested at six widths |
+| Repository Code | Star occupied a separate heading row | Star next to Go to file in the toolbar |
+| Work, Proposals, Pull requests, Actions, Commits, Releases, Pages, Settings | Page-specific headings omitted or diverged from repository navigation | Shared owner avatar, owner/repo breadcrumb, visibility badge, section label and all nine tabs; each section checked |
+| Proposals | Loading class remained after an empty result | Settled empty state has no spinner; grouped header actions; spaced footer with zero-result pagination hidden |
+| Actions | Partial tabs and plain visibility text | Shared full navigation and visibility badge |
+| Pages | Loading class remained after empty deployments | Settled empty state has no spinner; irrelevant pagination hidden |
+| Repository Settings | Generic shell sizing separated header and content vertically | Explicit header/body layout; content begins beneath navigation; desktop/mobile geometry assertions |
+
+## I. Browser and code regression
+
+60 repository/header checks passed at 1600, 1280, 1024, 768, 430 and 390 pixels,
+using local UI assets, live public read APIs and isolated maintainer fixtures.
+They check navigation, active tab, document overflow, signup discovery, settled
+empty states and settings geometry. Desktop/mobile screenshots are in
+`docs/evidence/ui-shell-c48/`.
+
+Real disposable Trestle plus captured-mail desktop/mobile browser flows pass:
+signup, resend supersession, verification, reset confirmation, reset, session
+revocation, new-password login and link reuse rejected on arrival. Full Switchyard
+Go tests and affected vet pass; Trestle account-token race tests and vet pass.
+Real mail delivery is separately certified by the user; captured mail alone is
+not delivery evidence.
+
+## J–K. Checkpoints
+
+Local Trestle: `4ceac7a` (non-consuming link validation).
+Local Switchyard: `3c66d31` (Mailgun), `b29f45b` (arrival validation/reset copy),
+`d462e69` (repository UI). Linode application checkpoint: `d462e69`; Trestle
+checkpoint: `4ceac7a`. Documentation checkpoints may follow without changing
+runtime code. No source was pushed, tagged or released.
+
+## L. Remaining limitations
+
+The token adapter supports standalone collection storage and fails closed for
+replication. PostgreSQL runtime certification was unavailable. Mail throttles
+are in memory and the reset-mail worker is nondurable: outage/crash requires a
+new request. Existing missing-email accounts require private administrator
+repair. Verification remains informational. DMARC is monitoring policy, not
+an enforcement rollout. Snapshot restoration can revive post-snapshot tokens;
+follow the documented incident invalidation procedure. Maintainer layout tests
+use isolated fixtures and do not claim live settings-write certification.
+
+## M. Readiness
+
+The requested UI and real mail checks are complete. Final deployed browser checks
+are recorded in `docs/evidence/auth-hardening/live-browser.json`. **READY TO PUSH** for this scoped campaign. Deployed desktop/mobile auth checks
+passed. This report does not authorize or perform a push.

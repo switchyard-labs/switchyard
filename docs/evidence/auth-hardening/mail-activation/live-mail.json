@@ -10,7 +10,7 @@
   "verification_consumed": "confirmed by user and private settings API verified_at",
   "reset_request_status": 202,
   "reset_inbox_and_consumption": "confirmed by user",
-  "switchyard_binary_sha256": "a27d4b7609d97c9d4665b2a958f1e6c4a9e63d01ac171fb9ae29a2be2515d4c7",
+  "switchyard_binary_sha256": "b883d75ace0763ff939603a61c914e2c5043f672ab93686db7b6febf763e349b",
   "tests": [
     "go test ./...",
     "go vet ./internal/maildelivery ./internal/app",
@@ -21,5 +21,12 @@
   "new_password_login": "confirmed by user",
   "old_password_rejected": true,
   "old_session_rejected": true,
-  "disposable_account_cleaned": true
+  "disposable_account_cleaned": true,
+  "verification_resend_supersession": "confirmed by user",
+  "verification_reuse_rejected": "confirmed by user",
+  "reset_reuse_rejected": "confirmed by user",
+  "sender_expiry_mobile_layout": "confirmed by user",
+  "expiry_coverage": "controlled-clock authority tests; not wall-clock mail waiting",
+  "switchyard_deployed_commit": "d462e69",
+  "trestle_deployed_commit": "4ceac7a"
 }
