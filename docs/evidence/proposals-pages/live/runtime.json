@@ -1,0 +1,14 @@
+{
+  "deployed_source": "2ce7c717b22bed1d6f33e1d448ca968fa2bc1fb3",
+  "test_only_followup": "c5cefb4",
+  "binary_sha256": "c86cafa02809775d500301a1a9e1e2b3d30a0721ba8e880900a17c22bb604817",
+  "service": "active",
+  "schema": 11,
+  "native_hosting": "active",
+  "public_url": "https://switchyard.cx",
+  "rollback_backup": "/opt/cp0/switchyard/before-signedout-20261005-065215/",
+  "source_pushes": false,
+  "tags": false,
+  "releases": false,
+  "live_coding_agent_executions": false
+}

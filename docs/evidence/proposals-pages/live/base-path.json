@@ -1,0 +1,31 @@
+{
+  "rows": [
+    {
+      "path": "/foo.js/",
+      "styles": [
+        "https://pages-probe-1005.switchyard.cx/foo.js/assets/site.css"
+      ],
+      "scripts": [
+        "https://pages-probe-1005.switchyard.cx/foo.js/assets/app.js"
+      ],
+      "images": [
+        {
+          "src": "https://pages-probe-1005.switchyard.cx/foo.js/assets/icon.svg",
+          "width": 20
+        }
+      ]
+    },
+    {
+      "path": "/foo.js/nested/",
+      "styles": [
+        "https://pages-probe-1005.switchyard.cx/foo.js/assets/site.css"
+      ],
+      "scripts": [
+        "https://pages-probe-1005.switchyard.cx/foo.js/assets/app.js"
+      ],
+      "images": []
+    }
+  ],
+  "unprefixedRootRelativeTargetsOwnerRoot": "https://pages-probe-1005.switchyard.cx/assets/site.css",
+  "noHTMLRewriting": true
+}

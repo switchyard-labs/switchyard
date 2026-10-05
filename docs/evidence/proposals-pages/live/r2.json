@@ -1,0 +1,16 @@
+[
+  {
+    "site": "site_8373a58e912bd51bcc2d17e3",
+    "deployment": "dpl_98b8566ae25fc83b6041760f587f7490",
+    "objects": 7,
+    "files_verified": 6,
+    "immutable_prefix": "pages/site_8373a58e912bd51bcc2d17e3/dpl_98b8566ae25fc83b6041760f587f7490/"
+  },
+  {
+    "site": "site_b0f5d8d7417c93b03a4264d2",
+    "deployment": "dpl_d0910851ca1f63375a658da3fe46e003",
+    "objects": 7,
+    "files_verified": 6,
+    "immutable_prefix": "pages/site_b0f5d8d7417c93b03a4264d2/dpl_d0910851ca1f63375a658da3fe46e003/"
+  }
+]

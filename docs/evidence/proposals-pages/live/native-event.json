@@ -1,0 +1,220 @@
+{
+  "run": {
+    "can_admin": true,
+    "can_run": true,
+    "checks": [
+      {
+        "definition_revision": "2a185738ca9a9c656f135e7fc98a3f3da978f036b1b0c7a25abc5e7c9e3e990c",
+        "id": "179aba02-806f-491b-8405-90090742bfbd-pages-owner",
+        "job_id": "pages-owner",
+        "repo": "codex-pages-live-20261005",
+        "run_id": "179aba02-806f-491b-8405-90090742bfbd",
+        "source_sha": "398a11a36274c5166b95f9f7e8087a5cf0f7a459",
+        "status": "success"
+      },
+      {
+        "definition_revision": "2a185738ca9a9c656f135e7fc98a3f3da978f036b1b0c7a25abc5e7c9e3e990c",
+        "id": "179aba02-806f-491b-8405-90090742bfbd-pages-project",
+        "job_id": "pages-project",
+        "repo": "codex-pages-live-20261005",
+        "run_id": "179aba02-806f-491b-8405-90090742bfbd",
+        "source_sha": "398a11a36274c5166b95f9f7e8087a5cf0f7a459",
+        "status": "success"
+      }
+    ],
+    "deployments_enabled": false,
+    "enabled": true,
+    "jobs": [
+      {
+        "id": "179aba02-806f-491b-8405-90090742bfbd-pages-owner",
+        "repo": "codex-pages-live-20261005",
+        "run_id": "179aba02-806f-491b-8405-90090742bfbd",
+        "state": {
+          "id": "pages-owner",
+          "name": "Pages owner",
+          "static": {
+            "job_id": "pages-owner",
+            "key": "build-assets/codex-pages-live-20261005/179aba02-806f-491b-8405-90090742bfbd/pages-owner/876d6527ce03ceb44a41dcfa520a1b2a212ad7afb23a98f02787ef72c127876a",
+            "name": "pages-static.bundle.json",
+            "sha256": "f6545f15375576d876c25c5e9991536ecbce0d0136f9c2f86d155b683b4a6c40",
+            "size": 1716,
+            "source_sha": "398a11a36274c5166b95f9f7e8087a5cf0f7a459"
+          },
+          "status": "succeeded",
+          "steps": [
+            {
+              "finished_at": "2026-10-05T04:47:55.610Z",
+              "id": "build",
+              "log_key": "runs/179aba02-806f-491b-8405-90090742bfbd/pages-owner-build.json",
+              "name": "build",
+              "started_at": "2026-10-05T04:47:35.538Z",
+              "status": "succeeded",
+              "truncated": false
+            }
+          ]
+        }
+      },
+      {
+        "id": "179aba02-806f-491b-8405-90090742bfbd-pages-project",
+        "repo": "codex-pages-live-20261005",
+        "run_id": "179aba02-806f-491b-8405-90090742bfbd",
+        "state": {
+          "id": "pages-project",
+          "name": "Pages project",
+          "static": {
+            "job_id": "pages-project",
+            "key": "build-assets/codex-pages-live-20261005/179aba02-806f-491b-8405-90090742bfbd/pages-project/876d6527ce03ceb44a41dcfa520a1b2a212ad7afb23a98f02787ef72c127876a",
+            "name": "pages-static.bundle.json",
+            "sha256": "7153e20044d14e0a1ce037fb83a5caf7737a4f74c6e06a307119b715c6999fae",
+            "size": 1755,
+            "source_sha": "398a11a36274c5166b95f9f7e8087a5cf0f7a459"
+          },
+          "status": "succeeded",
+          "steps": [
+            {
+              "finished_at": "2026-10-05T04:47:31.298Z",
+              "id": "build",
+              "log_key": "runs/179aba02-806f-491b-8405-90090742bfbd/pages-project-build.json",
+              "name": "build",
+              "started_at": "2026-10-05T04:47:10.132Z",
+              "status": "succeeded",
+              "truncated": false
+            }
+          ]
+        }
+      }
+    ],
+    "run": {
+      "actor": "Pages activation",
+      "created_at": "2026-10-05T04:47:08.123Z",
+      "definition_revision": "2a185738ca9a9c656f135e7fc98a3f3da978f036b1b0c7a25abc5e7c9e3e990c",
+      "id": "179aba02-806f-491b-8405-90090742bfbd",
+      "ref": "refs/heads/main",
+      "repo": "codex-pages-live-20261005",
+      "source_sha": "398a11a36274c5166b95f9f7e8087a5cf0f7a459",
+      "state": {
+        "external_status": "complete",
+        "finished_at": "2026-10-05T04:47:59.791Z",
+        "manifest": {
+          "finished_at": "2026-10-05T04:47:59.791Z",
+          "jobs": [
+            {
+              "id": "pages-project",
+              "name": "Pages project",
+              "static": {
+                "job_id": "pages-project",
+                "key": "build-assets/codex-pages-live-20261005/179aba02-806f-491b-8405-90090742bfbd/pages-project/876d6527ce03ceb44a41dcfa520a1b2a212ad7afb23a98f02787ef72c127876a",
+                "name": "pages-static.bundle.json",
+                "sha256": "7153e20044d14e0a1ce037fb83a5caf7737a4f74c6e06a307119b715c6999fae",
+                "size": 1755,
+                "source_sha": "398a11a36274c5166b95f9f7e8087a5cf0f7a459"
+              },
+              "status": "succeeded",
+              "steps": [
+                {
+                  "finished_at": "2026-10-05T04:47:31.298Z",
+                  "id": "build",
+                  "log_key": "runs/179aba02-806f-491b-8405-90090742bfbd/pages-project-build.json",
+                  "name": "build",
+                  "started_at": "2026-10-05T04:47:10.132Z",
+                  "status": "succeeded",
+                  "truncated": false
+                }
+              ]
+            },
+            {
+              "id": "pages-owner",
+              "name": "Pages owner",
+              "static": {
+                "job_id": "pages-owner",
+                "key": "build-assets/codex-pages-live-20261005/179aba02-806f-491b-8405-90090742bfbd/pages-owner/876d6527ce03ceb44a41dcfa520a1b2a212ad7afb23a98f02787ef72c127876a",
+                "name": "pages-static.bundle.json",
+                "sha256": "f6545f15375576d876c25c5e9991536ecbce0d0136f9c2f86d155b683b4a6c40",
+                "size": 1716,
+                "source_sha": "398a11a36274c5166b95f9f7e8087a5cf0f7a459"
+              },
+              "status": "succeeded",
+              "steps": [
+                {
+                  "finished_at": "2026-10-05T04:47:55.610Z",
+                  "id": "build",
+                  "log_key": "runs/179aba02-806f-491b-8405-90090742bfbd/pages-owner-build.json",
+                  "name": "build",
+                  "started_at": "2026-10-05T04:47:35.538Z",
+                  "status": "succeeded",
+                  "truncated": false
+                }
+              ]
+            }
+          ],
+          "run": {
+            "actor": "Pages activation",
+            "definition_revision": "2a185738ca9a9c656f135e7fc98a3f3da978f036b1b0c7a25abc5e7c9e3e990c",
+            "event": {
+              "type": "push"
+            },
+            "jobs": [
+              {
+                "id": "pages-project",
+                "name": "Pages project",
+                "static": {
+                  "base_path": "/foo.js/",
+                  "directory": "public"
+                },
+                "steps": [
+                  {
+                    "command": "cd '.' && export SWITCHYARD_PAGES_BASE_PATH='/foo.js/' && sed \"s|@{base}|$SWITCHYARD_PAGES_BASE_PATH|g\" templates/source.html > templates/template.html && ./tools/nift build --all && pwd && find public -maxdepth 3 -type f",
+                    "id": "build",
+                    "timeout_ms": 120000
+                  }
+                ]
+              },
+              {
+                "id": "pages-owner",
+                "name": "Pages owner",
+                "static": {
+                  "base_path": "/",
+                  "directory": "public"
+                },
+                "steps": [
+                  {
+                    "command": "cd '.' && export SWITCHYARD_PAGES_BASE_PATH='/' && sed \"s|@{base}|$SWITCHYARD_PAGES_BASE_PATH|g\" templates/source.html > templates/template.html && ./tools/nift build --all && pwd && find public -maxdepth 3 -type f",
+                    "id": "build",
+                    "timeout_ms": 120000
+                  }
+                ]
+              }
+            ],
+            "owner": "switchyard-cp0",
+            "provider": "cloudflare-artifacts",
+            "providerData": {
+              "namespace": "switchyard-cp0"
+            },
+            "ref": "refs/heads/main",
+            "repo": "codex-pages-live-20261005",
+            "run_id": "179aba02-806f-491b-8405-90090742bfbd",
+            "sha": "398a11a36274c5166b95f9f7e8087a5cf0f7a459",
+            "trigger": "push"
+          },
+          "source": {
+            "commit_present": true,
+            "config": null,
+            "inspection": "artifacts-worker-binding",
+            "repo": "codex-pages-live-20261005",
+            "sha": "398a11a36274c5166b95f9f7e8087a5cf0f7a459"
+          },
+          "started_at": "2026-10-05T04:47:08.123Z",
+          "status": "succeeded"
+        },
+        "status": "success"
+      },
+      "trigger": "push"
+    }
+  },
+  "deployment_ids": [
+    "dpl_738c15725e631a73c5c9836b2b1a219b",
+    "dpl_0f07c2e32c218036f8fd5074841f0f03"
+  ],
+  "repeated_observation_no_duplicate": true,
+  "production_generation": 6
+}

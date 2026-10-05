@@ -2,6 +2,39 @@
 
 Accepted 5 October 2026: implement Proposals first, certify them, then Pages. The accepted [feasibility report](proposals-pages-feasibility.md) remains the architecture contract. No pushes authorized. Do not reopen the product decision absent a concrete contradiction.
 
+## Current state — live activation certified, 5 October 2026
+
+Proposal + Pages are implemented and live on Linode/Cloudflare. Native Git push
+→ approved Actions build → immutable R2 export → ready deployment → explicit
+promotion and rollback passed with the real services. DNS/TLS are active, not
+conditional. Signed-out surfaces default to public exploration or sign-in prompts
+without flashing Alice's workspace. Public repositories remain public.
+
+See [A–U handover](proposals-pages-live-handover.md) and
+[live evidence](../evidence/proposals-pages/live/). Deployed app source is
+`2ce7c717b22bed1d6f33e1d448ca968fa2bc1fb3`; the later `c5cefb4` adds a regression
+test only. CLI `85f7683` passed the live reads and promotion/rollback sequence.
+No campaign source was pushed, tagged or released. Disposable fixture Git pushes
+were performed as authorized. Production fixture mapping is generation 6, owner
+and project both restored to A; later ready previews remain immutable.
+
+Reserved infrastructure names are now checked during registration and namespace
+creation as well as Pages configuration. The first smoke exposed a missing
+registration guard; its exact newly created www user/namespace/session were
+removed, the guard fixed, and subsequent live reserved registrations rejected.
+
+Remaining scope is deliberately deferred: custom domains, confidential Security
+intake, imports, rename migration, automated retention/quota/billing, larger
+history archival, and broader Actions repository rollout. Commercial proposer
+quality remains a separate provider qualification question; no live coding Agent
+was run on Linode during this static Pages certification.
+
+## Historical checkpoints
+
+The dated checkpoints below describe earlier local states. Their PARTIAL,
+CONDITIONAL, pending and undeployed statements are historical and superseded by
+the current state above; they are retained to preserve implementation decisions.
+
 ## Foundation checkpoint
 
 Implemented locally:

@@ -1,0 +1,182 @@
+[
+  {
+    "surface": "proposals",
+    "width": 1600,
+    "bounds": {
+      "w": 1600,
+      "h": 1000,
+      "sw": 1585,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposal-detail",
+    "width": 1600,
+    "bounds": {
+      "w": 1600,
+      "h": 1000,
+      "sw": 1585,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "pages",
+    "width": 1600,
+    "bounds": {
+      "w": 1600,
+      "h": 1000,
+      "sw": 1585,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposals",
+    "width": 1280,
+    "bounds": {
+      "w": 1280,
+      "h": 1000,
+      "sw": 1265,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposal-detail",
+    "width": 1280,
+    "bounds": {
+      "w": 1280,
+      "h": 1000,
+      "sw": 1265,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "pages",
+    "width": 1280,
+    "bounds": {
+      "w": 1280,
+      "h": 1000,
+      "sw": 1265,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposals",
+    "width": 1024,
+    "bounds": {
+      "w": 1024,
+      "h": 1000,
+      "sw": 1009,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposal-detail",
+    "width": 1024,
+    "bounds": {
+      "w": 1024,
+      "h": 1000,
+      "sw": 1009,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "pages",
+    "width": 1024,
+    "bounds": {
+      "w": 1024,
+      "h": 1000,
+      "sw": 1009,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposals",
+    "width": 768,
+    "bounds": {
+      "w": 768,
+      "h": 1000,
+      "sw": 753,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposal-detail",
+    "width": 768,
+    "bounds": {
+      "w": 768,
+      "h": 1000,
+      "sw": 753,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "pages",
+    "width": 768,
+    "bounds": {
+      "w": 768,
+      "h": 1000,
+      "sw": 753,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposals",
+    "width": 430,
+    "bounds": {
+      "w": 430,
+      "h": 1000,
+      "sw": 415,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposal-detail",
+    "width": 430,
+    "bounds": {
+      "w": 430,
+      "h": 1000,
+      "sw": 415,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "pages",
+    "width": 430,
+    "bounds": {
+      "w": 430,
+      "h": 1000,
+      "sw": 415,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposals",
+    "width": 390,
+    "bounds": {
+      "w": 390,
+      "h": 1000,
+      "sw": 375,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "proposal-detail",
+    "width": 390,
+    "bounds": {
+      "w": 390,
+      "h": 1000,
+      "sw": 375,
+      "sh": 1000
+    }
+  },
+  {
+    "surface": "pages",
+    "width": 390,
+    "bounds": {
+      "w": 390,
+      "h": 1000,
+      "sw": 375,
+      "sh": 1000
+    }
+  }
+]

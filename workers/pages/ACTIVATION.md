@@ -1,8 +1,8 @@
 # Native Pages activation
 
-Live infrastructure was activated on 2026-10-05. End-to-end certification is
-still in progress; infrastructure activation alone does not prove a successful
-published build.
+Live infrastructure and end-to-end certification completed on 2026-10-05.
+See [the live handover](../../docs/plan/proposals-pages-live-handover.md) and
+[recorded evidence](../../docs/evidence/proposals-pages/live/).
 
 - Cloudflare account: `b7f20353ee8a9e5d2003f52c74ba795e`.
 - Active zone: `switchyard.cx` (`abf2755072006add6ff1e59342ab5114`).
@@ -14,7 +14,7 @@ published build.
   `*.switchyard.cx/*`. Apex is outside this route; explicit DNS-only infrastructure
   records bypass the wildcard Worker.
 - Serving Worker: `switchyard-pages`, version
-  `b0caefd0-1f86-4e75-ad02-6008362ad20a`, `workers_dev=false`.
+  `5a861b5e-8c8b-452e-91d7-7c129f9c1f7e`, `workers_dev=false`.
 - R2: existing `switchyard-actions-probe-20261003`, retained deliberately.
   Actions build assets, Release assets, immutable Pages content and production
   mappings occupy distinct namespaces. A bucket rename would require migration

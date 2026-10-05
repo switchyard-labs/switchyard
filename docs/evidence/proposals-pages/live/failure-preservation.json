@@ -1,0 +1,34 @@
+{
+  "failed": {
+    "approved_by": "pages-probe-1005",
+    "config": {
+      "build_command": "false",
+      "output_directory": "public",
+      "owner": "pages-probe-1005",
+      "project": "foo.js",
+      "public_acknowledged": false,
+      "ref": "pages-preview",
+      "repository_id": "repo_41a2cc776b66262f20b492f6",
+      "working_directory": "."
+    },
+    "created_at": "2026-10-05T05:34:30Z",
+    "created_by": "pages-probe-1005",
+    "definition_revision": "d70b2233b142d9aa6311cc7e080a68dd975ddd657f5ff663bb5682e19161832e",
+    "id": "dpl_3243cab710b5500e46359452ff6a15e9",
+    "identity": "dpl_3243cab710b5500e46359452ff6a15e9",
+    "job_id": "pages-project",
+    "repo": "codex-pages-live-20261005",
+    "repository_id": "repo_41a2cc776b66262f20b492f6",
+    "run_id": "pages-613a3999d8b9dc5df43562d45e7a8a59",
+    "site_id": "site_b0f5d8d7417c93b03a4264d2",
+    "source_ref": "refs/heads/pages-preview",
+    "source_sha": "ff407b7f87bc697eaa96cac2f23b8457dceb1fd2",
+    "state": {
+      "status": "failed",
+      "transitioned_at": "2026-10-05T05:35:18Z"
+    }
+  },
+  "production_generation": 6,
+  "production_preserved": true,
+  "configuration_restored": true
+}

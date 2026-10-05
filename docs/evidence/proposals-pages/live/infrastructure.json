@@ -1,0 +1,155 @@
+{
+  "zone": {
+    "name": "switchyard.cx",
+    "status": "active",
+    "name_servers": [
+      "linda.ns.cloudflare.com",
+      "noel.ns.cloudflare.com"
+    ]
+  },
+  "dns": [
+    {
+      "name": "switchyard.cx",
+      "type": "A",
+      "content": "45.79.189.46",
+      "proxied": false,
+      "ttl": 1
+    },
+    {
+      "name": "*.switchyard.cx",
+      "type": "AAAA",
+      "content": "100::",
+      "proxied": true,
+      "ttl": 1
+    },
+    {
+      "name": "docs.switchyard.cx",
+      "type": "CNAME",
+      "content": "switchyard-labs.github.io",
+      "proxied": false,
+      "ttl": 1
+    },
+    {
+      "name": "www.switchyard.cx",
+      "type": "CNAME",
+      "content": "switchyard.cx",
+      "proxied": false,
+      "ttl": 1
+    },
+    {
+      "name": "switchyard.cx",
+      "type": "TXT",
+      "content": "\"v=spf1 include:spf.efwd.registrar-servers.com ~all\"",
+      "proxied": false,
+      "ttl": 1
+    }
+  ],
+  "routes": [
+    {
+      "id": "cf0b8cba67fa40a1b1e060b2b055a6df",
+      "pattern": "*.switchyard.cx/*",
+      "script": "switchyard-pages",
+      "request_limit_fail_open": false
+    }
+  ],
+  "workers": {
+    "switchyard-pages": {
+      "created_on": "2026-10-05T04:46:11.040092Z",
+      "versions": [
+        {
+          "version_id": "5a861b5e-8c8b-452e-91d7-7c129f9c1f7e",
+          "percentage": 100
+        }
+      ]
+    },
+    "switchyard-actions-probe-20261003": {
+      "created_on": "2026-10-05T04:06:12.122511Z",
+      "versions": [
+        {
+          "version_id": "1999cbae-0d3b-485a-8bd8-fff117c25ae0",
+          "percentage": 100
+        }
+      ]
+    }
+  },
+  "hosts": [
+    {
+      "host": "switchyard.cx",
+      "status": 200,
+      "final_url": "https://switchyard.cx"
+    },
+    {
+      "host": "www.switchyard.cx",
+      "status": 200,
+      "final_url": "https://switchyard.cx/"
+    },
+    {
+      "host": "docs.switchyard.cx",
+      "status": 200,
+      "final_url": "https://docs.switchyard.cx"
+    },
+    {
+      "host": "alice.switchyard.cx",
+      "status": 404,
+      "final_url": "https://alice.switchyard.cx"
+    }
+  ],
+  "reserved": [
+    {
+      "name": "www",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "docs",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "app",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "api",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "admin",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "assets",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "static",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "pages",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "login",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "signup",
+      "status": 400,
+      "error": "username_invalid"
+    },
+    {
+      "name": "dpl-probe",
+      "status": 400,
+      "error": "username_invalid"
+    }
+  ],
+  "reserved_test_cleanup": "Removed only www user, namespace and session created at 2026-10-05T06:19:21Z by initial smoke; exact IDs verified."
+}
