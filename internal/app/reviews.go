@@ -71,6 +71,15 @@ func (a *App) handleReviewAttempt(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
 		return
 	}
+
+	sourceSHA := ""
+	if len(findings) > 0 {
+		sourceSHA = strOr(findings[0]["source_sha"])
+	}
+	if _, _, err := a.Trestle.CreateRecord("execution_metadata", map[string]any{"execution_id": ex.ID, "repo": repo, "metadata": map[string]any{"attempt_id": attemptID, "branch": branch, "source_sha": sourceSHA, "principal": user, "role": "reviewer", "adapter": "deterministic"}}, "execution-meta-"+ex.ID); err != nil {
+		writeJSON(w, draftPersistenceStatus(err), map[string]any{"error": "review_persistence_failed"})
+		return
+	}
 	writeJSON(w, 200, map[string]any{"attempt_id": attemptID, "findings": findings, "execution": ex.ID, "reviewed_by": user})
 }
 
@@ -78,17 +87,18 @@ func (a *App) handleReviewAttempt(w http.ResponseWriter, r *http.Request) {
 // structural (changed-file inventory + marker quality) and semantic (empty
 // marker / scope size). It returns finding maps {severity, message, file}.
 func (a *App) deterministicReview(repo, branch, attemptID string) ([]map[string]any, error) {
-	changed, err := a.changedFiles(repo, branch)
+	sourceSHA, err := a.repoHead(repo, branch)
+	if err != nil || !workspaceSHA.MatchString(sourceSHA) {
+		return nil, fmt.Errorf("review source unavailable")
+	}
+	changed, err := a.changedFiles(repo, sourceSHA)
 	if err != nil {
 		return nil, err
 	}
 	findings := []map[string]any{}
-	if len(changed) == 0 {
-		return findings, nil
-	}
 	findings = append(findings, map[string]any{"severity": "info", "message": "attempt touches " + itoa(len(changed)) + " file(s)", "file": ""})
 	for _, f := range changed {
-		data, err := a.Artifacts.RawFile(repo, branch, f)
+		data, err := a.Artifacts.RawFile(repo, sourceSHA, f)
 		if err != nil {
 			findings = append(findings, map[string]any{"severity": "warning", "message": "file could not be read", "file": f})
 			continue
@@ -102,6 +112,9 @@ func (a *App) deterministicReview(repo, branch, attemptID string) ([]map[string]
 				findings = append(findings, map[string]any{"severity": "warning", "message": "ATTEMPT.md lacks an init header + run line (structural)", "file": f})
 			}
 		}
+	}
+	for _, finding := range findings {
+		finding["source_sha"] = sourceSHA
 	}
 	return findings, nil
 }

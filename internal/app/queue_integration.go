@@ -46,11 +46,18 @@ func (a *App) handleEnqueuePR(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 404, map[string]any{"error": "pr_not_found"})
 		return
 	}
-	if !a.checkPassed(prID) {
+	var input struct {
+		SourceSHA string `json:"source_sha"`
+	}
+	if readJSON(r, &input) != nil || len(input.SourceSHA) != 40 {
+		writeJSON(w, 400, map[string]any{"error": "source_sha_required"})
+		return
+	}
+	if !a.checkPassedAt(prID, input.SourceSHA) {
 		writeJSON(w, 409, map[string]any{"error": "check_not_passed"})
 		return
 	}
-	qid, err := a.enqueuePR(pr)
+	qid, err := a.enqueuePR(pr, input.SourceSHA, user)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -59,7 +66,7 @@ func (a *App) handleEnqueuePR(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 201, map[string]any{"id": qid, "pr_id": prID, "status": "queued"})
 }
 
-func (a *App) enqueuePR(pr map[string]any) (string, error) {
+func (a *App) enqueuePR(pr map[string]any, expectedSource, principal string) (string, error) {
 	repo, branch, base, prID := strOf(pr["repo"]), strOf(pr["branch"]), strOf(pr["base"]), strOf(pr["id"])
 	changed, err := a.changedFiles(repo, branch)
 	if err != nil {
@@ -71,9 +78,12 @@ func (a *App) enqueuePR(pr map[string]any) (string, error) {
 	} else if len(changed) > 2 {
 		risk = "medium"
 	}
-	_, sourceSHA, err := a.Refs.Snapshot(repo, base, branch)
+	baseSHA, sourceSHA, err := a.Refs.Snapshot(repo, base, branch)
 	if err != nil {
 		return "", err
+	}
+	if sourceSHA != expectedSource || principal == "" {
+		return "", fmt.Errorf("source moved or enqueue principal missing")
 	}
 	if !a.checkPassedAt(prID, sourceSHA) {
 		return "", fmt.Errorf("exact source check required")
@@ -89,6 +99,7 @@ func (a *App) enqueuePR(pr map[string]any) (string, error) {
 	at := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 	_, _, err = a.Trestle.CreateRecord("iq", map[string]any{
 		"id": qid, "pr_id": prID, "repo": repo, "base": base, "branch": branch,
+		"source_sha": sourceSHA, "enqueue_base_sha": baseSHA, "approved_by": principal, "approval_kind": "source_enqueue",
 		"status": "queued", "risk": risk, "policy": "exact_source_check + immutable_preview + semantic + policy",
 		"attempts": "0", "error": "", "created_at": at, "updated_at": at,
 	}, "iq-"+qid)
@@ -281,6 +292,17 @@ func (a *App) processQueueItem(it *queueItem) (resultErr error) {
 		}
 	}()
 
+	// The durable queue intent is authoritative, including when recovering a
+	// candidate. Legacy items are not backfilled from a mutable branch tip.
+	_, _, intent, err := a.Trestle.FindRecord("iq", filterEq("id", it.id))
+	if err != nil {
+		return err
+	}
+	sourceSHA := strOr(intent["source_sha"])
+	if len(sourceSHA) != 40 || strOr(intent["approved_by"]) == "" {
+		return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "legacy_unpinned_intent_requires_reapproval", "updated_at": nowStr()})
+	}
+
 	claim, err := a.claimQueue(it.id)
 	if err != nil || claim == nil {
 		return err
@@ -293,6 +315,9 @@ func (a *App) processQueueItem(it *queueItem) (resultErr error) {
 	}()
 	if claim.effect.Candidate != nil {
 		candidate := claim.effect.Candidate
+		if candidate.SourceSHA != sourceSHA {
+			return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "candidate_identity_mismatch", "updated_at": nowStr()})
+		}
 		defer func() {
 			if claim.effect.Phase == "done" {
 				candidate.Close()
@@ -309,7 +334,7 @@ func (a *App) processQueueItem(it *queueItem) (resultErr error) {
 			return a.finishQueuePublication(it, claim, candidate.CommitSHA)
 		}
 		if claim.effect.Phase == "publishing" {
-			if !a.checkPassedAt(it.prID, candidate.SourceSHA) {
+			if candidate.SourceSHA != sourceSHA || !a.checkPassedAt(it.prID, candidate.SourceSHA) {
 				return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "required checks changed before publication", "updated_at": nowStr()})
 			}
 			if err := claim.save("publishing"); err != nil {
@@ -340,7 +365,14 @@ func (a *App) processQueueItem(it *queueItem) (resultErr error) {
 		return err
 	}
 	// policy gate 1: PR check must pass
-	if !a.checkPassed(it.prID) {
+	_, currentSource, err := a.Refs.Snapshot(it.repo, it.base, it.branch)
+	if err != nil {
+		return err
+	}
+	if currentSource != sourceSHA {
+		return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "source_moved_requires_new_enqueue", "updated_at": nowStr()})
+	}
+	if !a.checkPassedAt(it.prID, sourceSHA) {
 		return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "check_not_passed", "updated_at": nowStr()})
 	}
 	a.queueCheckpoint("after_checks")
@@ -358,7 +390,7 @@ func (a *App) processQueueItem(it *queueItem) (resultErr error) {
 			candidate.Close()
 		}
 	}()
-	if !a.checkPassedAt(it.prID, candidate.SourceSHA) {
+	if candidate.SourceSHA != sourceSHA || !a.checkPassedAt(it.prID, candidate.SourceSHA) {
 		return a.patchQueue(it.id, map[string]any{"status": "blocked", "error": "exact_source_check_required", "updated_at": nowStr()})
 	}
 

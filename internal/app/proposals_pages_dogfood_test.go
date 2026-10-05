@@ -131,7 +131,7 @@ func TestProposalWorkAttemptsPagesLocalDogfood(t *testing.T) {
 	if err := a.setCommitCheck(prID, "repo", selectedSHA, "pass", "local dogfood exact-source validation"); err != nil {
 		t.Fatal(err)
 	}
-	queued := call("POST", "/enqueue", "{}", a.handleEnqueuePR, prID)
+	queued := call("POST", "/enqueue", `{"source_sha":"`+selectedSHA+`"}`, a.handleEnqueuePR, prID)
 	if err := a.processQueueItem(&queueItem{id: strOf(queued["id"]), prID: prID, repo: "repo", base: "main", branch: "candidate-a", risk: "low"}); err != nil {
 		t.Fatal(err)
 	}

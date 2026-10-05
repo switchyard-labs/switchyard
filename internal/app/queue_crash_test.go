@@ -221,7 +221,7 @@ func TestQueueRecoversAfterProcessDeath(t *testing.T) {
 			os.WriteFile(filepath.Join(root, "token.sh"), []byte("#!/bin/sh\nprintf fixture\n"), 0700)
 			store := &queueStore{records: map[string][]*queueRecord{}, next: 10}
 			for collection, values := range map[string]map[string]any{
-				"iq":              {"id": "queue", "pr_id": "pr", "repo": "repo", "base": "main", "branch": "source", "status": "queued"},
+				"iq":              {"source_sha": source, "approved_by": "alice", "id": "queue", "pr_id": "pr", "repo": "repo", "base": "main", "branch": "source", "status": "queued"},
 				"prs":             {"id": "pr", "repo": "repo", "base": "main", "branch": "source", "status": "open"},
 				"commit_checks":   {"pr_id": "pr", "repo": "repo", "source_sha": source, "status": "pass", "created_at": "2026-10-03T00:00:00Z"},
 				"repository_meta": {"id": "repo-meta", "artifact_name": "repo", "owner_type": "user", "owner_id": "alice"},
@@ -287,5 +287,77 @@ func TestQueueRecoversAfterProcessDeath(t *testing.T) {
 				t.Fatalf("recovery incomplete: effect=%+v err=%v", effect, err)
 			}
 		})
+	}
+}
+
+func TestQueueIntentCannotRetargetCheckedSource(t *testing.T) {
+	root := t.TempDir()
+	remote := filepath.Join(root, "remote.git")
+	local := filepath.Join(root, "local")
+	queueGit(t, root, "init", "--bare", remote)
+	queueGit(t, root, "init", "-b", "main", local)
+	os.WriteFile(filepath.Join(local, "base"), []byte("base"), 0600)
+	queueGit(t, local, "add", ".")
+	queueGit(t, local, "commit", "-m", "base")
+	queueGit(t, local, "push", remote, "main")
+	queueGit(t, local, "checkout", "-b", "source")
+	os.WriteFile(filepath.Join(local, "source"), []byte("A"), 0600)
+	queueGit(t, local, "add", ".")
+	queueGit(t, local, "commit", "-m", "A")
+	queueGit(t, local, "push", remote, "source")
+	sourceA := queueGit(t, local, "rev-parse", "HEAD")
+	os.Mkdir(filepath.Join(root, "scratch"), 0700)
+	os.WriteFile(filepath.Join(root, "token.sh"), []byte("#!/bin/sh\nprintf fixture\n"), 0700)
+	store := &queueStore{records: map[string][]*queueRecord{
+		"prs":             {{id: "pr", version: 1, values: map[string]any{"id": "pr", "repo": "repo", "branch": "source", "base": "main"}}},
+		"commit_checks":   {{id: "check-a", version: 1, values: map[string]any{"pr_id": "pr", "repo": "repo", "source_sha": sourceA, "status": "pass", "created_at": nowStr()}}},
+		"repository_meta": {{id: "meta", version: 1, values: map[string]any{"id": "meta", "artifact_name": "repo", "owner_type": "user", "owner_id": "alice"}}},
+	}, next: 10}
+	server := httptest.NewServer(store)
+	defer server.Close()
+	a := queueCrashApp(server.URL, remote, root)
+	a.DataDir = root
+	pr := store.records["prs"][0].values
+	idA, err := a.enqueuePR(pr, sourceA, "alice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.WriteFile(filepath.Join(local, "source"), []byte("B"), 0600)
+	queueGit(t, local, "add", ".")
+	queueGit(t, local, "commit", "-m", "B")
+	queueGit(t, local, "push", remote, "source")
+	sourceB := queueGit(t, local, "rev-parse", "HEAD")
+	store.mu.Lock()
+	store.records["commit_checks"] = append(store.records["commit_checks"], &queueRecord{id: "check-b", version: 1, values: map[string]any{"pr_id": "pr", "repo": "repo", "source_sha": sourceB, "status": "pass", "created_at": nowStr()}})
+	store.mu.Unlock()
+	before := queueGit(t, root, "--git-dir="+remote, "rev-parse", "refs/heads/main")
+	if err := a.processQueueItem(&queueItem{id: idA, prID: "pr", repo: "repo", base: "main", branch: "source"}); err != nil {
+		t.Fatal(err)
+	}
+	if after := queueGit(t, root, "--git-dir="+remote, "rev-parse", "refs/heads/main"); after != before {
+		t.Fatal("changed source integrated under old intent")
+	}
+	_, _, intent, err := a.Trestle.FindRecord("iq", filterEq("id", idA))
+	if err != nil || intent["status"] != "blocked" || intent["source_sha"] != sourceA {
+		t.Fatal(intent, err)
+	}
+	if _, err := a.enqueuePR(pr, sourceA, "alice"); err == nil {
+		t.Fatal("stale enqueue accepted")
+	}
+	idB, err := a.enqueuePR(pr, sourceB, "alice")
+	if err != nil || idB == idA {
+		t.Fatal(idA, idB, err)
+	}
+	// Legacy records cannot acquire identity from the current source.
+	_, _, err = a.Trestle.CreateRecord("iq", map[string]any{"id": "legacy", "status": "queued"}, "legacy")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := a.processQueueItem(&queueItem{id: "legacy", prID: "pr", repo: "repo", base: "main", branch: "source"}); err != nil {
+		t.Fatal(err)
+	}
+	_, _, legacy, _ := a.Trestle.FindRecord("iq", filterEq("id", "legacy"))
+	if legacy["status"] != "blocked" {
+		t.Fatal(legacy)
 	}
 }

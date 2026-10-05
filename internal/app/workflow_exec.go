@@ -609,7 +609,7 @@ func (e *wfExec) opIntegrate(args map[string]any) (map[string]any, error) {
 		if !ok {
 			return map[string]any{"pr": prID, "status": "check_failed"}, nil
 		}
-		qid, err := e.a.enqueuePR(map[string]any{"id": prID, "repo": repo, "branch": branch, "base": base})
+		qid, err := e.a.enqueuePR(map[string]any{"id": prID, "repo": repo, "branch": branch, "base": base}, sourceSHA, e.actor)
 		if err != nil {
 			return nil, err
 		}
