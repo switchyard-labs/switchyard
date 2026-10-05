@@ -13,7 +13,11 @@ type workflowGitEffect struct {
 	Result    map[string]any      `json:"result"`
 }
 
-func (e *wfExec) durableAgentUpdate(repo, branch, file, prompt string) (any, error) {
+func (e *wfExec) durableAgentUpdateRole(repo, branch, file, prompt, role string) (any, error) {
+	auth := publicationAuthority{principal: e.actor, role: role, kind: publicationAgent}
+	if err := e.a.authorizePublication(auth, repo, branch); err != nil {
+		return nil, err
+	}
 	effectID := e.runID + "|" + e.currentKey
 	_, _, values, err := e.a.Trestle.FindRecord("workflow_git_effects", filterEq("effect_id", effectID))
 	if err != nil {
@@ -47,7 +51,7 @@ func (e *wfExec) durableAgentUpdate(repo, branch, file, prompt string) (any, err
 		if ctx == nil {
 			ctx = context.Background()
 		}
-		execution, err := e.a.runViaSubstrateContext(agentUserContext(ctx, e.actor), "implementer", "wf:"+e.runID, repo, branch, file, string(content), prompt)
+		execution, err := e.a.runViaSubstrateContext(agentUserContext(ctx, e.actor), role, "wf:"+e.runID, repo, branch, file, string(content), prompt)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +77,7 @@ func (e *wfExec) durableAgentUpdate(repo, branch, file, prompt string) (any, err
 			return nil, err
 		}
 		e.a.workflowCheckpoint("before_git_publication")
-		result, err := e.a.Refs.PublishPrepared(effect.Candidate)
+		result, err := e.a.publishAgentCandidate(auth, effect.Candidate)
 		if err != nil {
 			return nil, err
 		}

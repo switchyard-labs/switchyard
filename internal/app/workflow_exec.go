@@ -489,10 +489,17 @@ func (e *wfExec) opAgent(args map[string]any) (map[string]any, error) {
 		if repo == "" || branch == "" || file == "" {
 			return nil, fmt.Errorf("agent: repo, branch, file required")
 		}
-		if err := e.a.policyGateAgent("implementer", repo, file); err != nil {
+		role := strOr(args["role"])
+		if role == "" {
+			role = "implementer"
+		}
+		if role != "implementer" && role != "conflict-resolver" {
+			return nil, fmt.Errorf("unsupported workflow publication role")
+		}
+		if err := e.a.policyGateAgent(role, repo, file); err != nil {
 			return nil, err
 		}
-		return e.durableAgentUpdate(repo, branch, file, appendLine)
+		return e.durableAgentUpdateRole(repo, branch, file, appendLine, role)
 
 	})
 	if err != nil {

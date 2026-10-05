@@ -300,7 +300,7 @@ func (a *App) applyConflictDecision(packet map[string]any, decision, user string
 		for _, c := range effective {
 			refsChanges = append(refsChanges, refs.Change{Path: c["file"], Content: c["content"]})
 		}
-		if res, err := a.Refs.Update(repo, branch, head, refsChanges, "decision "+decision+" by "+user, "escalation:"+user+":"+targetID); err == nil {
+		if res, err := a.publishUpdate(publicationAuthority{principal: user}, repo, branch, head, refsChanges, "decision "+decision+" by "+user, "escalation:"+user+":"+targetID); err == nil {
 			_ = res
 			if err := a.patchAttempt(targetID, map[string]any{"status": "resolved", "message": "resolved by decision " + decision, "updated_at": nowStr()}); err != nil {
 				return map[string]any{"attempt": targetID, "status": "coordination_failed", "error": err.Error()}

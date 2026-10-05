@@ -139,7 +139,7 @@ func TestWorkflowCrashWorker(t *testing.T) {
 			os.Exit(92)
 		}
 	}
-	e := &wfExec{a: a, runID: "run", actor: "alice", params: map[string]any{"repo": "repo", "branch": "main"}, budget: 10}
+	e := &wfExec{a: a, runID: "run", actor: "alice", params: map[string]any{"repo": "repo", "branch": "attempt-workflow"}, budget: 10}
 	var err error
 	switch os.Getenv("SWITCHYARD_WORKFLOW_CRASH_MODE") {
 	case "approval":
@@ -171,6 +171,7 @@ func TestWorkflowRecoversAfterProcessDeath(t *testing.T) {
 				queueGit(t, local, "add", ".")
 				queueGit(t, local, "commit", "-m", "base")
 				queueGit(t, local, "push", remote, "main")
+				queueGit(t, local, "push", remote, "main:attempt-workflow")
 				base := queueGit(t, local, "rev-parse", "HEAD")
 				os.Mkdir(filepath.Join(root, "scratch"), 0700)
 				os.WriteFile(filepath.Join(root, "token.sh"), []byte("#!/bin/sh\nprintf fixture\n"), 0700)
@@ -183,7 +184,7 @@ func TestWorkflowRecoversAfterProcessDeath(t *testing.T) {
 				a := queueCrashApp(server.URL, remote, root)
 				var plannedSHA string
 				if mode == "git" {
-					candidate, err := a.Refs.PrepareUpdate("repo", "main", base, []refs.Change{{Path: "file.go", Content: "changed"}}, "workflow effect run|s0")
+					candidate, err := a.Refs.PrepareUpdate("repo", "attempt-workflow", base, []refs.Change{{Path: "file.go", Content: "changed"}}, "workflow effect run|s0")
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -199,7 +200,7 @@ func TestWorkflowRecoversAfterProcessDeath(t *testing.T) {
 				if !ok || exit.ExitCode() != 92 {
 					t.Fatalf("expected real process death: %v %s", err, output)
 				}
-				e := &wfExec{a: a, runID: "run", actor: "alice", params: map[string]any{"repo": "repo", "branch": "main"}, budget: 10}
+				e := &wfExec{a: a, runID: "run", actor: "alice", params: map[string]any{"repo": "repo", "branch": "attempt-workflow"}, budget: 10}
 				switch mode {
 				case "approval":
 					if _, err := e.opWaitApproval(map[string]any{"reason": "review"}); err == nil || e.park != "approval" {
@@ -210,10 +211,10 @@ func TestWorkflowRecoversAfterProcessDeath(t *testing.T) {
 					if err != nil || result["new_sha"] != plannedSHA {
 						t.Fatalf("Git recovery %v %v", result, err)
 					}
-					if head := queueGit(t, root, "--git-dir="+remote, "rev-parse", "main"); head != plannedSHA {
+					if head := queueGit(t, root, "--git-dir="+remote, "rev-parse", "attempt-workflow"); head != plannedSHA {
 						t.Fatal("published different candidate")
 					}
-					if count := queueGit(t, root, "--git-dir="+remote, "rev-list", "--count", "main"); count != "2" {
+					if count := queueGit(t, root, "--git-dir="+remote, "rev-list", "--count", "attempt-workflow"); count != "2" {
 						t.Fatal("duplicate workflow commit")
 					}
 				default:

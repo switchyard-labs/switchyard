@@ -244,7 +244,7 @@ func (a *App) handleResolveConflict(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "semantic_repair_requires_provider"})
 		return
 	}
-	res, resolved, err := a.Refs.ResolveIntoSource(repo, base, branch, "resolve attempt "+attemptID, "conflict-resolver:"+user+":"+attemptID)
+	res, resolved, err := a.publishResolution(publicationAuthority{principal: user, role: "conflict-resolver", kind: publicationAgent}, repo, base, branch, "resolve attempt "+attemptID, "conflict-resolver:"+user+":"+attemptID)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return

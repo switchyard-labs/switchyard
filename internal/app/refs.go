@@ -55,7 +55,7 @@ func (a *App) handleRefUpdate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "repo/branch/message required"})
 		return
 	}
-	res, err := a.Refs.Update(in.Repo, in.Branch, in.Expected, in.Changes, in.Message, "user:"+user)
+	res, err := a.publishUpdate(publicationAuthority{principal: user}, in.Repo, in.Branch, in.Expected, in.Changes, in.Message, "user:"+user)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return

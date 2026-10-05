@@ -341,7 +341,7 @@ func (a *App) processQueueItem(it *queueItem) (resultErr error) {
 				return err
 			}
 			publicationStarted := time.Now()
-			result, err := a.Refs.PublishPrepared(candidate)
+			result, err := a.publishQueueCandidate(it, candidate)
 			claim.recordTiming("publication", publicationStarted, err)
 			if err != nil {
 				return err
@@ -450,7 +450,7 @@ func (a *App) processQueueItem(it *queueItem) (resultErr error) {
 	}
 	a.queueCheckpoint("before_publication")
 	publicationStarted := time.Now()
-	res, err := a.Refs.PublishPrepared(candidate)
+	res, err := a.publishQueueCandidate(it, candidate)
 	claim.recordTiming("publication", publicationStarted, err)
 	if err != nil {
 		if strings.Contains(err.Error(), "CONFLICT") {

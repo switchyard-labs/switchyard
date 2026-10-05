@@ -216,6 +216,6 @@ func (a *App) providerConflict(ctx context.Context, repo, base, branch, attempt,
 			return nil, nil, fmt.Errorf("resolver proposal still violates semantic contract")
 		}
 	}
-	result, err := a.Refs.PublishRepairTree(repo, branch, head, tree, "provider conflict repair "+attempt, "conflict-resolver:"+user+":"+attempt)
+	result, err := a.publishRepair(publicationAuthority{principal: user, role: "conflict-resolver", kind: publicationAgent}, repo, branch, head, tree, "provider conflict repair "+attempt, "conflict-resolver:"+user+":"+attempt)
 	return result, conflicts, err
 }

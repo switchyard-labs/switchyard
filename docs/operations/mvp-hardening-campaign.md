@@ -46,3 +46,31 @@ state/binary or a verified restore of the exclusive pre-migration snapshot.
 
 Publication recovery and final rollout remain subsequent checkpoints. No live
 schema mutation or deployment has been performed by these checkpoints yet.
+
+## CP3: application publication authority
+
+All application mutation callers now pass through `publication_authority.go`,
+including Attempt runs, workflow Git effects, repair, direct human writes and
+queue publication. A structural regression prevents new application call sites
+from bypassing this boundary. The refs package remains the mechanical Git
+substrate; independently issued external Git credentials remain outside this
+application boundary.
+
+Agent writes require current RunAgent permission and a supported write role.
+Default canonical branches, main/master and protected-ref patterns deny direct
+Agent publication. Human direct writes retain the existing archived/protected
+policy. Queue publication re-reads its exact-source enqueue intent, current
+integrator permission, check state and policy. Workflow writing roles currently
+support implementer and conflict-resolver; unsupported roles fail explicitly.
+Checks happen before execution and before publication/recovery.
+
+Existing workflow process-death tests now publish to an isolated branch, retaining
+all crash/replay assertions. Full application tests and new policy/role/revocation
+regressions passed. No live deployment has occurred.
+
+Live read-only preflight: schema ledger through version 13; two queue items already
+blocked, two integration effects in claimed/validating phases, no durable candidate
+in those effects, no workflow Git effects, three open findings, no execution
+metadata records. Existing queue items remain legacy and will not be assigned a
+source identity from current Git state. The inventory must be repeated within the
+exclusive migration window before mutation.

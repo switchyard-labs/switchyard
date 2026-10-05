@@ -35,7 +35,7 @@ func (a *App) handleCreateAttempt(w http.ResponseWriter, r *http.Request) {
 		in.Branch = "attempt-" + strings.TrimPrefix(attemptID, "wk_")
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
-	res, err := a.Refs.Update(in.Repo, in.Branch, "", nil, "attempt "+attemptID+" init", "user:"+user)
+	res, err := a.publishUpdate(publicationAuthority{principal: user}, in.Repo, in.Branch, "", nil, "attempt "+attemptID+" init", "user:"+user)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
@@ -257,6 +257,12 @@ func (a *App) runAgentStep(role, attemptID, repo, branch, file, currentContent, 
 }
 
 func (a *App) runAgentStepContext(ctx context.Context, role, attemptID, repo, branch, file, currentContent, appendLine, expectedHead, provenance string) (*agent.Execution, *refs.Result, error) {
+	principal, _ := ctx.Value(agentUserKey{}).(string)
+	auth := publicationAuthority{principal: principal, role: role, kind: publicationAgent}
+	if err := a.authorizePublication(auth, repo, branch); err != nil {
+		return nil, nil, err
+	}
+
 	ex, err := a.runViaSubstrateContext(ctx, role, attemptID, repo, branch, file, currentContent, appendLine)
 	if err != nil {
 		return ex, nil, err
@@ -270,7 +276,7 @@ func (a *App) runAgentStepContext(ctx context.Context, role, attemptID, repo, br
 	}
 	publicationStarted := time.Now()
 	msg := "attempt " + attemptID + " run (" + ex.Adapter + ") execution " + ex.ID
-	res, err := a.Refs.Update(repo, branch, expectedHead, []refs.Change{{Path: file, Content: newContent}}, msg, provenance)
+	res, err := a.publishUpdate(auth, repo, branch, expectedHead, []refs.Change{{Path: file, Content: newContent}}, msg, provenance)
 	defer func() {
 		if a.Trestle == nil {
 			return

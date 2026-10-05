@@ -264,7 +264,7 @@ func (a *App) handleWorkspaceMutation(w http.ResponseWriter, r *http.Request) {
 			changes = append(changes, refs.Change{Path: in.Target + strings.TrimPrefix(change.Path, in.Source), Content: string(data), Mode: mode})
 		}
 	}
-	result, err := a.Refs.Update(repo, in.Branch, in.ExpectedSHA, changes, in.Message, "browser-file-operation:"+a.currentUser(r))
+	result, err := a.publishUpdate(publicationAuthority{principal: a.currentUser(r)}, repo, in.Branch, in.ExpectedSHA, changes, in.Message, "browser-file-operation:"+a.currentUser(r))
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": "file_operation_failed"})
 		return
@@ -279,38 +279,40 @@ func (a *App) handleWorkspaceMutation(w http.ResponseWriter, r *http.Request) {
 // Browser commits must respect archival and protected-ref rules, including
 // the legacy direct-ref and draft commit surfaces.
 func (a *App) allowDirectWorkspaceWrite(w http.ResponseWriter, meta map[string]any, branch string) bool {
-	if meta == nil {
-		writeJSON(w, 403, map[string]any{"error": "repository_write_denied"})
+	status, code := a.directPublicationPolicy(meta, branch)
+	if status != 0 {
+		writeJSON(w, status, map[string]any{"error": code})
 		return false
+	}
+	return true
+}
+func (a *App) directPublicationPolicy(meta map[string]any, branch string) (int, string) {
+	if meta == nil {
+		return 403, "repository_write_denied"
 	}
 	_, _, settings, err := a.Trestle.FindRecord("repository_settings", filterEq("repo_id", strOr(meta["id"])))
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": "write_policy_unavailable"})
-		return false
+		return 502, "write_policy_unavailable"
 	}
 	if strOr(settings["archived"]) == "true" {
-		writeJSON(w, 403, map[string]any{"error": "repository_archived"})
-		return false
+		return 403, "repository_archived"
 	}
 	rules, err := a.Trestle.ListRecords("repo_protected_refs", filterEq("repo_id", strOr(meta["id"])))
 	if err != nil {
-		writeJSON(w, 502, map[string]any{"error": "write_policy_unavailable"})
-		return false
+		return 502, "write_policy_unavailable"
 	}
 	for _, rule := range rules {
 		pattern := strOr(rule["pattern"])
 		first, e1 := filepath.Match(pattern, branch)
 		second, e2 := filepath.Match(pattern, "refs/heads/"+branch)
 		if e1 != nil || e2 != nil {
-			writeJSON(w, 502, map[string]any{"error": "write_policy_unavailable"})
-			return false
+			return 502, "write_policy_unavailable"
 		}
 		if (first || second) && (strOr(rule["require_pr"]) == "true" || strOr(rule["require_queue"]) == "true") {
-			writeJSON(w, 403, map[string]any{"error": "protected_ref_requires_review"})
-			return false
+			return 403, "protected_ref_requires_review"
 		}
 	}
-	return true
+	return 0, ""
 }
 
 func (a *App) handleWorkspaceContent(w http.ResponseWriter, r *http.Request) {

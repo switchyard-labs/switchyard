@@ -201,7 +201,7 @@ func (a *App) handleCommitDraft(w http.ResponseWriter, r *http.Request) {
 	if ae, _ := d["last_agent_execution"].(string); ae != "" {
 		prov += " agent:" + ae
 	}
-	res, err := a.Refs.Update(repo, branch, head, []refs.Change{{Path: path, Content: content}}, in.Message, prov)
+	res, err := a.publishUpdate(publicationAuthority{principal: user}, repo, branch, head, []refs.Change{{Path: path, Content: content}}, in.Message, prov)
 	if err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
