@@ -1,6 +1,21 @@
 package app
 
-import "testing"
+import (
+	"net/http/httptest"
+	"strings"
+	"testing"
+)
+
+func TestRegistrationRejectsInfrastructureOwnersBeforePersistence(t *testing.T) {
+	for _, name := range []string{"www", "docs", "app", "api", "admin", "assets", "static", "pages", "login", "signup", "dpl-probe"} {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("POST", "/api/auth/register", strings.NewReader(`{"username":"`+name+`","password":"disposable-test-password"}`))
+		(&App{}).handleRegister(w, r)
+		if w.Code != 400 || !strings.Contains(w.Body.String(), "username_invalid") {
+			t.Fatalf("reserved registration %s: %d %s", name, w.Code, w.Body.String())
+		}
+	}
+}
 
 func TestRepositoryRouteParsing(t *testing.T) {
 	cases := []struct{ path, owner, repo, kind, ref, file string }{
