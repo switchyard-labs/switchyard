@@ -28,6 +28,7 @@ type queueStore struct {
 	mu                 sync.Mutex
 	records            map[string][]*queueRecord
 	next               int
+	failProvenance     int
 	failStepCompletion bool
 	enforceUnique      bool
 	idempotency        map[string]*queueRecord
@@ -97,6 +98,11 @@ func (f *queueStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == "POST" {
+		if collection == "ref_updates" && f.failProvenance > 0 {
+			f.failProvenance--
+			w.WriteHeader(500)
+			return
+		}
 		key := collection + "/" + r.Header.Get("Idempotency-Key")
 		if f.enforceUnique {
 			if old := f.idempotency[key]; old != nil && r.Header.Get("Idempotency-Key") != "" {
@@ -193,6 +199,7 @@ func TestQueueCrashWorker(t *testing.T) {
 			os.Exit(91)
 		}
 	}
+	a.Refs.PublicationCheckpoint = a.queueCheckpoint
 	if err := a.processQueueItem(&queueItem{id: "queue", prID: "pr", repo: "repo", base: "main", branch: "source", risk: "low"}); err != nil {
 		t.Fatal(err)
 	}
@@ -200,7 +207,7 @@ func TestQueueCrashWorker(t *testing.T) {
 }
 
 func TestQueueRecoversAfterProcessDeath(t *testing.T) {
-	for _, phase := range []string{"after_claim", "after_checks", "after_preview", "after_semantic", "before_publication", "after_publication", "before_pr_completion", "before_queue_completion"} {
+	for _, phase := range []string{"after_publication_intent", "before_git_push", "after_git_push", "after_provenance_receipt", "after_claim", "after_checks", "after_preview", "after_semantic", "before_publication", "after_publication", "before_pr_completion", "before_queue_completion"} {
 		t.Run(phase, func(t *testing.T) {
 			root := t.TempDir()
 			remote := filepath.Join(root, "remote.git")
@@ -219,7 +226,7 @@ func TestQueueRecoversAfterProcessDeath(t *testing.T) {
 			source := queueGit(t, local, "rev-parse", "HEAD")
 			os.Mkdir(filepath.Join(root, "scratch"), 0700)
 			os.WriteFile(filepath.Join(root, "token.sh"), []byte("#!/bin/sh\nprintf fixture\n"), 0700)
-			store := &queueStore{records: map[string][]*queueRecord{}, next: 10}
+			store := &queueStore{records: map[string][]*queueRecord{}, next: 10, enforceUnique: true, idempotency: map[string]*queueRecord{}}
 			for collection, values := range map[string]map[string]any{
 				"iq":              {"source_sha": source, "approved_by": "alice", "id": "queue", "pr_id": "pr", "repo": "repo", "base": "main", "branch": "source", "status": "queued"},
 				"prs":             {"id": "pr", "repo": "repo", "base": "main", "branch": "source", "status": "open"},
@@ -282,6 +289,9 @@ func TestQueueRecoversAfterProcessDeath(t *testing.T) {
 			}
 			store.mu.Lock()
 			defer store.mu.Unlock()
+			if len(store.records["ref_updates"]) != 1 {
+				t.Fatalf("provenance count %d", len(store.records["ref_updates"]))
+			}
 			effect, err = decodeQueueEffect(effectRecord.values)
 			if err != nil || effect.Phase != "done" || store.records["iq"][0].values["status"] != "done" || store.records["prs"][0].values["status"] != "integrated" {
 				t.Fatalf("recovery incomplete: effect=%+v err=%v", effect, err)
@@ -347,6 +357,63 @@ func TestQueueIntentCannotRetargetCheckedSource(t *testing.T) {
 	idB, err := a.enqueuePR(pr, sourceB, "alice")
 	if err != nil || idB == idA {
 		t.Fatal(idA, idB, err)
+	}
+
+	// Normal base movement must re-preview B without retargeting its source.
+	queueGit(t, local, "checkout", "main")
+	os.WriteFile(filepath.Join(local, "base-two"), []byte("canonical movement"), 0600)
+	queueGit(t, local, "add", ".")
+	queueGit(t, local, "commit", "-m", "base moved")
+	queueGit(t, local, "push", remote, "main")
+	baseMoved := queueGit(t, local, "rev-parse", "HEAD")
+	store.mu.Lock()
+	store.enforceUnique = true
+	store.idempotency = map[string]*queueRecord{}
+	store.failProvenance = 1
+	store.mu.Unlock()
+	itemB := &queueItem{id: idB, prID: "pr", repo: "repo", base: "main", branch: "source", risk: "low"}
+	if err := a.processQueueItem(itemB); err == nil {
+		t.Fatal("lost provenance acknowledgement reported success")
+	}
+	published := queueGit(t, root, "--git-dir="+remote, "rev-parse", "refs/heads/main")
+	if published == baseMoved {
+		t.Fatal("fault did not happen after Git publication")
+	}
+	// Revocation after the Git effect permits historical acknowledgement only.
+	store.mu.Lock()
+	store.records["repository_settings"] = []*queueRecord{{id: "settings", version: 1, values: map[string]any{"repo_id": "meta", "archived": "true"}}}
+	store.mu.Unlock()
+	if err := a.processQueueItem(itemB); err != nil {
+		t.Fatal("publication recovery", err)
+	}
+	if after := queueGit(t, root, "--git-dir="+remote, "rev-parse", "refs/heads/main"); after != published {
+		t.Fatal("recovery duplicated publication")
+	}
+	_, _, done, _ := a.Trestle.FindRecord("iq", filterEq("id", idB))
+	if done["source_sha"] != sourceB || done["status"] != "done" {
+		t.Fatal(done)
+	}
+	facts, err := a.Trestle.ListRecords("ref_updates", "")
+	if err != nil || len(facts) != 1 {
+		t.Fatal("publication fact count", len(facts), err)
+	}
+	store.mu.Lock()
+	delete(store.records, "repository_settings")
+	store.mu.Unlock()
+	// A permanently broken source ref gets a bounded terminal state.
+	_, _, err = a.Trestle.CreateRecord("iq", map[string]any{"id": "poison", "pr_id": "pr", "repo": "repo", "base": "missing-base", "branch": "source", "source_sha": sourceB, "approved_by": "alice", "status": "queued"}, "poison")
+	if err != nil {
+		t.Fatal(err)
+	}
+	poison := &queueItem{id: "poison", prID: "pr", repo: "repo", base: "missing-base", branch: "source"}
+	for i := 0; i < maxQueueAttempts; i++ {
+		if err := a.processQueueItem(poison); err == nil {
+			t.Fatal("broken ref unexpectedly succeeded")
+		}
+	}
+	_, _, blocked, _ := a.Trestle.FindRecord("iq", filterEq("id", "poison"))
+	if blocked["status"] != "blocked" || blocked["attempts"] != itoa(maxQueueAttempts) {
+		t.Fatal(blocked)
 	}
 	// Legacy records cannot acquire identity from the current source.
 	_, _, err = a.Trestle.CreateRecord("iq", map[string]any{"id": "legacy", "status": "queued"}, "legacy")

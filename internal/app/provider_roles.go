@@ -155,7 +155,12 @@ func (a *App) providerConflict(ctx context.Context, repo, base, branch, attempt,
 	if err != nil {
 		return nil, nil, err
 	}
-	defer os.RemoveAll(tree)
+	keepCandidate := false
+	defer func() {
+		if !keepCandidate {
+			os.RemoveAll(tree)
+		}
+	}()
 	if len(conflicts) > 20 {
 		return nil, nil, fmt.Errorf("repair exceeds 20 conflict files")
 	}
@@ -217,5 +222,8 @@ func (a *App) providerConflict(ctx context.Context, repo, base, branch, attempt,
 		}
 	}
 	result, err := a.publishRepair(publicationAuthority{principal: user, role: "conflict-resolver", kind: publicationAgent}, repo, branch, head, tree, "provider conflict repair "+attempt, "conflict-resolver:"+user+":"+attempt)
+	if err != nil {
+		keepCandidate = true
+	}
 	return result, conflicts, err
 }

@@ -159,7 +159,7 @@ func (a *App) handleRequeueItem(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "item_not_requeueable"})
 		return
 	}
-	if err := a.patchQueue(qid, map[string]any{"status": "queued", "updated_at": nowStr()}); err != nil {
+	if err := a.patchQueue(qid, map[string]any{"status": "queued", "next_retry_at": "", "attempts": "0", "updated_at": nowStr()}); err != nil {
 		writeJSON(w, 502, map[string]any{"error": err.Error()})
 		return
 	}
@@ -201,6 +201,9 @@ func (a *App) StartIntegrationQueue(ctx context.Context, interval time.Duration)
 }
 
 func (a *App) pumpQueue() {
+	if err := a.Refs.ReconcilePublicationFacts(); err != nil {
+		log.Printf("publication receipt reconciliation: %v", err)
+	}
 	// strict FIFO: at most one integration in flight globally. This is what
 	// gives ordering — a later PR that edits the same file sees the earlier
 	// PR's integration during preview, so conflicts are detected and routed to
@@ -223,6 +226,9 @@ func (a *App) pumpQueue() {
 	var best *queueItem
 	for _, it := range items {
 		st, _ := it["status"].(string)
+		if retryAt, err := time.Parse(time.RFC3339Nano, strOr(it["next_retry_at"])); err == nil && retryAt.After(time.Now()) {
+			continue
+		}
 		if st != "queued" && st != "running" && st != "publishing" && st != "reconciling" && st != "done" {
 			continue
 		}
@@ -274,6 +280,27 @@ func (a *App) pumpQueue() {
 }
 
 func (a *App) processQueueItem(it *queueItem) (resultErr error) {
+	defer func() {
+		if resultErr == nil {
+			return
+		}
+		_, _, item, err := a.Trestle.FindRecord("iq", filterEq("id", it.id))
+		if err != nil || item == nil || item["status"] == "blocked" || item["status"] == "done" {
+			return
+		}
+		attempts := a.queueAttempts(it.id) + 1
+		status := "queued"
+		message := "transient failure; retry scheduled"
+		if attempts >= maxQueueAttempts {
+			status = "blocked"
+			message = "retry budget exhausted; inspect publication receipt before explicit requeue"
+		}
+		delay := time.Duration(1<<min(attempts, 6)) * time.Second
+		if err := a.patchQueue(it.id, map[string]any{"status": status, "attempts": itoa(attempts), "error": message, "next_retry_at": time.Now().Add(delay).UTC().Format(time.RFC3339Nano), "updated_at": nowStr()}); err != nil {
+			log.Printf("queue retry persistence: %v", err)
+		}
+	}()
+
 	started := time.Now()
 	defer func() {
 		status := 200
@@ -353,7 +380,7 @@ func (a *App) processQueueItem(it *queueItem) (resultErr error) {
 					return err
 				}
 				candidate.Close()
-				return a.patchQueue(it.id, map[string]any{"status": "queued", "error": "source or base moved; revalidation required", "updated_at": nowStr()})
+				return a.retryStaleQueue(it.id)
 			}
 			return a.finishQueuePublication(it, claim, result.NewSHA)
 		}
@@ -467,18 +494,23 @@ func (a *App) processQueueItem(it *queueItem) (resultErr error) {
 		if err := claim.save("queued"); err != nil {
 			return err
 		}
-		attempts := a.queueAttempts(it.id)
-		if attempts+1 >= maxQueueAttempts {
-			a.patchQueue(it.id, map[string]any{"status": "failed", "error": "stale after " + itoa(attempts+1) + " attempts", "updated_at": nowStr()})
-			return nil
-		}
-		return a.patchQueue(it.id, map[string]any{"status": "queued", "attempts": itoa(attempts + 1), "error": "stale; requeued", "updated_at": nowStr()})
+		return a.retryStaleQueue(it.id)
 	}
 	a.queueCheckpoint("after_publication")
 	return a.finishQueuePublication(it, claim, res.NewSHA)
 }
 
 func (a *App) finishQueuePublication(it *queueItem, claim *queueClaim, sha string) error {
+	if claim.effect.Candidate != nil {
+		_, _, intent, err := a.Trestle.FindRecord("iq", filterEq("id", it.id))
+		if err != nil {
+			return err
+		}
+		if err := a.Refs.ReconcilePreparedProvenance(claim.effect.Candidate, "queue:"+strOr(intent["approved_by"])+":"+it.id); err != nil {
+			return err
+		}
+	}
+
 	claim.effect.PublishedSHA = sha
 	if err := claim.save("reconciling"); err != nil {
 		return err
@@ -522,3 +554,13 @@ func (a *App) queueCheckpoint(phase string) {
 }
 
 func queueLane(repo, base string) string { return "lane_" + sha256Hex([]byte(repo + "|" + base))[:32] }
+
+// Base movement is retryable, but cannot keep the oldest item active forever.
+func (a *App) retryStaleQueue(id string) error {
+	attempts := a.queueAttempts(id) + 1
+	status, reason := "queued", "base moved; fresh validation scheduled"
+	if attempts >= maxQueueAttempts {
+		status, reason = "blocked", "base movement retry budget exhausted; explicit requeue required"
+	}
+	return a.patchQueue(id, map[string]any{"status": status, "attempts": itoa(attempts), "error": reason, "next_retry_at": time.Now().Add(time.Duration(1<<min(attempts, 6)) * time.Second).UTC().Format(time.RFC3339Nano), "updated_at": nowStr()})
+}

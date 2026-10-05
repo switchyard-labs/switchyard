@@ -85,6 +85,9 @@ func (e *wfExec) durableAgentUpdateRole(repo, branch, file, prompt, role string)
 			return nil, fmt.Errorf("workflow Git effect stale; explicit reconciliation required")
 		}
 	}
+	if err := e.a.Refs.ReconcilePreparedProvenance(effect.Candidate, "agent:"+auth.principal+":"+auth.role); err != nil {
+		return nil, err
+	}
 	e.a.workflowCheckpoint("after_git_publication")
 	return effect.Result, nil
 }

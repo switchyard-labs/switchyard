@@ -78,7 +78,7 @@ func (a *App) publishAgentCandidate(auth publicationAuthority, candidate *refs.P
 	if err := a.authorizePublication(auth, candidate.Repo, candidate.Base); err != nil {
 		return nil, err
 	}
-	return a.Refs.PublishPrepared(candidate)
+	return a.Refs.PublishPreparedTracked(candidate, "agent:"+auth.principal+":"+auth.role)
 }
 
 // Only the queue processor calls this boundary after preview/semantic checks.
@@ -103,11 +103,21 @@ func (a *App) publishQueueCandidate(it *queueItem, candidate *refs.PreparedMerge
 	if !a.checkPassedAt(it.prID, candidate.SourceSHA) {
 		return nil, fmt.Errorf("queue_checks_revoked")
 	}
-	decision, reason := a.immutableIntegrationPolicy(it.repo, it.risk)
+	changed, err := candidate.ChangedFiles()
+	if err != nil {
+		return nil, err
+	}
+	risk := "low"
+	if len(changed) > 8 {
+		risk = "high"
+	} else if len(changed) > 2 {
+		risk = "medium"
+	}
+	decision, reason := a.immutableIntegrationPolicy(candidate.Repo, risk)
 	if decision != "allow" {
 		return nil, fmt.Errorf("queue_publication_policy_denied: %s", reason)
 	}
-	return a.Refs.PublishPrepared(candidate)
+	return a.Refs.PublishPreparedTracked(candidate, "queue:"+strOr(intent["approved_by"])+":"+it.id)
 }
 
 func (a *App) publishRepair(auth publicationAuthority, repo, branch, head, tree, message, provenance string) (*refs.Result, error) {

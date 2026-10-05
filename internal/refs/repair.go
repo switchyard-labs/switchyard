@@ -3,7 +3,6 @@ package refs
 import (
 	"fmt"
 	"strings"
-	"time"
 )
 
 // PublishRepairTree commits the inspected merged preview onto the source branch.
@@ -13,9 +12,6 @@ func (s *Service) PublishRepairTree(repo, branch, expected, tree, message, prove
 	if err := validateBranch(branch); err != nil {
 		return nil, err
 	}
-	lock := s.lock(repo, branch)
-	lock.Lock()
-	defer lock.Unlock()
 	mergeHead, err := gitOut(tree, "rev-parse", "MERGE_HEAD")
 	if err != nil || strings.TrimSpace(mergeHead) != expected {
 		return nil, fmt.Errorf("repair preview source does not match expected SHA")
@@ -30,14 +26,14 @@ func (s *Service) PublishRepairTree(repo, branch, expected, tree, message, prove
 	if err != nil {
 		return nil, err
 	}
-	sha, err := s.push(repo, remote, branch, tree, expected)
+	head, err := gitOut(tree, "rev-parse", "HEAD")
 	if err != nil {
-		return nil, &StageError{Code: "git_push_failed", Err: err}
+		return nil, err
 	}
-	if s.Trestle != nil {
-		if _, _, err = s.Trestle.CreateRecord("ref_updates", map[string]any{"repo": repo, "branch": branch, "old_sha": expected, "new_sha": sha, "provenance": provenance, "occurred_at": time.Now().UTC().Format(time.RFC3339)}, "refupd-"+repo+"-"+branch+"-"+sha[:12]); err != nil {
-			return nil, fmt.Errorf("repair provenance persistence failed: %w", err)
-		}
+	treeSHA, err := gitOut(tree, "rev-parse", "HEAD^{tree}")
+	if err != nil {
+		return nil, err
 	}
-	return &Result{Status: "ok", OldSHA: expected, NewSHA: sha, Ref: "refs/heads/" + branch}, nil
+	candidate := &PreparedMerge{Repo: repo, Base: branch, BaseSHA: expected, CommitSHA: strings.TrimSpace(head), TreeSHA: strings.TrimSpace(treeSHA), Dir: tree, remote: remote}
+	return s.PublishPreparedTracked(candidate, provenance)
 }

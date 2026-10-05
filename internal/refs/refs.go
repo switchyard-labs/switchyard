@@ -45,9 +45,10 @@ type Result struct {
 }
 
 type Service struct {
-	Artifacts  *artifacts.Client
-	Trestle    *trestle.Client
-	ScratchDir string
+	Artifacts             *artifacts.Client
+	Trestle               *trestle.Client
+	ScratchDir            string
+	PublicationCheckpoint func(string) // fault-injection hook; nil in production
 
 	mu         sync.Mutex
 	refLocks   map[string]*sync.Mutex
@@ -200,30 +201,39 @@ func (s *Service) Update(repo, branch, expected string, changes []Change, messag
 	if err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(dir)
-
-	pushStarted := time.Now()
-	newSHA, pushErr := s.push(repo, remote, branch, dir, expected)
-	timings["git_push_ns"] = int64(time.Since(pushStarted))
-	if pushErr != nil {
-		// a rejected non-force push means the ref moved; if it did, STALE,
-		// otherwise it is a genuine error.
-		now, e := s.currentSHA(repo, remote, branch)
-		if e == nil && now != "" && now != expected {
-			return &Result{Status: "stale", OldSHA: expected, NewSHA: now, Ref: "refs/heads/" + branch}, nil
+	keepCandidate := false
+	defer func() {
+		if !keepCandidate {
+			os.RemoveAll(dir)
 		}
-		return nil, &StageError{Code: "git_push_failed", Err: pushErr}
+	}()
+	head, err := gitOut(dir, "rev-parse", "HEAD")
+	if err != nil {
+		return nil, err
 	}
-	stateStarted := time.Now()
-	// record provenance
-	if s.Trestle != nil {
-		_, _, _ = s.Trestle.CreateRecord("ref_updates", map[string]any{
-			"repo": repo, "branch": branch, "old_sha": current, "new_sha": newSHA,
-			"provenance": provenance, "occurred_at": time.Now().UTC().Format(time.RFC3339),
-		}, "refupd-"+repo+"-"+branch+"-"+newSHA[:12])
+	tree, err := gitOut(dir, "rev-parse", "HEAD^{tree}")
+	if err != nil {
+		return nil, err
 	}
-	timings["publication_state_ns"] = int64(time.Since(stateStarted))
-	return &Result{Status: "ok", OldSHA: current, NewSHA: newSHA, Ref: "refs/heads/" + branch}, nil
+	candidate := &PreparedMerge{Repo: repo, Base: branch, BaseSHA: expected, CommitSHA: strings.TrimSpace(head), TreeSHA: strings.TrimSpace(tree), Dir: dir, remote: remote}
+	result, err = s.trackedPublication(candidate, provenance, func() (*Result, error) {
+		pushStarted := time.Now()
+		newSHA, pushErr := s.push(repo, remote, branch, dir, expected)
+		timings["git_push_ns"] = int64(time.Since(pushStarted))
+		if pushErr != nil {
+			now, e := s.currentSHA(repo, remote, branch)
+			if e == nil && now != "" && now != expected && now != candidate.CommitSHA {
+				return &Result{Status: "stale", OldSHA: expected, NewSHA: now, Ref: "refs/heads/" + branch}, nil
+			}
+			return nil, &StageError{Code: "git_push_failed", Err: pushErr}
+		}
+		return &Result{Status: "ok", OldSHA: expected, NewSHA: newSHA, Ref: "refs/heads/" + branch}, nil
+	})
+	if err != nil {
+		keepCandidate = true
+		return nil, err
+	}
+	return result, nil
 }
 
 func (s *Service) buildCommit(repo, remote, branch, expected string, changes []Change, message string, timingArgs ...map[string]int64) (string, error) {
@@ -342,7 +352,7 @@ func (s *Service) MergeBranch(repo, target, source, message, provenance string) 
 		return nil, err
 	}
 	defer candidate.Close()
-	return s.PublishPrepared(candidate)
+	return s.PublishPreparedTracked(candidate, provenance)
 }
 
 // PreviewMerge tests whether the source branch merges cleanly into the target
@@ -569,19 +579,20 @@ func (s *Service) ResolveIntoSource(repo, target, source, message, provenance st
 	if err := git(dir, "", "-c", "user.name=switchyard", "-c", "user.email=switchyard@local", "commit", "--quiet", "-m", message); err != nil {
 		return nil, nil, fmt.Errorf("resolve commit: %w", err)
 	}
-	// push the resolution onto the source branch
-	if _, err := s.push(repo, remote, source, dir, srcSHA); err != nil {
-		return nil, nil, fmt.Errorf("resolve push: %w", err)
+	newSHA, err := gitOut(dir, "rev-parse", "HEAD")
+	if err != nil {
+		return nil, nil, err
 	}
-	newSHA, _ := gitOut(dir, "rev-parse", "HEAD")
-	newSHA = strings.TrimSpace(newSHA)
-	if s.Trestle != nil {
-		_, _, _ = s.Trestle.CreateRecord("ref_updates", map[string]any{
-			"repo": repo, "branch": source, "old_sha": srcSHA, "new_sha": newSHA,
-			"provenance": "resolve:" + provenance, "occurred_at": time.Now().UTC().Format(time.RFC3339),
-		}, "refupd-"+repo+"-"+source+"-"+newSHA[:12])
+	treeSHA, err := gitOut(dir, "rev-parse", "HEAD^{tree}")
+	if err != nil {
+		return nil, nil, err
 	}
-	return &Result{Status: "ok", OldSHA: srcSHA, NewSHA: newSHA, Ref: "refs/heads/" + source}, resolved, nil
+	candidate := &PreparedMerge{Repo: repo, Base: source, BaseSHA: srcSHA, CommitSHA: strings.TrimSpace(newSHA), TreeSHA: strings.TrimSpace(treeSHA), Dir: dir, remote: remote}
+	result, err := s.PublishPreparedTracked(candidate, "resolve:"+provenance)
+	if err != nil {
+		return nil, nil, err
+	}
+	return result, resolved, nil
 }
 
 // repoTokenRemote resolves a repo token from a remote URL by fetching repo name

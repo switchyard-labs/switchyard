@@ -74,3 +74,23 @@ in those effects, no workflow Git effects, three open findings, no execution
 metadata records. Existing queue items remain legacy and will not be assigned a
 source identity from current Git state. The inventory must be repeated within the
 exclusive migration window before mutation.
+
+## CP4: durable publication facts
+
+Schema version 15 adds `publication_intents` (unique ID, immutable candidate and
+provenance identity, stable timestamp, completion phase) and optional queue
+`next_retry_at`. Intent precedes the Git effect; exact remote observation resolves
+an ambiguous response; the stable fact is acknowledged before operation completion.
+Queue, workflow, human Update and repair publication share this protocol. Failed
+receipt persistence retains the candidate for recovery. Observation-only journal
+reconciliation never grants authority to push, including after policy revocation.
+No historical gaps are backfilled. Missing scratch can acknowledge an exact current
+remote match; descendant inspection still requires retained local scratch.
+
+Validation: full app/refs suites passed; process-death boundaries before push,
+after push, after receipt and before operation completion converge with one fact.
+Lost push response, retry, stale/no-op and conflicting receipt tests passed.
+Base movement preserves the pinned source. Provenance-store failure after a push
+recovers without another push, even after policy revocation. Queue errors and
+repeated base movement have backoff and bounded retries; explicit requeue resets
+the budget. No live migration or deployment has occurred yet.
