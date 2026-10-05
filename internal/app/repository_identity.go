@@ -15,7 +15,7 @@ var repoSlugRE = regexp.MustCompile(`^[a-z0-9._-]{1,100}$`)
 
 var reservedOwnerSlugs = map[string]bool{
 	"www": true, "docs": true, "app": true, "admin": true, "static": true,
-	"pages": true, "login": true, "signup": true, "sy": true,
+	"pages": true, "login": true, "signup": true, "register": true, "signin": true, "sy": true,
 	"api": true, "assets": true, "settings": true, "organizations": true,
 	"work": true, "pulls": true, "workflows": true, "attention": true,
 	"repositories": true, "operations": true, "history": true, "profile": true,

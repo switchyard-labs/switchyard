@@ -14,11 +14,13 @@ type loginWindow struct {
 	Until time.Time
 }
 
-func (a *App) allowLogin(remote string) bool {
+func (a *App) allowLogin(remote string) bool { return a.allowAuthAttempt(remote, "login") }
+func (a *App) allowAuthAttempt(remote, purpose string) bool {
 	host, _, err := net.SplitHostPort(remote)
 	if err != nil {
 		host = remote
 	}
+	host = purpose + ":" + host
 	a.authMu.Lock()
 	defer a.authMu.Unlock()
 	now := time.Now()

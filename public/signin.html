@@ -8,7 +8,7 @@
 		<link rel="stylesheet" href="/assets/css/theme.css?v=c22d">
 		<link rel="stylesheet" href="/assets/css/components.css?v=avatar-fill-c42">
 		<link rel="stylesheet" href="/assets/css/app.css?v=c22d">
-		<link rel="stylesheet" href="/assets/css/identity.css?v=profile-c42">
+		<link rel="stylesheet" href="/assets/css/identity.css?v=signup-v12">
 	<link rel="stylesheet" href="/assets/css/operations.css?v=c21"></head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
@@ -28,10 +28,11 @@
 			    <h1 id="auth-title">Sign in to Switchyard</h1>
 			    <p class="muted auth-copy">Access repositories, Work, Pull Requests, organizations and the editor.</p>
 			    <form id="signin-form" class="auth-form">
-			      <label>Username<input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
-			      <label id="registration-name" hidden>Display name<input name="display_name" autocomplete="name" maxlength="120"></label>
-			      <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
-			      <button class="btn primary auth-submit" type="submit">Sign in</button>
+			      <label>Username<input name="username" minlength="3" maxlength="39" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+			      <label id="registration-email" hidden>Email<input name="email" type="email" autocomplete="email" maxlength="254" disabled></label>
+			      <label>Password<input name="password" type="password" maxlength="72" autocomplete="current-password" required></label>
+			      <label id="registration-confirm" hidden>Confirm password<input name="confirm_password" type="password" autocomplete="new-password" disabled></label>
+      <button class="btn primary auth-submit" type="submit">Sign in</button>
 			    </form>
 			    <div class="auth-divider"><span>or</span></div>
 			    <button class="btn auth-toggle" type="button" id="toggle-mode">Create an account</button>
@@ -42,6 +43,6 @@
 		<script src="/assets/js/code-surface.js?v=c18"></script>
 		<script src="/assets/js/markdown.js?v=c18"></script>
 		<script src="/assets/js/code-blocks.js"></script>
-		<script src="/assets/js/app.js?v=repo-heading-c42b"></script>
+		<script src="/assets/js/app.js?v=signup-v12"></script>
 	</body>
 </html>

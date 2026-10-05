@@ -201,7 +201,7 @@ func (a *App) authorizeHandler(next http.HandlerFunc) http.HandlerFunc {
 			writeJSON(w, 401, map[string]any{"error": "unauthorized"})
 			return
 		}
-		if a.isDemoGuest(r) && !publicOrg && !(path == "/api/demo" || path == "/api/auth/me" || strings.HasPrefix(path, "/api/repositories") || strings.HasPrefix(path, "/api/users/") || strings.HasPrefix(path, "/api/owners/") || strings.HasPrefix(path, "/api/avatars/")) {
+		if a.isDemoGuest(r) && !publicOrg && !(path == "/api/demo" || path == "/api/auth/me" || path == "/api/auth/registration" || strings.HasPrefix(path, "/api/repositories") || strings.HasPrefix(path, "/api/users/") || strings.HasPrefix(path, "/api/owners/") || strings.HasPrefix(path, "/api/avatars/")) {
 			writeJSON(w, 401, map[string]any{"error": "sign_in_required"})
 			return
 		}

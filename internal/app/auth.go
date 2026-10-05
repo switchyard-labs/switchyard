@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/mail"
+	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -31,11 +34,31 @@ func (a *App) currentUser(r *http.Request) string {
 	return ""
 }
 
+func registrationOpen() bool {
+	policy := strings.ToLower(strings.TrimSpace(os.Getenv("SWITCHYARD_REGISTRATION_POLICY")))
+	return policy == "" || policy == "open"
+}
+func (a *App) handleRegistrationPolicy(w http.ResponseWriter, r *http.Request) {
+	mode := "disabled"
+	if registrationOpen() {
+		mode = "open"
+	}
+	writeJSON(w, 200, map[string]any{"mode": mode, "email_verification": false})
+}
 func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
+	if !registrationOpen() {
+		writeJSON(w, 403, map[string]any{"error": "registration_disabled"})
+		return
+	}
+	if !a.allowAuthAttempt(r.RemoteAddr, "signup") {
+		writeJSON(w, 429, map[string]any{"error": "registration_rate_limited"})
+		return
+	}
 	var in struct {
-		Username    string `json:"username"`
-		Password    string `json:"password"`
-		DisplayName string `json:"display_name"`
+		Username        string `json:"username"`
+		Email           string `json:"email"`
+		Password        string `json:"password"`
+		ConfirmPassword string `json:"confirm_password"`
 	}
 	if err := readJSON(r, &in); err != nil {
 		writeJSON(w, 400, map[string]any{"error": "bad_request"})
@@ -50,13 +73,45 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]any{"error": "username_invalid"})
 		return
 	}
-	if ns, _ := a.Trestle.ListRecords("owner_namespaces", `slug = "`+normalizeOwnerSlug(in.Username)+`"`); len(ns) > 0 {
+	if len(in.Password) > 72 {
+		writeJSON(w, 400, map[string]any{"error": "password_too_long"})
+		return
+	}
+	if in.Password != in.ConfirmPassword {
+		writeJSON(w, 400, map[string]any{"error": "password_confirmation_mismatch"})
+		return
+	}
+	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
+	address, emailErr := mail.ParseAddress(in.Email)
+	if emailErr != nil || address.Address != in.Email || len(in.Email) > 254 || strings.Count(in.Email, "@") != 1 || !strings.Contains(strings.SplitN(in.Email, "@", 2)[1], ".") {
+		writeJSON(w, 400, map[string]any{"error": "email_invalid"})
+		return
+	}
+	ns, err := a.Trestle.ListRecords("owner_namespaces", filterEq("slug", in.Username))
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "registration_unavailable"})
+		return
+	}
+	if len(ns) > 0 {
 		writeJSON(w, 409, map[string]any{"error": "username_taken"})
 		return
 	}
 	existing, err := a.Trestle.ListRecords("users", `username = "`+in.Username+`"`)
-	if err == nil && len(existing) > 0 {
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "registration_unavailable"})
+		return
+	}
+	if len(existing) > 0 {
 		writeJSON(w, 409, map[string]any{"error": "username_taken"})
+		return
+	}
+	emails, err := a.Trestle.ListRecords("account_emails", filterEq("email", in.Email))
+	if err != nil {
+		writeJSON(w, 502, map[string]any{"error": "registration_unavailable"})
+		return
+	}
+	if len(emails) > 0 {
+		writeJSON(w, 409, map[string]any{"error": "email_taken"})
 		return
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
@@ -64,20 +119,31 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 500, map[string]any{"error": "internal"})
 		return
 	}
-	display := in.DisplayName
-	if display == "" {
-		display = in.Username
-	}
-	_, _, err = a.Trestle.CreateRecord("users", map[string]any{
-		"username":      in.Username,
-		"password_hash": string(hash),
-		"display_name":  display,
-	}, "user-"+in.Username)
+	// Unique email reservations enforce case-insensitive ownership across processes.
+	emailID, _, err := a.Trestle.CreateRecord("account_emails", map[string]any{"email": in.Email, "username": in.Username, "created_at": nowStr()}, "signup-email-"+newToken())
 	if err != nil {
-		writeJSON(w, 500, map[string]any{"error": "create_user_failed"})
+		matches, lookupErr := a.Trestle.ListRecords("account_emails", filterEq("email", in.Email))
+		if lookupErr == nil && len(matches) > 0 {
+			writeJSON(w, 409, map[string]any{"error": "email_taken"})
+		} else {
+			writeJSON(w, 502, map[string]any{"error": "registration_unavailable"})
+		}
+		return
+	}
+	userID, _, err := a.Trestle.CreateRecord("users", map[string]any{"username": in.Username, "email": in.Email, "password_hash": string(hash), "display_name": in.Username}, "signup-user-"+newToken())
+	if err != nil {
+		a.removeSignupRecord("account_emails", emailID)
+		matches, lookupErr := a.Trestle.ListRecords("users", filterEq("username", in.Username))
+		if lookupErr == nil && len(matches) > 0 {
+			writeJSON(w, 409, map[string]any{"error": "username_taken"})
+		} else {
+			writeJSON(w, 502, map[string]any{"error": "registration_unavailable"})
+		}
 		return
 	}
 	if err := a.ensureOwnerNamespace(in.Username, "user", in.Username); err != nil {
+		a.removeSignupRecord("users", userID)
+		a.removeSignupRecord("account_emails", emailID)
 		writeJSON(w, 409, map[string]any{"error": "owner_namespace_conflict"})
 		return
 	}
@@ -86,6 +152,14 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 201, map[string]any{"ok": true, "user": in.Username})
+}
+
+// Cleanup is restricted to record IDs created by this signup request.
+func (a *App) removeSignupRecord(collection, id string) {
+	if id == "" {
+		return
+	}
+	_ = a.Trestle.DeleteRecord(collection, id, "1")
 }
 
 func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {

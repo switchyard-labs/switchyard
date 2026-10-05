@@ -11,7 +11,7 @@ import (
 )
 
 // Bump whenever the declared schema changes; old versions remain historical.
-const switchyardSchemaVersion = 11
+const switchyardSchemaVersion = 12
 
 func schemaFingerprint(collections [][2]any) (string, error) {
 	type definition struct {

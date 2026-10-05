@@ -206,37 +206,54 @@
     if (!form) return;
     const err = document.getElementById("auth-error");
     const toggle = document.getElementById("toggle-mode");
-    let mode = "login";
+    let mode = /\/(signup|register)\/?$/.test(location.pathname) || location.hash === "#register" ? "register" : "login";
+    let registrationAllowed = false;
     const submit = form.querySelector("button[type=submit]");
     const password = form.elements.namedItem("password");
-    const displayName = document.getElementById("registration-name");
+    const email = form.elements.namedItem("email"), confirm = form.elements.namedItem("confirm_password");
+    function drawMode() {
+      const registering = mode === "register";
+      document.getElementById("registration-email").hidden = !registering;
+      document.getElementById("registration-confirm").hidden = !registering;
+      email.disabled = confirm.disabled = !registering;
+      email.required = confirm.required = registering;
+      password.autocomplete = registering ? "new-password" : "current-password";
+      password.minLength = registering ? 8 : 1;
+      document.getElementById("auth-title").textContent = registering ? "Create your Switchyard account" : "Sign in to Switchyard";
+      document.querySelector(".auth-copy").textContent = registering ? "Choose a username and enter your email and password. Your email stays private." : "Access repositories, Work, Pull Requests, organizations and the editor.";
+      submit.textContent = registering ? "Create account" : "Sign in";
+      submit.disabled = registering && !registrationAllowed;
+      toggle.textContent = registering ? "Back to sign in" : "No account? Register";
+      toggle.hidden = !registering && !registrationAllowed;
+    }
     toggle.addEventListener("click", () => {
       mode = mode === "login" ? "register" : "login";
-      err.hidden = true;
-      displayName.hidden = mode !== "register";
-      password.autocomplete = mode === "register" ? "new-password" : "current-password";
-      password.minLength = mode === "register" ? 8 : 1;
-      const title = document.getElementById("auth-title");
-      const copy = document.querySelector(".auth-copy");
-      submit.textContent = mode === "login" ? "Sign in" : "Create account";
-      toggle.textContent = mode === "login" ? "Create an account" : "Back to sign in";
-      if (title) title.textContent = mode === "login" ? "Sign in to Switchyard" : "Create your Switchyard account";
-      if (copy) copy.textContent = mode === "login" ? "Access repositories, Work, Pull Requests, organizations and the editor." : "Create an account with a username and password. You can add your profile and avatar afterwards.";
+      history.replaceState(null,"",mode === "register" ? "/signup" : "/signin");
+      err.hidden = true; drawMode();
     });
+    drawMode();
+    api("/api/auth/registration").then(policy => {
+      registrationAllowed = policy.mode === "open";drawMode();
+      if (mode === "register" && !registrationAllowed) { err.textContent = "New account registration is currently disabled.";err.hidden = false; }
+    }).catch(() => { err.textContent = "Registration availability could not be checked. Please try again.";err.hidden = false; });
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       err.hidden = true;
       const body = { username: form.username.value, password: form.password.value };
-      if (mode === "register") body.display_name = form.elements.namedItem("display_name").value || form.username.value;
+      if (mode === "register") {
+        if (!registrationAllowed) return;
+        if (password.value !== confirm.value) { err.textContent = "Passwords do not match.";err.hidden = false;confirm.focus();return; }
+        body.email = email.value;body.confirm_password = confirm.value;
+      }
       submit.disabled = true; toggle.disabled = true;
       try {
         await api(mode === "login" ? "/api/auth/login" : "/api/auth/register", { method: "POST", body: JSON.stringify(body) });
         location.href = "/";
       } catch (ex) {
-        const messages = { invalid_credentials: "Username or password is incorrect.", username_taken: "This username is already in use.", rate_limited: "Too many attempts. Please try again later." };
+        const messages = { invalid_credentials: "Username or password is incorrect.", username_taken: "This username is already in use.", email_taken: "This email is already in use.", email_invalid: "Enter a valid email address.", password_confirmation_mismatch: "Passwords do not match.", username_invalid: "Use 3–39 letters, numbers or hyphens; this name may be reserved.", username_or_password_too_short: "Use a username of at least 3 characters and a password of at least 8 characters.", password_too_long: "Use a password of at most 72 bytes.", registration_disabled: "New account registration is currently disabled.", session_persistence_failed: "Your account was created, but sign-in could not complete. Try signing in.", registration_unavailable: "Registration is temporarily unavailable. Please try again.", registration_rate_limited: "Too many registration attempts. Please try again later.", login_rate_limited: "Too many sign-in attempts. Please try again later.", rate_limited: "Too many attempts. Please try again later." };
         err.textContent = messages[ex.message] || "Your account could not be accessed. Check the details and try again.";
         err.hidden = false;
-      } finally { submit.disabled = false; toggle.disabled = false; }
+      } finally { submit.disabled = mode === "register" && !registrationAllowed; toggle.disabled = false; }
     });
   }
 

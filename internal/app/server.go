@@ -66,7 +66,8 @@ func New(t *trestle.Client, a *artifacts.Client, staticDir, dataDir string) *App
 func switchyardCollections() [][2]any {
 	collections := [][2]any{
 		{"demo_action_exclusions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text", Required: true}, {Name: "run_id", Type: "text", Required: true}, {Name: "created_at", Type: "text"}}},
-		{"users", []trestle.CollectionField{{Name: "username", Type: "text", Unique: true}, {Name: "password_hash", Type: "text", Required: true}, {Name: "display_name", Type: "text"}}},
+		{"account_emails", []trestle.CollectionField{{Name: "email", Type: "text", Unique: true, Required: true}, {Name: "username", Type: "text", Required: true}, {Name: "created_at", Type: "text"}}},
+		{"users", []trestle.CollectionField{{Name: "email", Type: "text"}, {Name: "username", Type: "text", Unique: true}, {Name: "password_hash", Type: "text", Required: true}, {Name: "display_name", Type: "text"}}},
 		{"sessions", []trestle.CollectionField{{Name: "token", Type: "text", Unique: true}, {Name: "username", Type: "text"}, {Name: "expires_at", Type: "text"}}},
 		{"repos", []trestle.CollectionField{{Name: "name", Type: "text", Unique: true}, {Name: "default_branch", Type: "text"}, {Name: "remote", Type: "text"}, {Name: "registered_at", Type: "text"}}},
 		{"owner_namespaces", []trestle.CollectionField{{Name: "slug", Type: "text", Unique: true}, {Name: "owner_type", Type: "text"}, {Name: "owner_id", Type: "text"}, {Name: "created_at", Type: "text"}}},
@@ -118,6 +119,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("/", a.serveStatic)
 
 	// auth
+	mux.HandleFunc("GET /api/auth/registration", a.authorizeHandler(a.handleRegistrationPolicy))
 	mux.HandleFunc("POST /api/auth/register", a.authorizeHandler(a.handleRegister))
 	mux.HandleFunc("POST /api/auth/login", a.authorizeHandler(a.handleLogin))
 	mux.HandleFunc("POST /api/auth/logout", a.authorizeHandler(a.handleLogout))
@@ -350,7 +352,7 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		a.serveAsset(w, r, "settings.html")
 		return
 	}
-	if page, ok := map[string]string{"/work": "work.html", "/pulls": "pulls.html", "/signin": "signin.html"}[strings.TrimSuffix(r.URL.Path, "/")]; ok {
+	if page, ok := map[string]string{"/work": "work.html", "/pulls": "pulls.html", "/signin": "signin.html", "/signup": "signin.html", "/register": "signin.html"}[strings.TrimSuffix(r.URL.Path, "/")]; ok {
 		a.serveAsset(w, r, page)
 		return
 	}
