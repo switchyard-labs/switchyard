@@ -33,3 +33,8 @@ Same-origin write checks and host-only Secure/HttpOnly/SameSite=Lax cookies appl
 The `sy` CLI currently provides login/status/logout, **not a signup command**. Self-registration is supported through browser/API; no CLI signup capability is claimed.
 
 Linode schema migration backup: `/opt/cp0/switchyard/before-signup-20261005-085011/`, including binary/environment and a consistent Trestle database backup during app maintenance. Schema-11 binaries cannot be restarted against schema 12; rollback needs a compatible binary or an exclusive, write-aware metadata restore.
+
+Email verification and recovery now have browser/API implementations; verification
+is informational and signup survives mail failure. See [account recovery](account-recovery.md)
+for SMTP configuration, limits, migration and certification status. Do not label
+real email recovery available until the production sender is configured and tested.

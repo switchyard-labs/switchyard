@@ -1,0 +1,50 @@
+[
+  {
+    "width": 1600,
+    "signup": true,
+    "verification": true,
+    "signed_out_verification": true,
+    "resend": true,
+    "superseded_verification_rejected": true,
+    "verification_reuse_rejected": true,
+    "password_confirmation": true,
+    "reset": true,
+    "old_password_rejected": true,
+    "old_session_revoked": true,
+    "new_password_login": true,
+    "reset_reuse_rejected": true,
+    "token_removed_from_url": true,
+    "missing_token_safe": true,
+    "layout": {
+      "width": 1600,
+      "scrollWidth": 1585,
+      "height": 900,
+      "scrollHeight": 900
+    },
+    "page_errors": []
+  },
+  {
+    "width": 390,
+    "signup": true,
+    "verification": true,
+    "signed_out_verification": true,
+    "resend": true,
+    "superseded_verification_rejected": true,
+    "verification_reuse_rejected": true,
+    "password_confirmation": true,
+    "reset": true,
+    "old_password_rejected": true,
+    "old_session_revoked": true,
+    "new_password_login": true,
+    "reset_reuse_rejected": true,
+    "token_removed_from_url": true,
+    "missing_token_safe": true,
+    "layout": {
+      "width": 390,
+      "scrollWidth": 375,
+      "height": 900,
+      "scrollHeight": 900
+    },
+    "page_errors": []
+  }
+]

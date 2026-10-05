@@ -20,6 +20,7 @@ import (
 	"switchyard/internal/actions"
 	"switchyard/internal/agent"
 	"switchyard/internal/artifacts"
+	"switchyard/internal/maildelivery"
 	"switchyard/internal/refs"
 	"switchyard/internal/telemetry"
 	"switchyard/internal/trestle"
@@ -34,6 +35,7 @@ type App struct {
 	workflowCrashHook func(string)
 	queueCrashHook    func(string) // test-only injection, unset by constructors
 
+	Mailer         maildelivery.Mailer
 	Trestle        *trestle.Client
 	Artifacts      *artifacts.Client
 	Refs           *refs.Service
@@ -67,7 +69,7 @@ func switchyardCollections() [][2]any {
 	collections := [][2]any{
 		{"demo_action_exclusions", []trestle.CollectionField{{Name: "id", Type: "text", Unique: true}, {Name: "repo", Type: "text", Required: true}, {Name: "run_id", Type: "text", Required: true}, {Name: "created_at", Type: "text"}}},
 		{"account_emails", []trestle.CollectionField{{Name: "email", Type: "text", Unique: true, Required: true}, {Name: "username", Type: "text", Required: true}, {Name: "created_at", Type: "text"}}},
-		{"users", []trestle.CollectionField{{Name: "email", Type: "text"}, {Name: "username", Type: "text", Unique: true}, {Name: "password_hash", Type: "text", Required: true}, {Name: "display_name", Type: "text"}}},
+		{"users", []trestle.CollectionField{{Name: "account_auth", Type: "json"}, {Name: "verified_at", Type: "text"}, {Name: "disabled_at", Type: "text"}, {Name: "email", Type: "text"}, {Name: "username", Type: "text", Unique: true}, {Name: "password_hash", Type: "text", Required: true}, {Name: "display_name", Type: "text"}}},
 		{"sessions", []trestle.CollectionField{{Name: "token", Type: "text", Unique: true}, {Name: "username", Type: "text"}, {Name: "expires_at", Type: "text"}}},
 		{"repos", []trestle.CollectionField{{Name: "name", Type: "text", Unique: true}, {Name: "default_branch", Type: "text"}, {Name: "remote", Type: "text"}, {Name: "registered_at", Type: "text"}}},
 		{"owner_namespaces", []trestle.CollectionField{{Name: "slug", Type: "text", Unique: true}, {Name: "owner_type", Type: "text"}, {Name: "owner_id", Type: "text"}, {Name: "created_at", Type: "text"}}},
@@ -124,6 +126,11 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("POST /api/auth/login", a.authorizeHandler(a.handleLogin))
 	mux.HandleFunc("POST /api/auth/logout", a.authorizeHandler(a.handleLogout))
 	mux.HandleFunc("GET /api/auth/me", a.authorizeHandler(a.handleMe))
+	mux.HandleFunc("POST /api/auth/verify-email", a.authorizeHandler(a.handleVerifyEmail))
+	mux.HandleFunc("POST /api/auth/resend-verification", a.authorizeHandler(a.handleResendVerification))
+	mux.HandleFunc("POST /api/auth/password-reset/request", a.authorizeHandler(a.handleResetRequest))
+	mux.HandleFunc("POST /api/auth/password-reset/complete", a.authorizeHandler(a.handleResetComplete))
+	mux.HandleFunc("GET /api/settings/email", a.authorizeHandler(a.handleAccountEmail))
 	mux.HandleFunc("GET /api/demo", a.authorizeHandler(a.handleDemoStatus))
 	mux.HandleFunc("GET /api/owners/{slug}", a.authorizeHandler(a.handleGetOwnerProfile))
 	mux.HandleFunc("GET /api/users/{username}", a.authorizeHandler(a.handleGetUserProfile))
@@ -352,7 +359,7 @@ func (a *App) serveStatic(w http.ResponseWriter, r *http.Request) {
 		a.serveAsset(w, r, "settings.html")
 		return
 	}
-	if page, ok := map[string]string{"/work": "work.html", "/pulls": "pulls.html", "/signin": "signin.html", "/signup": "signin.html", "/register": "signin.html"}[strings.TrimSuffix(r.URL.Path, "/")]; ok {
+	if page, ok := map[string]string{"/work": "work.html", "/pulls": "pulls.html", "/signin": "signin.html", "/signup": "signin.html", "/register": "signin.html", "/forgot-password": "recovery.html", "/reset-password": "recovery.html", "/verify-email": "recovery.html"}[strings.TrimSuffix(r.URL.Path, "/")]; ok {
 		a.serveAsset(w, r, page)
 		return
 	}
@@ -509,7 +516,7 @@ func (a *App) userForSession(r *http.Request, token string) (string, bool) {
 	}
 	u, _ := items[0]["username"].(string)
 	record := a.userRecord(u)
-	if record == nil || !strings.HasSuffix(token, "_"+sha256Hex([]byte(strOr(record["password_hash"])))[:16]) {
+	if record == nil || strOr(record["disabled_at"]) != "" || !strings.HasSuffix(token, "_"+sha256Hex([]byte(strOr(record["password_hash"])))[:16]) {
 		return "", false
 	}
 	return u, true
@@ -546,6 +553,10 @@ func readJSON(r *http.Request, out any) error {
 // serveAsset renders embedded release assets unless an explicit development
 // directory is configured. Canonical route identity is preserved in the URL.
 func (a *App) serveAsset(w http.ResponseWriter, r *http.Request, name string) {
+	if name == "recovery.html" {
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("Cache-Control", "no-store")
+	}
 	if a.StaticDir != "" {
 		file, err := os.Open(filepath.Join(a.StaticDir, name))
 		if err != nil {

@@ -213,6 +213,7 @@
     const email = form.elements.namedItem("email"), confirm = form.elements.namedItem("confirm_password");
     function drawMode() {
       const registering = mode === "register";
+      document.getElementById("forgot-password-link").hidden = registering;
       document.getElementById("registration-email").hidden = !registering;
       document.getElementById("registration-confirm").hidden = !registering;
       email.disabled = confirm.disabled = !registering;
@@ -247,8 +248,8 @@
       }
       submit.disabled = true; toggle.disabled = true;
       try {
-        await api(mode === "login" ? "/api/auth/login" : "/api/auth/register", { method: "POST", body: JSON.stringify(body) });
-        location.href = "/";
+        const result = await api(mode === "login" ? "/api/auth/login" : "/api/auth/register", { method: "POST", body: JSON.stringify(body) });
+        location.href = mode === "register" ? "/settings.html?verify=email&delivery=" + encodeURIComponent(result.email_verification || "unavailable") + "#security" : "/";
       } catch (ex) {
         const messages = { invalid_credentials: "Username or password is incorrect.", username_taken: "This username is already in use.", email_taken: "This email is already in use.", email_invalid: "Enter a valid email address.", password_confirmation_mismatch: "Passwords do not match.", username_invalid: "Use 3–39 letters, numbers or hyphens; this name may be reserved.", username_or_password_too_short: "Use a username of at least 3 characters and a password of at least 8 characters.", password_too_long: "Use a password of at most 72 bytes.", registration_disabled: "New account registration is currently disabled.", session_persistence_failed: "Your account was created, but sign-in could not complete. Try signing in.", registration_unavailable: "Registration is temporarily unavailable. Please try again.", registration_rate_limited: "Too many registration attempts. Please try again later.", login_rate_limited: "Too many sign-in attempts. Please try again later.", rate_limited: "Too many attempts. Please try again later." };
         err.textContent = messages[ex.message] || "Your account could not be accessed. Check the details and try again.";

@@ -1,0 +1,11 @@
+{
+  "records": [
+    {
+      "name": "switchyard.cx",
+      "type": "TXT",
+      "content": "\"v=spf1 include:spf.efwd.registrar-servers.com ~all\""
+    }
+  ],
+  "changed": false,
+  "smtp_configured": false
+}

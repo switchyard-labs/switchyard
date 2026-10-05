@@ -1,0 +1,21 @@
+{
+  "trestle": {
+    "build": "passed",
+    "tests": "passed",
+    "vet": "passed",
+    "account_token_race": "passed",
+    "portable_restore": "passed",
+    "postgres": "not configured"
+  },
+  "switchyard": {
+    "build": "passed",
+    "tests": "passed",
+    "vet": "passed",
+    "affected_race": "passed",
+    "javascript_parse": "passed",
+    "generated_build": "passed",
+    "diff_check": "passed"
+  },
+  "browser": "desktop/mobile real disposable Trestle with captured mail; passed",
+  "real_mail": "not configured"
+}

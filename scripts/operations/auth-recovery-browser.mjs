@@ -1,0 +1,30 @@
+import fs from 'node:fs/promises';
+import {chromium} from '/home/nick/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+const base=process.env.RECOVERY_PREVIEW_URL,mailfile=process.env.RECOVERY_MAIL_FILE,out=process.env.RECOVERY_EVIDENCE_DIR;
+if(!base||new URL(base).hostname!=='127.0.0.1'||!mailfile||!out)throw new Error('Disposable loopback preview required');
+await fs.mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:true});const report=[];
+function assert(value,message){if(!value)throw new Error(message)}
+async function messages(){return JSON.parse(await fs.readFile(mailfile,'utf8'))}
+async function link(subject,email){const items=await messages();const msg=items.filter(m=>m.Subject===subject&&m.To===email).at(-1);assert(msg,'Expected captured mail');return msg.Text.match(/https:\/\/\S+/)[0]}
+async function openLink(page,raw){const u=new URL(raw);await page.goto(base+u.pathname+u.hash);await page.waitForFunction(()=>!location.href.includes('token='));assert(!page.url().includes('token='),'Token left in browser URL');}
+try{for(const width of [1600,390]){
+ const ctx=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width,height:900}}),page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const name='authprobe-'+width+'-'+Date.now().toString(36),email=name+'@example.test',old='original-browser-password',next='replacement-browser-password';
+ await page.goto(base+'/signup');await page.locator('#signin-form input[name=username]').fill(name);await page.locator('#signin-form input[name=email]').fill(email);await page.locator('#signin-form input[name=password]').fill(old);await page.locator('#signin-form input[name=confirm_password]').fill(old);
+ await page.locator('#signin-form button[type=submit]').click();await page.waitForURL('**/settings.html?**');await page.locator('#account-email-state').filter({hasText:'Unverified'}).waitFor();
+ const initialCookies=await ctx.cookies();const oldCtx=await browser.newContext({ignoreHTTPSErrors:true});await oldCtx.addCookies(initialCookies);
+ const originalVerification=await link('Verify your Switchyard email',email);await page.getByRole('button',{name:'Resend verification',exact:true}).click();await page.locator('#account-email-state').filter({hasText:'Verification email sent.'}).waitFor();const verification=await link('Verify your Switchyard email',email);assert(verification!==originalVerification,'Resend did not replace link');await openLink(page,originalVerification);await page.getByRole('button',{name:'Verify email',exact:true}).click();await page.getByRole('status').filter({hasText:'invalid or expired'}).waitFor();await ctx.clearCookies();await openLink(page,verification);await page.getByRole('button',{name:'Verify email',exact:true}).click();await page.getByRole('status').filter({hasText:'Email verified.'}).waitFor();
+ await openLink(page,verification);await page.getByRole('button',{name:'Verify email',exact:true}).click();await page.getByRole('status').filter({hasText:'invalid or expired'}).waitFor();
+ await page.goto(base+'/forgot-password');await page.locator('#recovery-form input[name=email]').fill(email);await page.getByRole('button',{name:'Send reset link'}).click();await page.getByRole('status').filter({hasText:'If an account exists'}).waitFor();
+ const reset=await link('Reset your Switchyard password',email);await openLink(page,reset);await page.locator('input[name=new_password]').fill(next);await page.locator('input[name=confirm_password]').fill('does-not-match');await page.getByRole('button',{name:'Update password'}).click();await page.getByRole('status').filter({hasText:'Passwords do not match'}).waitFor();await page.locator('input[name=confirm_password]').fill(next);await page.getByRole('button',{name:'Update password'}).click();await page.getByRole('status').filter({hasText:'Password updated.'}).waitFor();
+ assert((await oldCtx.request.get(base+'/api/auth/me')).status()===401,'Old session remained authenticated');
+ assert((await ctx.request.post(base+'/api/auth/login',{data:{username:name,password:old}})).status()===401,'Old password accepted');
+ await page.goto(base+'/signin');await page.locator('#signin-form input[name=username]').fill(name);await page.locator('#signin-form input[name=password]').fill(next);await page.locator('#signin-form button[type=submit]').click();await page.waitForURL(base+'/');assert((await ctx.request.get(base+'/api/auth/me')).status()===200,'New-password login failed');
+ await openLink(page,reset);await page.locator('input[name=new_password]').fill(next+'2');await page.locator('input[name=confirm_password]').fill(next+'2');await page.getByRole('button',{name:'Update password'}).click();await page.getByRole('status').filter({hasText:'invalid or expired'}).waitFor();
+ await page.goto(base+'/reset-password');await page.getByRole('status').filter({hasText:'invalid or expired'}).waitFor();assert(await page.locator('#recovery-submit').isDisabled(),'Missing-token form enabled');
+ const layout=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,height:innerHeight,scrollHeight:document.documentElement.scrollHeight}));assert(layout.scrollWidth<=layout.width&&layout.scrollHeight<=layout.height,'Page overflow');assert(errors.length===0,'Browser error: '+errors.join(', '));await page.screenshot({path:out+'/'+width+'-recovery.png'});
+ report.push({width,signup:true,verification:true,signed_out_verification:true,resend:true,superseded_verification_rejected:true,verification_reuse_rejected:true,password_confirmation:true,reset:true,old_password_rejected:true,old_session_revoked:true,new_password_login:true,reset_reuse_rejected:true,token_removed_from_url:true,missing_token_safe:true,layout,page_errors:errors});await oldCtx.close();await ctx.close();
+}
+ await fs.writeFile(out+'/browser.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({desktop_mobile_flows:'passed',mail:'deterministic capture; no real delivery'}));
+}finally{await browser.close()}

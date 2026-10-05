@@ -14,6 +14,7 @@ var ownerSlugRE = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?$`)
 var repoSlugRE = regexp.MustCompile(`^[a-z0-9._-]{1,100}$`)
 
 var reservedOwnerSlugs = map[string]bool{
+	"forgot-password": true, "reset-password": true, "verify-email": true,
 	"www": true, "docs": true, "app": true, "admin": true, "static": true,
 	"pages": true, "login": true, "signup": true, "register": true, "signin": true, "sy": true,
 	"api": true, "assets": true, "settings": true, "organizations": true,

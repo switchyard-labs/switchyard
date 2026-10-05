@@ -43,7 +43,7 @@ func (a *App) handleRegistrationPolicy(w http.ResponseWriter, r *http.Request) {
 	if registrationOpen() {
 		mode = "open"
 	}
-	writeJSON(w, 200, map[string]any{"mode": mode, "email_verification": false})
+	writeJSON(w, 200, map[string]any{"mode": mode, "email_verification": true})
 }
 func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if !registrationOpen() {
@@ -152,11 +152,15 @@ func (a *App) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 409, map[string]any{"error": "owner_namespace_conflict"})
 		return
 	}
-	if err := a.startSession(w, r, in.Username); err != nil {
+	if err := a.startSession(w, r, in.Username, string(hash)); err != nil {
 		writeJSON(w, 502, map[string]any{"error": "session_persistence_failed"})
 		return
 	}
-	writeJSON(w, 201, map[string]any{"ok": true, "user": in.Username})
+	delivery := "sent"
+	if !a.allowAccountMail(r, in.Email) || a.sendAccountToken(r.Context(), userID, in.Email, "email_verification") != nil {
+		delivery = "unavailable"
+	}
+	writeJSON(w, 201, map[string]any{"ok": true, "user": in.Username, "email_verification": delivery})
 }
 
 // Cleanup is restricted to record IDs created by this signup request.
@@ -186,7 +190,7 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	items, err := a.Trestle.ListRecords("users", filterEq("username", in.Username))
-	if err != nil || len(items) == 0 {
+	if err != nil || len(items) == 0 || strOr(items[0]["disabled_at"]) != "" {
 		_ = bcrypt.CompareHashAndPassword([]byte("$2a$10$7EqJtq98hPqEX7fNZaFWoOhi8nVZzQEjU1C5bG1fT3UJwWzM6bLfW"), []byte(in.Password))
 		writeJSON(w, 401, map[string]any{"error": "invalid_credentials"})
 		return
@@ -196,19 +200,25 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 401, map[string]any{"error": "invalid_credentials"})
 		return
 	}
-	if err := a.startSession(w, r, in.Username); err != nil {
+	if err := a.startSession(w, r, in.Username, hash); err != nil {
 		writeJSON(w, 502, map[string]any{"error": "session_persistence_failed"})
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "user": in.Username})
 }
 
-func (a *App) startSession(w http.ResponseWriter, r *http.Request, username string) error {
+func (a *App) startSession(w http.ResponseWriter, r *http.Request, username string, authenticatedHash ...string) error {
 	record := a.userRecord(username)
-	if record == nil {
+	if record == nil || strOr(record["disabled_at"]) != "" {
 		return fmt.Errorf("user not found")
 	}
-	token := newToken() + "_" + sha256Hex([]byte(strOr(record["password_hash"])))[:16]
+	hash := strOr(record["password_hash"])
+	// A reset between password validation and session creation must never bind
+	// an old-password login to the replacement password's session generation.
+	if len(authenticatedHash) > 0 && authenticatedHash[0] != hash {
+		return fmt.Errorf("account changed during authentication")
+	}
+	token := newToken() + "_" + sha256Hex([]byte(hash))[:16]
 	_, _, err := a.Trestle.CreateRecord("sessions", map[string]any{
 		"token":      token,
 		"username":   username,

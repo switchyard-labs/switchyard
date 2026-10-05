@@ -44,6 +44,11 @@
       "name": "pages",
       "title": "Pages",
       "template": "templates/template.html"
+    },
+    {
+      "name": "recovery",
+      "title": "Account recovery",
+      "template": "templates/template.html"
     }
   ]
 }
