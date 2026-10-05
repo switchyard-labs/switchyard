@@ -514,6 +514,8 @@ func (a *App) userForSession(r *http.Request, token string) (string, bool) {
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
+	// API responses depend on session and permissions; never reuse them after sign-out.
+	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)

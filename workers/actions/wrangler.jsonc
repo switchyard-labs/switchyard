@@ -51,7 +51,7 @@
     "BACKUP_BUCKET_NAME": "switchyard-actions-probe-20261003",
     "CLOUDFLARE_ACCOUNT_ID": "b7f20353ee8a9e5d2003f52c74ba795e",
     "ARTIFACTS_NAMESPACE": "switchyard-cp0",
-    "ALLOWED_REPOS": "codex-actions-probe-20261003"
+    "ALLOWED_REPOS": "codex-actions-probe-20261003,codex-pages-live-20261005"
   },
   "observability": {
     "enabled": true,

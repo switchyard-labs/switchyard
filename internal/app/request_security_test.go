@@ -51,6 +51,9 @@ func TestDemoGuestIsNotAuthenticated(t *testing.T) {
 	r = r.WithContext(contextWithDemoGuest(contextWithUser(r.Context(), "demo"), true))
 	w := httptest.NewRecorder()
 	a.handleMe(w, r)
+	if w.Header().Get("Cache-Control") != "no-store" {
+		t.Fatal("auth state must not be cached")
+	}
 	if w.Code != 401 || strings.Contains(w.Body.String(), `"authed":true`) {
 		t.Fatal(w.Code, w.Body.String())
 	}

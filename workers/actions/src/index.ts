@@ -1,3 +1,4 @@
+import {approvedDefinition,saveApprovedDefinition} from './approved-definition.mjs';
 import { CIWorkflow, type CiContext, type CiParams, type CloudflareArtifacts, type CiRunnerResult, isCiRunnerFailure } from '@cloudflare/ci';
 import { type CiBindings, CiSandbox } from '@cloudflare/ci/worker';
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers';
@@ -72,7 +73,7 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
      // probes can observe the in-flight job rather than an empty step list.
      await step.do(`record-running-${label}`,()=>save());
      const outputs=job.assets?.length&&commandIndex===job.steps.length-1?await step.do(`prepare-outputs-${job.id}`,async()=>{
-      const stored=await this.env.BACKUP_BUCKET.get(`definitions/${run.repo}.json`),definition=stored?await stored.json<any>():null;
+      const definition=await approvedDefinition(this.env.BACKUP_BUCKET,run.repo,run.definition_revision);
       if(!definition||definition.revision!==run.definition_revision||typeof definition.upload_origin!=='string'||new URL(definition.upload_origin).protocol!=='https:')throw new Error('Approved upload origin unavailable');
       return Promise.all(job.assets!.map(async asset=>{
        const scope={run:run.run_id,repo:run.repo,job:job.id,name:asset.name,sha:run.sha,expires:Math.floor(Date.now()/1000)+600,limit:64*1024*1024},grant=await issueBuildAssetGrant(this.env.CONTROL_SECRET,scope);
@@ -80,7 +81,7 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
       }));
      }):[];
      const staticOutput=job.static&&commandIndex===job.steps.length-1?await step.do(`prepare-static-${job.id}`,async()=>{
-      const stored=await this.env.BACKUP_BUCKET.get(`definitions/${run.repo}.json`),definition=stored?await stored.json<any>():null;
+      const definition=await approvedDefinition(this.env.BACKUP_BUCKET,run.repo,run.definition_revision);
       if(!definition||definition.revision!==run.definition_revision||typeof definition.upload_origin!=='string'||new URL(definition.upload_origin).protocol!=='https:')throw Error('Approved upload origin unavailable');
       const scope={run:run.run_id,repo:run.repo,job:job.id,name:'pages-static.bundle.json',sha:run.sha,expires:Math.floor(Date.now()/1000)+600,limit:64*1024*1024},grant=await issueBuildAssetGrant(this.env.CONTROL_SECRET,scope);
       return {...job.static,limit:scope.limit,url:definition.upload_origin+grant.path,token:grant.token};
@@ -108,7 +109,7 @@ export class Actions extends CIWorkflow<CloudflareArtifacts, Env> {
     view.status='succeeded';await save();
    }
    manifest.status='succeeded';
-  } catch(error) {manifest.status='failed';throw error;} finally {manifest.finished_at=await step.do('finished-at',async()=>new Date().toISOString());await save();}
+  } catch(error) {manifest.status='failed';throw error;} finally {manifest.finished_at=await step.do('finished-at',async()=>new Date().toISOString());await step.do('record-finished',()=>save());}
  }
 }
 export default {
@@ -143,7 +144,7 @@ export default {
     if(typeof definition.source!=='string' || definition.source.length>65536 || definition.revision!==await digest(definition.source) || !Array.isArray(definition.refs) || definition.refs.length>16 || !definition.refs.every((ref:unknown)=>typeof ref==='string' && /^refs\/(heads|tags)\/[a-zA-Z0-9_./-]{1,250}$/.test(ref) && !ref.includes('..')))return json({error:'invalid_definition'},400);
     if(definition.release&&!definition.refs.every((ref:string)=>ref.startsWith('refs/tags/')))return json({error:'release_requires_tag_refs'},400);
     validateRun({provider:'cloudflare-artifacts',providerData:{namespace:env.ARTIFACTS_NAMESPACE},owner:env.ARTIFACTS_NAMESPACE,repo,sha:'a'.repeat(40),ref:definition.refs[0],run_id:'definition-validation',definition_revision:definition.revision,jobs:definition.jobs,...(definition.release?{release:definition.release}:{})},env.ARTIFACTS_NAMESPACE,env.ALLOWED_REPOS.split(','));
-    await env.BACKUP_BUCKET.put(`definitions/${repo}.json`,JSON.stringify({...definition,upload_origin:url.origin}));return json({repo,revision:definition.revision});
+    await saveApprovedDefinition(env.BACKUP_BUCKET,repo,{...definition,upload_origin:url.origin});return json({repo,revision:definition.revision});
    }
    if(request.method==='GET' && url.pathname==='/runs') {
     const cursor=url.searchParams.get('cursor')||undefined;
