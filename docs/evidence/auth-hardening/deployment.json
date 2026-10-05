@@ -1,0 +1,13 @@
+{
+  "host": "switchyard-cp0",
+  "public_url": "https://switchyard.cx",
+  "backup": "/opt/cp0/switchyard/before-auth-20261005-105212",
+  "trestle_implementation_commit": "aebb5a4",
+  "switchyard_implementation_commit": "b2bb0d9",
+  "trestle_schema": 24,
+  "switchyard_schema": 13,
+  "service": "active",
+  "mail_configured": false,
+  "initial_attempt": "binary overwrite blocked before migration; corrected to atomic replacement",
+  "rollback_performed": false
+}

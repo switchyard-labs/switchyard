@@ -1,6 +1,6 @@
 # Email verification and recovery campaign
 
-Status: implementation and local certification complete; backed-up live rollout in progress. Real mail certification awaits a provider.
+Status: implemented, locally certified and deployed. Live auth and browser regressions pass; real mail certification awaits a provider.
 
 ## Architecture audit (2026-10-05)
 
@@ -73,9 +73,26 @@ Switchyard 12→13, preserving users/session/email counts. Evidence is under
 `docs/evidence/auth-hardening/`; see `account-recovery.md` for exact operations,
 limits and restore implications.
 
-## Remaining production acceptance
+## Live acceptance and remaining delivery prerequisite
 
-Backed-up rollout and live disposable-account regressions are next. Real
+Both services are deployed after an exclusive consistent backup at
+`/opt/cp0/switchyard/before-auth-20261005-105212`. The initial binary overwrite
+failed before migration because another process held its executable; atomic
+replacement corrected it. Trestle now reports implementation `aebb5a4`, schema24;
+Switchyard implementation `b2bb0d9`, schema13. The later Trestle `6edad83` is
+tests only. No push/tag/release occurred.
+
+Live disposable-account checks passed signup surviving mail failure, private
+unverified status, signed-out verification, one-time use, generic reset request,
+reset, old password/session rejection, new-password login, logout, private email
+and anonymous public repository access. Disposable records were removed. These
+checks used trusted backend token issuance and do **not** prove email delivery.
+Desktop/mobile deployed browser checks pass signup field discovery, forgot flow,
+invalid links, URL clearing, no-store/no-referrer and signed-out workspace privacy.
+Public Pages serving (14 cases plus HTTP conditional/range checks) and 15 product
+regressions including Proposal and cookie isolation pass.
+
+Real
 verification/reset email delivery and sender DNS cannot be certified until a
 mail provider is configured. Existing registrar SPF is preserved; no DKIM/DMARC
 or mail credentials were found. No push, tag or release is authorized.

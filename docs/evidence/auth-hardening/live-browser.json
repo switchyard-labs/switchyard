@@ -1,0 +1,24 @@
+[
+  {
+    "width": 1600,
+    "signed_out_workspace_no_alice_flash": true,
+    "signup_four_fields": true,
+    "forgot_discoverable": true,
+    "generic_forgot_response": true,
+    "invalid_links_safe": true,
+    "token_removed_from_url": true,
+    "no_referrer_no_store": true,
+    "page_errors": []
+  },
+  {
+    "width": 390,
+    "signed_out_workspace_no_alice_flash": true,
+    "signup_four_fields": true,
+    "forgot_discoverable": true,
+    "generic_forgot_response": true,
+    "invalid_links_safe": true,
+    "token_removed_from_url": true,
+    "no_referrer_no_store": true,
+    "page_errors": []
+  }
+]

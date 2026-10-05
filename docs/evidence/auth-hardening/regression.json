@@ -1,0 +1,6 @@
+{
+  "pages_serving": "14 GET cases plus HEAD, ETag and range passed",
+  "product": "15 read-only checks passed, including Proposal, Pages and host-only cookie isolation",
+  "signed_out": "desktop/mobile no Alice workspace data; public repository access passed",
+  "smtp_real_delivery": "blocked on provider credentials/sender DNS"
+}

@@ -1,0 +1,16 @@
+{
+  "signup_mail_failure_preserves_account": true,
+  "private_unverified_settings": true,
+  "signed_out_verification_and_reuse_rejection": true,
+  "generic_reset_request": true,
+  "old_session_revoked": true,
+  "old_password_rejected": true,
+  "new_password_login": true,
+  "reset_reuse_rejected": true,
+  "logout": true,
+  "email_not_public": true,
+  "public_repo_access": true,
+  "real_mail": "not configured; no messages sent",
+  "live_token_path": "trusted Trestle issuance, public Switchyard consumption",
+  "disposable_account_cleaned": true
+}
