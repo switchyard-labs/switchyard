@@ -118,3 +118,16 @@ at capacity; it does not add distributed or persistent throttling.
 Validation: full app/refs suites pass; Actions 32 tests, typecheck and dry build
 pass; Pages 17 tests pass. Export/Nift tests require the local subprocess/fixture
 permissions used by the existing suite. No live migration/deployment yet.
+
+## CP6: claim corrections
+
+README/domain-model and brochure copy now distinguish implemented JSON
+`field_equals` from design categories, exact-source enqueue from independent
+review approval, application authority from independent Git credentials, local
+model-backed evidence from production throughput, and HMAC control requests from
+independently signed response snapshots. Moving-ref archives, submodule/export
+limitations, immutable event receipts, same-owner Pages origins, scratch recovery
+and raw CLI 401 behavior are explicit. Existing Nift workflow rebuilt eight changed
+brochure pages; CNAME/publication arrangement is preserved. The app Nift check
+reports ten generated pages up to date. The changed enqueue script gets a fresh
+query version to avoid stale browser code at rollout. No deployment yet.

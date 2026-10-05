@@ -81,15 +81,14 @@ See `agents-and-workflows.md`.
 | --- | --- | --- |
 | Draft edit contention | stale/overlapping editor edits | transient, inline in the editor |
 | Git textual conflict | actual merge conflict | Git operation / PR |
-| Structural conflict | API/schema/build change | contract/API-compat gates, preview integration |
-| Semantic conflict | clean merge, incompatible assumptions | preview integration + tests |
+| Structural conflict (design category) | API/schema/build change | No general structural conflict detector implemented |
+| Semantic conflict | clean merge, violated JSON `field_equals` rule | bounded deterministic contract validation on preview tree |
 | Intent conflict | two pieces of Work attempt contradictory outcomes | overlap detection / comparison |
 | Policy conflict | change violates policy | policy gate |
 
 Draft edit contention is **ephemeral editor state**, not a durable Finding or
 Conflict record; only unresolved contention that needs durable routing escalates.
-The other conflict types feed the review/conflict infrastructure, which is a set
-of mechanisms (deterministic + test-based + bounded LLM judgment), not one agent.
+The implemented semantic gate supports JSON `field_equals` only. Broader structural, intent and test-based semantic detection remain design categories, not implemented general detectors. Model review findings are evidence and do not manufacture integration approval.
 
 ## Cardinality
 

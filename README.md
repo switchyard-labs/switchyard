@@ -52,3 +52,30 @@ npm test --prefix workers/actions
 Browser regression stages live in `scripts/cua-actions-smoke-stages.mjs` and run through the documented Codex browser interface against an actual configured instance. A script file existing is not browser certification. [Campaign evidence](docs/plan/codex-implementation-campaign.md) records what has actually passed and what remains pending.
 
 See [architecture](docs/architecture/README.md), [CI boundaries/evidence](docs/evidence/campaign/C15/README.md) and [competition alignment](docs/plan/cloudflare-competition-alignment.md). Historical Checkpoint 0 material records earlier experiments and dependencies; it does not describe the current runtime. Licensed under [MIT](LICENSE).
+
+## MVP hardening boundaries
+
+Application Agent publication is restricted to permitted candidate/Attempt
+branches. Canonical/protected application writes use the separately validated
+Integration Queue boundary; intentional direct human writes remain available
+where policy permits. Independently-issued Git credentials are outside this
+application boundary. Queue enqueue persists the exact source SHA and principal;
+base movement revalidates the same source, while source movement requires a new
+intent. Reviews record source-bound evidence, not independent approval decisions.
+
+Deterministic semantic checks currently support bounded JSON `field_equals`
+contracts only. ZIP/tar.gz branch/tag snapshots resolve their ref at request time;
+release links use full SHAs. Submodules and `.gitattributes` export rules are not
+supported. Actions control requests are HMAC-authenticated; HTTPS Worker responses
+are trusted transport artifacts, not independently signed snapshots.
+
+Real model-backed implementation, review and conflict-resolution runs were
+exercised on isolated local workers. The current Linode deployment serves the
+control plane and is not sized for routine Agent execution. These runs do not
+establish production throughput or distributed-worker scaling. Publication replay
+requires retained local candidate scratch; missing scratch fails explicitly with
+bounded queue retries. Periodic ref polling cannot reconstruct intermediate pushes.
+Pages projects share an owner origin; the host-only `__Host-` authentication cookie
+protects Switchyard specifically, not arbitrary parent-domain cookies. Raw `sy api`
+HTTP 401 currently exits 1. See `docs/operations/mvp-hardening-campaign.md` for
+checkpoint evidence and rollout limitations.
