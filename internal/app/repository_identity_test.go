@@ -24,6 +24,11 @@ func TestRepositoryRouteParsing(t *testing.T) {
 }
 
 func TestOwnerAndRepoSlugs(t *testing.T) {
+	for _, name := range []string{"www", "docs", "app", "api", "admin", "assets", "static", "pages", "login", "signup", "sy", "dpl-probe"} {
+		if validOwnerSlug(name) {
+			t.Fatalf("reserved owner accepted: %s", name)
+		}
+	}
 	if !validOwnerSlug("switchyard-labs") || validOwnerSlug("assets") || validOwnerSlug("Bad_Name") {
 		t.Fatal("owner slug validation")
 	}

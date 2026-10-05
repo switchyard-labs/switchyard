@@ -14,6 +14,8 @@ var ownerSlugRE = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?$`)
 var repoSlugRE = regexp.MustCompile(`^[a-z0-9._-]{1,100}$`)
 
 var reservedOwnerSlugs = map[string]bool{
+	"www": true, "docs": true, "app": true, "admin": true, "static": true,
+	"pages": true, "login": true, "signup": true, "sy": true,
 	"api": true, "assets": true, "settings": true, "organizations": true,
 	"work": true, "pulls": true, "workflows": true, "attention": true,
 	"repositories": true, "operations": true, "history": true, "profile": true,
@@ -25,7 +27,7 @@ func normalizeRepoSlug(s string) string  { return strings.ToLower(strings.TrimSp
 
 func validOwnerSlug(s string) bool {
 	s = normalizeOwnerSlug(s)
-	return ownerSlugRE.MatchString(s) && !reservedOwnerSlugs[s]
+	return ownerSlugRE.MatchString(s) && !reservedOwnerSlugs[s] && !strings.HasPrefix(s, "dpl-")
 }
 func validRepoSlug(s string) bool { return repoSlugRE.MatchString(normalizeRepoSlug(s)) }
 
