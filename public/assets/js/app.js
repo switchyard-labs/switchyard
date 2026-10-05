@@ -14,22 +14,25 @@
   window.SwitchyardIcons = { icon };
   function mountRepositoryIdentity(owner, repo, section, metadata = {}) {
     const main = document.getElementById('main-content');
-    if (!main || !owner || !repo || main.querySelector('.repository-context') || main.querySelector('.repository-page, .actions-page')) return;
+    if (!main || !owner || !repo || main.querySelector('.repository-shell') || main.querySelector('.repository-page')) return;
     const base = '/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo);
-    const nav = document.createElement('nav');
-    nav.className = 'repository-context';
-    nav.setAttribute('aria-label', 'Repository location');
-    const ownerLink = document.createElement('a');
-    ownerLink.href = '/' + encodeURIComponent(owner);
-    const image = document.createElement('img');
-    image.width = 24; image.height = 24; image.alt = '';
-    image.src = '/api/avatars/' + (metadata.owner_type === 'org' ? 'org' : 'user') + '/' + encodeURIComponent(metadata.owner_id || owner);
+    const shell = document.createElement('header'); shell.className = 'repository-shell';
+    const identity = document.createElement('nav'); identity.className = 'repository-context'; identity.setAttribute('aria-label', 'Repository location');
+    const ownerLink = document.createElement('a'); ownerLink.href = '/' + encodeURIComponent(owner);
+    const image = document.createElement('img'); image.width = 24; image.height = 24; image.alt = '';
     ownerLink.append(image, document.createTextNode(owner));
     const repoLink = document.createElement('a'); repoLink.href = base; repoLink.textContent = repo;
-    nav.append(ownerLink, document.createTextNode(' / '), repoLink);
-    if (section) { const current = document.createElement('span'); current.textContent = section; current.setAttribute('aria-current', 'page'); nav.append(document.createTextNode(' / '), current); }
-    main.prepend(nav);
-    if (!metadata.owner_type) api('/api/owners/' + encodeURIComponent(owner)).then(profile => { if (profile.avatar_url) image.src = profile.avatar_url; }).catch(() => {});
+    const badge = document.createElement('span'); badge.className = 'badge'; badge.hidden = true;
+    identity.append(ownerLink, document.createTextNode('/'), repoLink, badge);
+    if (section) { const current = document.createElement('span'); current.className = 'repository-section'; current.textContent = section; current.setAttribute('aria-current','page'); identity.append(document.createTextNode('/'),current); }
+    const nav = document.createElement('nav'); nav.className = 'tabs repository-nav'; nav.setAttribute('aria-label','Repository');
+    const tabs = [['Code',''],['Work','work'],['Proposals','proposals'],['Pull requests','pulls'],['Actions','actions'],['Commits','commits/main'],['Releases','releases'],['Pages','pages'],['Settings','settings']];
+    const active = location.pathname.split('/')[3];
+    for (const [label,path] of tabs) { const link = document.createElement('a'); link.textContent = label; link.href = base + (path ? '/' + path : ''); if (path.split('/')[0] === active || (active === 'pull' && path === 'pulls')) { link.className = 'active'; link.setAttribute('aria-current','page'); } nav.append(link); }
+    shell.append(identity,nav); main.prepend(shell);
+    function update(meta) { image.src = '/api/avatars/' + (meta.owner_type === 'org' ? 'org' : 'user') + '/' + encodeURIComponent(meta.owner_id || owner); if(meta.visibility){badge.textContent=meta.visibility;badge.hidden=false;} nav.querySelectorAll('a')[5].href=base+'/commits/'+encodeURIComponent(meta.default_branch||'main'); }
+    update(metadata);
+    if (!metadata.visibility) api('/api/repositories/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo)).then(update).catch(() => {});
   }
   window.SwitchyardIdentity = {mount: mountRepositoryIdentity};
  document.querySelectorAll(".hamburger").forEach(button=>button.innerHTML=icon("menu"));
@@ -72,7 +75,7 @@
       header.querySelector(".header-right").before(links);
     }
     const main = document.querySelector("main");
-    const contextLinks = [...document.querySelectorAll(".header-right > a")];
+    const contextLinks = [...document.querySelectorAll(".header-right > a")].filter(link => !link.hidden);
     if (main && contextLinks.length) {
       const context = document.createElement("div"); context.className = "page-context";
       contextLinks.forEach(link => context.append(link)); main.prepend(context);
@@ -162,13 +165,13 @@
     const state = document.getElementById("auth-state");
     const mAuth = document.getElementById("mobile-auth");
     if (state) {
-      state.innerHTML = user ? '<a class="account-chip" href="/'+encodeURIComponent(user)+'" aria-label="View profile for '+esc(user)+'" title="'+esc(user)+'"><img src="/api/avatars/user/'+encodeURIComponent(user)+'" alt=""></a>' : '<a class="btn header-signin" href="/signin.html">Sign in</a>';
+      state.innerHTML = user ? '<a class="account-chip" href="/'+encodeURIComponent(user)+'" aria-label="View profile for '+esc(user)+'" title="'+esc(user)+'"><img src="/api/avatars/user/'+encodeURIComponent(user)+'" alt=""></a>' : '<a class="btn header-signin" href="/signin">Sign in</a><a class="btn header-signup" href="/signup">Sign up</a>';
     }
     if (mAuth) mAuth.innerHTML = user ? '<a href="/'+encodeURIComponent(user)+'">Profile</a>' : '';
     const session = document.getElementById("menu-session-actions");
     if (session) session.innerHTML = user
       ? '<span>Signed in as <strong>'+esc(user)+'</strong></span><button class="btn" id="logout-mobile" type="button">Sign out</button>'
-      : '<a class="btn" href="/signin">Sign in</a>';
+      : '<a class="btn" href="/signin">Sign in</a><a class="btn" href="/signup">Sign up</a>';
     const lo = document.getElementById("logout-mobile");
     if (lo) lo.onclick = async () => {
       const error = document.getElementById("menu-session-error");
@@ -296,7 +299,7 @@
 
   document.addEventListener("DOMContentLoaded", async () => {
     const route = location.pathname.split('/').filter(Boolean).map(decodeURIComponent);
-    const sections = {tree:'Code',blob:'Source',commits:'Commits',commit:'Commit',pull:'Pull request',pulls:'Pull requests',actions:'Actions',settings:'Settings',work:'Work',branches:'Branches',tags:'Tags'};
+    const sections = {tree:'Code',blob:'Source',commits:'Commits',commit:'Commit',pull:'Pull request',pulls:'Pull requests',actions:'Actions',proposals:'Proposals',pages:'Pages',releases:'Releases',settings:'Settings',work:'Work',branches:'Branches',tags:'Tags'};
     const reservedOwners = new Set(['api','assets','organizations','work','settings','operations','repositories','pulls','signin']);
     if (route.length >= 3 && !reservedOwners.has(route[0]) && sections[route[2]]) mountRepositoryIdentity(route[0], route[1], sections[route[2]]);
     renderDemoBanner();

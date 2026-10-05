@@ -6,11 +6,11 @@
 		<title>Switchyard</title>
 		<link rel="icon" type="image/webp" href="/assets/images/favicon.webp">
 		<link rel="stylesheet" href="/assets/css/theme.css?v=c22d">
-		<link rel="stylesheet" href="/assets/css/components.css?v=avatar-fill-c42">
+		<link rel="stylesheet" href="/assets/css/components.css?v=repo-shell-c48">
 		<link rel="stylesheet" href="/assets/css/app.css?v=c22d">
 		<link rel="stylesheet" href="/assets/css/identity.css?v=auth-recovery-v13">
 		<meta name="referrer" content="no-referrer">
-		<script src="/assets/js/auth-recovery.js?v=auth-recovery-v13"></script>
+		<script src="/assets/js/auth-recovery.js?v=auth-preflight-v14"></script>
 	<link rel="stylesheet" href="/assets/css/operations.css?v=c21"></head>
 	<body>
 		<a class="skip-link" href="#main-content">Skip to content</a>
@@ -31,12 +31,12 @@
 			<p id="pages-url"></p><p id="pages-hosting" class="muted">Public hosting awaits domain, DNS and TLS activation. Build and deployment records are available independently.</p>
 			<form id="pages-config" class="form-stack"><h2>Build configuration</h2><p id="pages-backing"></p><label>Branch or qualified tag ref<input name="ref" value="main" required></label><label>Working directory<input name="working_directory" value="." required></label><label>Build command<input name="build_command" placeholder="nift build" required></label><label>Output directory<input name="output_directory" value="public" required></label><label>SPA fallback (optional, relative to output)<input name="spa_fallback" placeholder="index.html"></label><label><input type="checkbox" name="enabled" checked> Enable new Pages builds</label><label><input type="checkbox" name="public_acknowledged"> I acknowledge that output from private source is public</label><div class="dialog-actions"><button class="btn" id="pages-save">Save configuration</button><button class="btn primary" id="pages-deploy" type="button">Deploy</button></div></form>
 			<h2>Production</h2><div id="pages-production" class="loading-state">Loading production mapping…</div>
-			<h2>Deployments</h2><div id="pages-history" class="loading-state">Loading deployments…</div><div class="dialog-actions"><button class="btn" id="pages-previous">Previous</button><span id="pages-count"></span><button class="btn" id="pages-next">Next</button><button class="btn" id="pages-refresh">Refresh</button></div>
+			<h2>Deployments</h2><div id="pages-history" class="loading-state">Loading deployments…</div><div class="list-pagination"><button class="btn" id="pages-previous">Previous</button><span id="pages-count"></span><button class="btn" id="pages-next">Next</button><button class="btn" id="pages-refresh">Refresh</button></div>
 			</div></section><script src="/assets/js/app-pages.js"></script>
 		</main>
 		<script src="/assets/js/code-surface.js?v=c18"></script>
 		<script src="/assets/js/markdown.js?v=c18"></script>
 		<script src="/assets/js/code-blocks.js"></script>
-		<script src="/assets/js/app.js?v=auth-recovery-v13"></script>
+		<script src="/assets/js/app.js?v=repo-shell-c48"></script>
 	</body>
 </html>

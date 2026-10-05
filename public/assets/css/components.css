@@ -124,3 +124,33 @@ select:not([multiple]):not([size]), select[size="1"] {
 .site-main:has(>#signed-in-home), .site-main:has(>[data-auth-content]) { display:flex; flex-direction:column; overflow:hidden; }
 #signed-in-home, [data-auth-content] { flex:1; min-height:0; }
 #signed-in-home>.home-layout, [data-auth-content]>.work-page { height:100%; }
+
+/* Repository identity and navigation are shared across all canonical surfaces. */
+.repository-shell { flex:none; min-width:0; margin-bottom:16px; }
+.repository-context { font-size:21px; color:var(--text); gap:10px; padding-bottom:12px; }
+.repository-context a { text-decoration:none; }
+.repository-context>a:nth-of-type(2) { font-weight:650; }
+.repository-context .badge { font-size:11px; }
+.repository-section { font-size:14px; color:var(--text-dim); }
+.repository-nav { flex:none; display:flex; overflow-x:auto; white-space:nowrap; margin-bottom:12px; }
+.repository-nav a { flex:none; }
+.page-head-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.list-pagination { display:flex; flex:none; align-items:center; justify-content:flex-end; gap:12px; padding:12px 0 0; }
+.auth-state { gap:8px; }
+#proposal-repo, #pages-repo, .repository-shell~.actions-page>.actions-repository, .repository-shell~.actions-page>#actions-tabs { display:none; }
+.site-main.settings-shell { display:flex; flex-direction:column; overflow:hidden; max-width:var(--shell-width); }
+.repository-settings-body { display:grid; grid-template-columns:210px minmax(0,1fr); gap:32px; min-height:0; overflow:hidden; flex:1; }
+.repository-settings-body>.settings-content { min-height:0; overflow:auto; padding:0 12px 12px 0; }
+.repository-settings-body .settings-nav { position:static; align-self:start; }
+@media(max-width:768px) {
+ .repository-context { font-size:18px; }
+ .repository-settings-body { display:flex; flex-direction:column; gap:16px; }
+ .repository-settings-body .settings-nav { flex:none; width:100%; }
+ .repository-settings-body>.settings-content { flex:1; }
+ .page-head { flex-wrap:wrap; }
+}
+
+.page-head-actions>form { flex-basis:100%; }
+.dialog-actions { gap:8px; }
+
+.site-main.settings-shell { gap:0; align-items:stretch; }
