@@ -79,3 +79,10 @@ Pages projects share an owner origin; the host-only `__Host-` authentication coo
 protects Switchyard specifically, not arbitrary parent-domain cookies. Raw `sy api`
 HTTP 401 currently exits 1. See `docs/operations/mvp-hardening-campaign.md` for
 checkpoint evidence and rollout limitations.
+
+## Command-line interface
+
+Use ordinary Git for repository transport/history and the first-party
+[sy CLI](https://github.com/switchyard-labs/sy) for terminal collaboration and
+control-plane operations. See the [public CLI guide](https://docs.switchyard.cx/docs/cli.html)
+for verified commands, HTTPS authentication, JSON output and current limitations.
